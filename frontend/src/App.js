@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import LoginPage from './pages/Login/LoginPage';
 import MainView from './pages/MainView/MainView';
+import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
 import './App.css';
 
 function App() {
@@ -13,7 +14,7 @@ function App() {
   return (
     <div className="App">
       {isLoggedIn
-        ? <MainView />
+        ? <AdminDashboard />
         : <LoginPage onLogin={() => setIsLoggedIn(true)} />
       }
     </div>
