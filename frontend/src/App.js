@@ -1,23 +1,24 @@
-// import logo from './logo.svg';
-// import './App.css';
-
 import React, { useState } from 'react';
 import LoginPage from './pages/Login/LoginPage';
+import RegisterPage from './pages/Register/RegisterPage';
 import MainView from './pages/MainView/MainView';
 import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
 import './App.css';
 
+console.log({ LoginPage, RegisterPage, MainView, AdminDashboard });
+
 function App() {
-  // false = muestra Login | true = muestra Dashboard
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [page, setPage] = useState('login');
+
+  if (page === 'register') return <RegisterPage onGoToLogin={() => setPage('login')} />;
+  if (page === 'main') return <MainView />;
+  if (page === 'admin') return <AdminDashboard />;
 
   return (
-    <div className="App">
-      {isLoggedIn
-        ? <AdminDashboard />
-        : <LoginPage onLogin={() => setIsLoggedIn(true)} />
-      }
-    </div>
+    <LoginPage
+      onLogin={() => setPage('main')}
+      onGoToRegister={() => setPage('register')}
+    />
   );
 }
 

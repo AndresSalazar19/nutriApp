@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function LoginPage({ onLogin }) {
+function LoginPage({ onLogin, onGoToRegister }) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -119,9 +119,13 @@ function LoginPage({ onLogin }) {
 
           <p className="text-center text-sm text-gray-500 mt-5">
             ¿No tienes una cuenta?{' '}
-            <a href="/register" className="text-green-600 font-bold hover:underline">
+            <button
+              type="button"
+              onClick={onGoToRegister}
+              className="text-green-600 font-bold hover:underline"
+            >
               Regístrate
-            </a>
+            </button>
           </p>
         </div>
 
