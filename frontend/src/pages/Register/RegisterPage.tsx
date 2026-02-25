@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 
-function RegisterPage({ onGoToLogin }) {
+interface RegisterPageProps {
+  onGoToLogin: () => void;
+}
+
+function RegisterPage({ onGoToLogin }: RegisterPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);

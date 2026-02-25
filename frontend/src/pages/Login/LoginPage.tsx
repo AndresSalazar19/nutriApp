@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 
-function LoginPage({ onLogin, onGoToRegister }) {
+interface LoginPageProps {
+  onLogin: () => void;
+  onGoToRegister: () => void;
+}
+
+function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
