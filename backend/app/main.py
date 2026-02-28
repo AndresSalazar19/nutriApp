@@ -19,4 +19,4 @@ async def root():
 # Un ejemplo con parámetros (muy común en nutrición)
 @app.get("/usuario/{usuario_id}")
 async def leer_usuario(usuario_id: int):
-    return {"usuario_id": usuario_id, "plan": "Plan Hipercalórico Estándar"}
+    return {"usuario_id": usuario_id, "plan": "Plan Calórico Estándar"}
