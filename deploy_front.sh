@@ -11,7 +11,7 @@ cd $PROJECT_DIR
 
 # 2. Bajar cambios de la rama actual
 echo "Trayendo cambios de Git..."
-git pull origin $(git rev-parse --abbrev-ref HEAD)
+sudo git pull origin feature/web-mobile-login
 
 # 3. Entrar al frontend y procesar
 cd $FRONTEND_DIR
