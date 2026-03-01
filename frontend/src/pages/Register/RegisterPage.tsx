@@ -312,7 +312,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
               onClick={onGoToLogin}
               className="text-green-600 font-bold hover:underline"
             >
-              Iniciar sesión
+              Iniciar sesión Cambio
             </button>
           </p>
         </div>
