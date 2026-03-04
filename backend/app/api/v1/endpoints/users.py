@@ -1,0 +1,32 @@
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+from app.db.base import get_db
+from app.schemas.user import UserCreate, UserResponse
+from app.core.response import success_response, error_response
+from app.services.user_service import UserService
+import uuid
+
+router = APIRouter(prefix="/users", tags=["users"])
+
+
+@router.post("/", response_model=None)
+def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    if UserService.email_exists(db, user_data.email):
+        resp = error_response(["El email ya está registrado"], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
+
+    user = UserService.create(db, user_data)
+    resp = success_response(data=UserResponse.model_validate(user).model_dump(mode="json"))
+    return JSONResponse(status_code=200, content=resp.model_dump())
+
+
+@router.get("/{user_id}", response_model=None)
+def read_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user = UserService.get_by_id(db, user_id)
+    if not user:
+        resp = error_response(["Usuario no encontrado"], status_code=404)
+        return JSONResponse(status_code=404, content=resp.model_dump())
+
+    resp = success_response(data=UserResponse.model_validate(user).model_dump(mode="json"))
+    return JSONResponse(status_code=200, content=resp.model_dump())
