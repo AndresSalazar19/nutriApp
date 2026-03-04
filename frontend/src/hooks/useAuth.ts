@@ -10,7 +10,7 @@ interface AuthState {
 }
 
 // ── MODO DESARROLLO ────────────────────────────────────────
-// Cambia estos valores para probar diferentes flujos sin backend:
+// Valores para probar diferentes flujos sin backend:
 //
 //   isAuthenticated: false  → siempre va al login
 //   isAuthenticated: true, role: 'nutritionist' → va al dashboard de nutricionista

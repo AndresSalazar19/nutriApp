@@ -1,7 +1,3 @@
-// Guard para rutas protegidas.
-// Si el usuario no está autenticado, redirige al login.
-// Si no tiene el rol correcto, redirige a su vista correspondiente.
-
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { ROUTES } from './routes';
