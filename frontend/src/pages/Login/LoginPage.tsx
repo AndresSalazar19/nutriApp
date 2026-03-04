@@ -10,9 +10,8 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Por ahora solo navega al dashboard sin autenticación real
     if (onLogin) onLogin();
   };
 
@@ -113,7 +112,7 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
               </a>
             </div>
 
-            {/* Botón */}
+            {/* Botón submit */}
             <button
               type="submit"
               className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition text-sm"
@@ -122,12 +121,13 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
             </button>
           </form>
 
+          {/* Enlace a registro */}
           <p className="text-center text-sm text-gray-500 mt-5">
             ¿No tienes una cuenta?{' '}
             <button
               type="button"
               onClick={onGoToRegister}
-              className="text-green-600 font-bold hover:underline"
+              className="text-green-600 font-bold hover:underline bg-transparent border-none cursor-pointer"
             >
               Regístrate
             </button>
