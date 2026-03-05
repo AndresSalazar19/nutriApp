@@ -1,0 +1,109 @@
+import React, { useState } from 'react';
+import { StepProps } from './types';
+import { SectionTitle } from './SectionTitle';
+import { InputField } from './InputField';
+
+export interface SecurityStepProps extends StepProps {
+  acceptTerms: boolean;
+  setAcceptTerms: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, acceptTerms, setAcceptTerms }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  // Funciones para evaluar las reglas de la contraseña
+  const hasMinLength = form.password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(form.password);
+  const hasNumber = /[0-9]/.test(form.password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(form.password);
+
+  return (
+    <div className="animate-fade-in">
+      <SectionTitle>Credenciales de Acceso</SectionTitle>
+
+      <InputField
+        label="Correo electrónico"
+        field="email"
+        type="email"
+        form={form}
+        update={update}
+        placeholder="ejemplo@email.com"
+      />
+
+      {/* --- REGLAS DE LA CONTRASEÑA --- */}
+      <div className="mb-4 bg-gray-50 rounded-lg p-3 border border-gray-100">
+        <p className="text-xs text-gray-500 font-semibold mb-2">La contraseña debe contener:</p>
+        <ul className="text-xs space-y-1">
+          <li className={`flex items-center gap-2 ${hasMinLength ? 'text-green-600' : 'text-gray-400'}`}>
+            <span className="text-sm">{hasMinLength ? '✓' : '○'}</span> Mínimo 8 caracteres
+          </li>
+          <li className={`flex items-center gap-2 ${hasUppercase ? 'text-green-600' : 'text-gray-400'}`}>
+            <span className="text-sm">{hasUppercase ? '✓' : '○'}</span> Al menos una letra mayúscula
+          </li>
+          <li className={`flex items-center gap-2 ${hasNumber ? 'text-green-600' : 'text-gray-400'}`}>
+            <span className="text-sm">{hasNumber ? '✓' : '○'}</span> Al menos un número
+          </li>
+          <li className={`flex items-center gap-2 ${hasSpecialChar ? 'text-green-600' : 'text-gray-400'}`}>
+            <span className="text-sm">{hasSpecialChar ? '✓' : '○'}</span> Un carácter especial (Ej: !@#$%)
+          </li>
+        </ul>
+      </div>
+
+      <div className="relative mt-2">
+        <InputField
+          label="Contraseña"
+          field="password"
+          type={showPassword ? 'text' : 'password'}
+          form={form}
+          update={update}
+          placeholder="••••••••"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
+        >
+          {showPassword ? '🙈' : '👁️'}
+        </button>
+      </div>
+
+      <div className="mb-4 relative">
+        <InputField
+          label="Confirmar contraseña"
+          field="confirmPassword"
+          type={showConfirm ? 'text' : 'password'}
+          form={form}
+          update={update}
+          placeholder="••••••••"
+        />
+        <button
+          type="button"
+          onClick={() => setShowConfirm(!showConfirm)}
+          className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
+        >
+          {showConfirm ? '🙈' : '👁️'}
+        </button>
+      </div>
+
+      {/* Validación visual rápida de coincidencia de contraseñas */}
+      {form.confirmPassword.length > 0 && form.password !== form.confirmPassword && (
+        <p className="text-red-500 text-xs mt-[-10px] mb-4 pl-1">Las contraseñas no coinciden.</p>
+      )}
+
+      <SectionTitle>Términos Legales</SectionTitle>
+      <div className="flex items-center gap-2 mt-4 mb-5">
+        <input
+          type="checkbox"
+          id="terms"
+          checked={acceptTerms}
+          onChange={e => setAcceptTerms(e.target.checked)}
+          className="accent-green-500 w-4 h-4 cursor-pointer"
+        />
+        <label htmlFor="terms" className="text-xs text-gray-500 cursor-pointer">
+          Acepto los <a href="#" className="text-green-600 font-semibold hover:underline">Términos de Servicio</a> y <a href="#" className="text-green-600 font-semibold hover:underline">Política de Privacidad</a>
+        </label>
+      </div>
+    </div>
+  );
+};
