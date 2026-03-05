@@ -9,6 +9,7 @@ echo "🚀 Iniciando despliegue automático..."
 # 1. Entrar al directorio
 cd $PROJECT_DIR
 
+<<<<<<< HEAD
 # 2. Bajar cambios de la rama indicada a la actual
 echo "📥 Trayendo cambios de feature/web-mobile-login a la rama actual..."
 
@@ -16,6 +17,10 @@ echo "📥 Trayendo cambios de feature/web-mobile-login a la rama actual..."
 sudo git config pull.rebase false
 
 # Hacemos el pull SIN sudo (trae los cambios de esa rama a la que tengas activa)
+=======
+# 2. Bajar cambios de la rama actual
+echo "Trayendo cambios de Git..."
+>>>>>>> 0baa9001b7f796510626d223b80445342c3f6263
 sudo git pull origin feature/web-mobile-login
 
 # 3. Entrar al frontend y procesar
