@@ -11,9 +11,9 @@ export function PublicRoute({ children }: PublicRouteProps) {
   const { isAuthenticated, role } = useAuth();
 
   // Si ya está autenticado, redirige según su rol
-  if (isAuthenticated) {
-    return <Navigate to={role === 'admin' ? ROUTES.ADMIN : ROUTES.DASHBOARD} replace />;
-  }
+  // if (isAuthenticated) {
+  //  return <Navigate to={role === 'admin' ? ROUTES.ADMIN : ROUTES.DASHBOARD} replace />;
+  //}
 
   return <>{children}</>;
 }

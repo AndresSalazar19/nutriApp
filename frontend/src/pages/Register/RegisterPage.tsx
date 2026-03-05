@@ -1,328 +1,209 @@
 import React, { useState } from 'react';
+import { FormState, RegisterPageProps } from './types';
+import { PersonalInfoStep } from './PersonalInfoStep';
+import { ProfessionalInfoStep } from './ProfessionalInfoStep';
+import { SecurityStep } from './SecurityStep';
 
-interface RegisterPageProps {
-  onGoToLogin: () => void;
-}
-
-interface FormState {
-  fullName: string;
-  email: string;
-  phone: string;
-  birthDate: string;
-  licenseNumber: string;
-  university: string;
-  specialties: string;
-  yearsExperience: string;
-  password: string;
-  confirmPassword: string;
-}
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+};
 
 function RegisterPage({ onGoToLogin }: RegisterPageProps) {
-  const [showPassword, setShowPassword]   = useState(false);
-  const [showConfirm, setShowConfirm]     = useState(false);
-  const [acceptTerms, setAcceptTerms]     = useState(false);
-  const [certFiles, setCertFiles]         = useState<File[]>([]);
-
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [senescytFile, setSenescytFile] = useState<File | null>(null);
   const [form, setForm] = useState<FormState>({
-    fullName:        '',
-    email:           '',
-    phone:           '',
-    birthDate:       '',
-    licenseNumber:   '',
-    university:      '',
-    specialties:     '',
+    fullName: '',
+    cedula: '',
+    birthDate: '',
+    gender: '',
+    phone: '',
+    specialties: '',
     yearsExperience: '',
-    password:        '',
+    email: '',
+    password: '',
     confirmPassword: '',
   });
 
+  // Función para actualizar cualquier campo de texto
   const update = (field: keyof FormState, value: string) =>
     setForm(prev => ({ ...prev, [field]: value }));
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) setCertFiles(Array.from(e.target.files));
-  };
+  // Navegación entre pasos
+  const nextStep = () => setStep(prev => Math.min(prev + 1, 3));
+  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Manejo asíncrono del envío del formulario
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('Registro enviado', form);
+    // Si no estamos en el último paso, solo avanzamos
+    if (step < 3) {
+      nextStep();
+      return;
+    }
+
+    // Iniciamos el estado de carga
+    setIsSubmitting(true);
+
+    try {
+      // 1. Convertimos los archivos a Base64 si existen
+      const cvBase64 = cvFile ? await fileToBase64(cvFile) : null;
+      const senescytBase64 = senescytFile ? await fileToBase64(senescytFile) : null;
+
+      // 2. Construimos el payload estructurado
+      const registrationPayload = {
+        personalInfo: {
+          fullName: form.fullName,
+          cedula: form.cedula,
+          birthDate: form.birthDate,
+          gender: form.gender,
+          phone: form.phone,
+        },
+        professionalInfo: {
+          specialties: form.specialties,
+          yearsExperience: Number(form.yearsExperience),
+          documents: {
+            cv: cvBase64,
+            senescyt: senescytBase64
+          }
+        },
+        security: {
+          email: form.email,
+          password: form.password,
+        },
+        metadata: {
+          acceptedTerms: acceptTerms,
+          registeredAt: new Date().toISOString()
+        }
+      };
+
+      console.log('📦 Objeto JSON puro listo para enviar a la API:', registrationPayload);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      alert('¡Registro exitoso revisa la consola!');
+      onGoToLogin();
+
+    } catch (error) {
+      console.error('❌ Error procesando el registro:', error);
+      alert('Ocurrió un error al procesar los archivos. Intenta de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  const InputField = ({
-    label,
-    field,
-    type = 'text',
-    placeholder,
-    className = '',
-  }: {
-    label: string;
-    field: keyof FormState;
-    type?: string;
-    placeholder: string;
-    className?: string;
-  }) => (
-    <div className={`mb-4 ${className}`}>
-      <label className="block text-xs font-semibold text-gray-600 mb-1">{label}</label>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={form[field]}
-        onChange={e => update(field, e.target.value)}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-green-500 transition bg-white"
-      />
-    </div>
-  );
-
-  const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-    <h2 className="text-green-600 font-semibold text-sm mb-4 border-b-2 border-green-500 pb-1 inline-block">
-      {children}
-    </h2>
-  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start py-8 px-4">
 
-      {/* Volver */}
-      <div className="w-full max-w-4xl mb-4">
+      {/* Botón Volver */}
+      <div className="w-full max-w-xl mb-4">
         <button
           onClick={onGoToLogin}
-          className="text-green-700 text-sm hover:underline flex items-center gap-1"
+          className="text-green-700 text-sm hover:underline flex items-center gap-1 disabled:opacity-50"
+          disabled={isSubmitting}
         >
           ← Volver al inicio
         </button>
       </div>
 
-      {/* Card principal */}
-      <div className="bg-white rounded-2xl shadow-md w-full max-w-4xl px-10 py-8">
+      {/* Contenedor Principal */}
+      <div className="bg-white rounded-2xl shadow-md w-full max-w-xl px-6 md:px-10 py-8">
 
-        {/* Header */}
-        <div className="flex flex-col items-center mb-8">
+        {/* Encabezado */}
+        <div className="flex flex-col items-center mb-6">
           <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-3 shadow">
-            {/* Reemplazar por img de logo */}
             <span className="text-xl">🥗</span>
           </div>
           <h1 className="text-2xl font-bold text-green-700">Crear Cuenta</h1>
-          <p className="text-gray-400 text-sm mt-1">Únete a nuestra red profesional</p>
+          <p className="text-gray-400 text-sm mt-1">Paso {step} de 3</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2">
-
-            {/* ── Columna izquierda ── */}
-            <div>
-              <SectionTitle>Información Personal</SectionTitle>
-
-              <InputField
-                label="Nombre completo"
-                field="fullName"
-                placeholder="Ingresa tu nombre completo"
-              />
-
-              {/* Email + Teléfono en fila */}
-              <div className="flex gap-3 mb-4">
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
-                    Correo electrónico
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="ejemplo@email.com"
-                    value={form.email}
-                    onChange={e => update('email', e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-green-500 transition bg-white"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
-                    Teléfono
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="0999 123 456"
-                    value={form.phone}
-                    onChange={e => update('phone', e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-green-500 transition bg-white"
-                  />
-                </div>
-              </div>
-
-              {/* Fecha de nacimiento */}
-              <div className="mb-6 relative">
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Fecha de nacimiento
-                </label>
-                <input
-                  type="text"
-                  placeholder="DD/MM/AAAA"
-                  value={form.birthDate}
-                  onChange={e => update('birthDate', e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-green-500 transition bg-white pr-8"
-                />
-                <span className="absolute right-3 top-[34px] text-gray-400 text-xs">📅</span>
-              </div>
-
-              <SectionTitle>Seguridad</SectionTitle>
-
-              {/* Contraseña */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Contraseña
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={form.password}
-                    onChange={e => update('password', e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-green-500 transition bg-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? '🙈' : '👁️'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirmar contraseña */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Confirmar contraseña
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirm ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={form.confirmPassword}
-                    onChange={e => update('confirmPassword', e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-green-500 transition bg-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showConfirm ? '🙈' : '👁️'}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Columna derecha ── */}
-            <div>
-              <SectionTitle>Información Profesional</SectionTitle>
-
-              <InputField
-                label="Número de licencia profesional"
-                field="licenseNumber"
-                placeholder="Ej: 1234-5678"
-              />
-              <InputField
-                label="Universidad"
-                field="university"
-                placeholder="Nombre de tu universidad"
-              />
-              <InputField
-                label="Especialidades"
-                field="specialties"
-                placeholder="Ej: Nutrición deportiva, Pediátrica"
-              />
-
-              {/* Años de experiencia */}
-              <div className="mb-6">
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Años de experiencia
-                </label>
-                <input
-                  type="number"
-                  placeholder="Ej: 5"
-                  min="0"
-                  value={form.yearsExperience}
-                  onChange={e => update('yearsExperience', e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-green-500 transition bg-white"
-                />
-              </div>
-
-              <SectionTitle>Subir certificaciones y títulos</SectionTitle>
-
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Seleccionar archivos
-                </label>
-                <label className="flex items-center justify-between border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-400 bg-white cursor-pointer hover:border-green-400 transition">
-                  <span className="truncate pr-2">
-                    {certFiles.length > 0
-                      ? certFiles.map(f => f.name).join(', ')
-                      : 'Seleccionar archivos'}
-                  </span>
-                  <span className="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center text-white text-base flex-shrink-0">
-                    ＋
-                  </span>
-                  <input
-                    type="file"
-                    multiple
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-                <p className="text-xs text-gray-400 mt-1">PDF, JPG o PNG. Máx. 5MB por archivo.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Términos */}
-          <div className="flex items-center gap-2 mt-2 mb-5">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={acceptTerms}
-              onChange={e => setAcceptTerms(e.target.checked)}
-              className="accent-green-500 w-4 h-4 cursor-pointer"
+        {/* Barra de Progreso */}
+        <div className="flex justify-between mb-8 gap-2">
+          {[1, 2, 3].map(i => (
+            <div
+              key={i}
+              className={`h-2 flex-1 rounded-full transition-colors duration-300 ${step >= i ? 'bg-green-500' : 'bg-gray-100'
+                }`}
             />
-            <label htmlFor="terms" className="text-xs text-gray-500 cursor-pointer">
-              Acepto los{' '}
-              <a href="#" className="text-green-600 font-semibold hover:underline">
-                Términos de Servicio
-              </a>{' '}
-              y{' '}
-              <a href="#" className="text-green-600 font-semibold hover:underline">
-                Política de Privacidad
-              </a>
-            </label>
+          ))}
+        </div>
+
+        {/* Formulario */}
+        <form onSubmit={handleSubmit}>
+
+          {/* Renderizado de Componentes por Paso */}
+          {step === 1 && (
+            <PersonalInfoStep form={form} update={update} />
+          )}
+
+          {step === 2 && (
+            <ProfessionalInfoStep
+              form={form}
+              update={update}
+              cvFile={cvFile}
+              setCvFile={setCvFile}
+              senescytFile={senescytFile}
+              setSenescytFile={setSenescytFile}
+            />
+          )}
+
+          {step === 3 && (
+            <SecurityStep
+              form={form}
+              update={update}
+              acceptTerms={acceptTerms}
+              setAcceptTerms={setAcceptTerms}
+            />
+          )}
+
+          {/* Botones de Acción */}
+          <div className="flex gap-3 mt-8">
+            {step > 1 && (
+              <button
+                type="button"
+                onClick={prevStep}
+                disabled={isSubmitting}
+                className="flex-1 py-3 border border-gray-200 hover:bg-gray-50 rounded-xl text-gray-600 font-semibold transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Atrás
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-xl transition text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+            >
+              {isSubmitting
+                ? 'Procesando...'
+                : (step === 3 ? 'Finalizar Registro' : 'Continuar')}
+            </button>
           </div>
 
-          {/* Botón submit */}
-          <button
-            type="submit"
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition text-sm shadow-sm"
-          >
-            Crear cuenta
-          </button>
         </form>
 
-        {/* Link a login */}
-        <div className="text-center mt-5">
+        {/* Enlace al Login */}
+        <div className="text-center mt-6 border-t border-gray-100 pt-6">
           <p className="text-sm text-gray-500">
             ¿Ya tienes una cuenta?{' '}
             <button
               type="button"
               onClick={onGoToLogin}
-              className="text-green-600 font-bold hover:underline bg-transparent border-none cursor-pointer"
+              disabled={isSubmitting}
+              className="text-green-600 font-bold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:hover:no-underline"
             >
               Iniciar sesión
             </button>
           </p>
         </div>
-      </div>
 
-      {/* Footer */}
-      <p className="text-xs text-gray-400 text-center mt-5 pb-4">
-        Al crear cuenta, aceptas nuestros Términos de Servicio y Política de Privacidad
-      </p>
+      </div>
     </div>
   );
 }
