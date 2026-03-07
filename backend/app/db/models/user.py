@@ -23,6 +23,7 @@ class User(Base):
     email_verified = Column(Boolean, default=False, nullable=False)
 
     person = relationship("Person", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    nutritionist_profile = relationship("NutritionistProfile", back_populates="user", foreign_keys="NutritionistProfile.user_id")
 
 
 class Person(Base):
