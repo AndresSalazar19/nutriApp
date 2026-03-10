@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { FormState, RegisterPageProps } from './types';
+import { FormState, FormErrors, RegisterPageProps } from './types';
 import { PersonalInfoStep } from './PersonalInfoStep';
 import { ProfessionalInfoStep } from './ProfessionalInfoStep';
 import { SecurityStep } from './SecurityStep';
+import { useFormValidation } from './useFormValidation';
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -19,6 +20,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [senescytFile, setSenescytFile] = useState<File | null>(null);
+  const [touched, setTouched] = useState<Set<keyof FormState>>(new Set());
   const [form, setForm] = useState<FormState>({
     fullName: '',
     cedula: '',
@@ -32,33 +34,46 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
     confirmPassword: '',
   });
 
-  // Función para actualizar cualquier campo de texto
-  const update = (field: keyof FormState, value: string) =>
+  const { errors, isStepValid } = useFormValidation(form, step);
+
+  // Marks field as touched and updates state
+  const update = (field: keyof FormState, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
+    setTouched(prev => {
+      const next = new Set(prev);
+      next.add(field);
+      return next;
+    });
+  };
 
-  // Navegación entre pasos
-  const nextStep = () => setStep(prev => Math.min(prev + 1, 3));
-  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
+  // Only pass errors for fields the user has already interacted with
+  const displayErrors: FormErrors = Object.fromEntries(
+    Object.entries(errors).filter(([field]) => touched.has(field as keyof FormState))
+  );
 
-  // Manejo asíncrono del envío del formulario
+  const nextStep = () => {
+    setTouched(new Set());
+    setStep(prev => Math.min(prev + 1, 3));
+  };
+  const prevStep = () => {
+    setTouched(new Set());
+    setStep(prev => Math.max(prev - 1, 1));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Si no estamos en el último paso, solo avanzamos
     if (step < 3) {
       nextStep();
       return;
     }
 
-    // Iniciamos el estado de carga
     setIsSubmitting(true);
 
     try {
-      // 1. Convertimos los archivos a Base64 si existen
       const cvBase64 = cvFile ? await fileToBase64(cvFile) : null;
       const senescytBase64 = senescytFile ? await fileToBase64(senescytFile) : null;
 
-      // 2. Construimos el payload estructurado
       const registrationPayload = {
         personalInfo: {
           fullName: form.fullName,
@@ -138,9 +153,8 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
         {/* Formulario */}
         <form onSubmit={handleSubmit}>
 
-          {/* Renderizado de Componentes por Paso */}
           {step === 1 && (
-            <PersonalInfoStep form={form} update={update} />
+            <PersonalInfoStep form={form} update={update} errors={displayErrors} />
           )}
 
           {step === 2 && (
@@ -160,6 +174,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
               update={update}
               acceptTerms={acceptTerms}
               setAcceptTerms={setAcceptTerms}
+              errors={displayErrors}
             />
           )}
 
@@ -177,7 +192,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
             )}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isStepValid}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-xl transition text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
             >
               {isSubmitting

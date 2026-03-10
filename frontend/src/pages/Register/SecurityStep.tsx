@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { StepProps } from './types';
+import { StepProps, FormErrors } from './types';
 import { SectionTitle } from './SectionTitle';
 import { InputField } from './InputField';
 
 export interface SecurityStepProps extends StepProps {
   acceptTerms: boolean;
   setAcceptTerms: React.Dispatch<React.SetStateAction<boolean>>;
+  errors: FormErrors;
 }
 
-export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, acceptTerms, setAcceptTerms }) => {
+export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, acceptTerms, setAcceptTerms, errors }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -29,6 +30,7 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
         form={form}
         update={update}
         placeholder="ejemplo@email.com"
+        error={errors.email}
       />
 
       {/* --- REGLAS DE LA CONTRASEÑA --- */}
