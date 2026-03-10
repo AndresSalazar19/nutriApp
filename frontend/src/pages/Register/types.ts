@@ -17,6 +17,8 @@ export interface FormState {
 
 export type FormErrors = Partial<Record<keyof FormState, string>> & {
   acceptTerms?: string;
+  cvFile?: string;
+  senescytFile?: string;
 };
 
 export interface StepProps {

@@ -34,7 +34,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
     confirmPassword: '',
   });
 
-  const { errors, isStepValid } = useFormValidation(form, step, acceptTerms)
+  const { errors, isStepValid } = useFormValidation(form, step, acceptTerms, cvFile, senescytFile)
 
   // Marks field as touched and updates state
   const update = (field: keyof FormState, value: string) => {
@@ -165,6 +165,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
               setCvFile={setCvFile}
               senescytFile={senescytFile}
               setSenescytFile={setSenescytFile}
+              errors={displayErrors}
             />
           )}
 

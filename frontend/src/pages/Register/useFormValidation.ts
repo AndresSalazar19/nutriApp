@@ -53,6 +53,39 @@ function validateStep1(form: FormState): FormErrors {
   return errors;
 }
 
+function validateStep2(form: FormState, cvFile: File | null, senescytFile: File | null): FormErrors {
+  const errors: FormErrors = {};
+
+  if (!form.specialties) {
+    errors.specialties = 'Debes seleccionar una especialidad.';
+  }
+
+  if (!form.yearsExperience || form.yearsExperience.trim() === '') {
+    errors.yearsExperience = 'Los años de experiencia son requeridos.';
+  } else if (Number(form.yearsExperience) < 0) {
+    errors.yearsExperience = 'Los años de experiencia no pueden ser negativos.';
+  }
+
+  if (!cvFile) {
+    errors.cvFile = 'El Curriculum Vitae es requerido.';
+  } else if (cvFile.type !== 'application/pdf' && !cvFile.name.toLowerCase().endsWith('.pdf')) {
+    errors.cvFile = 'El Curriculum Vitae debe ser un archivo PDF.';
+  }
+
+  if (!senescytFile) {
+    errors.senescytFile = 'El Registro Senescyt es requerido.';
+  } else {
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    const name = senescytFile.name.toLowerCase();
+    const validExt = name.endsWith('.pdf') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png');
+    if (!validTypes.includes(senescytFile.type) && !validExt) {
+      errors.senescytFile = 'El Registro Senescyt debe ser PDF, JPG o PNG.';
+    }
+  }
+
+  return errors;
+}
+
 function validateStep3(form: FormState, acceptTerms: boolean): FormErrors {
   const errors: FormErrors = {};
 
@@ -81,12 +114,19 @@ function validateStep3(form: FormState, acceptTerms: boolean): FormErrors {
   return errors;
 }
 
-export function useFormValidation(form: FormState, step: number, acceptTerms: boolean = false) {
+export function useFormValidation(
+  form: FormState,
+  step: number,
+  acceptTerms: boolean = false,
+  cvFile: File | null = null,
+  senescytFile: File | null = null,
+) {
   const errors = useMemo(() => {
     if (step === 1) return validateStep1(form);
+    if (step === 2) return validateStep2(form, cvFile, senescytFile);
     if (step === 3) return validateStep3(form, acceptTerms);
     return {} as FormErrors;
-  }, [form, step, acceptTerms]);
+  }, [form, step, acceptTerms, cvFile, senescytFile]);
 
   const isStepValid = Object.keys(errors).length === 0;
 
