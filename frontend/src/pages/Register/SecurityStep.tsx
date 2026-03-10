@@ -60,6 +60,7 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
           form={form}
           update={update}
           placeholder="••••••••"
+          error={errors.password}
         />
         <button
           type="button"
@@ -78,6 +79,7 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
           form={form}
           update={update}
           placeholder="••••••••"
+          error={errors.confirmPassword}
         />
         <button
           type="button"
@@ -87,11 +89,6 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
           {showConfirm ? '🙈' : '👁️'}
         </button>
       </div>
-
-      {/* Validación visual rápida de coincidencia de contraseñas */}
-      {form.confirmPassword.length > 0 && form.password !== form.confirmPassword && (
-        <p className="text-red-500 text-xs mt-[-10px] mb-4 pl-1">Las contraseñas no coinciden.</p>
-      )}
 
       <SectionTitle>Términos Legales</SectionTitle>
       <div className="flex items-center gap-2 mt-4 mb-5">
@@ -106,6 +103,9 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
           Acepto los <a href="#" className="text-green-600 font-semibold hover:underline">Términos de Servicio</a> y <a href="#" className="text-green-600 font-semibold hover:underline">Política de Privacidad</a>
         </label>
       </div>
+      {errors.acceptTerms && (
+        <p className="text-red-500 text-xs mt-1 mb-4 pl-6">{errors.acceptTerms}</p>
+      )}
     </div>
   );
 };

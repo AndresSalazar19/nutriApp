@@ -34,7 +34,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
     confirmPassword: '',
   });
 
-  const { errors, isStepValid } = useFormValidation(form, step);
+  const { errors, isStepValid } = useFormValidation(form, step, acceptTerms)
 
   // Marks field as touched and updates state
   const update = (field: keyof FormState, value: string) => {

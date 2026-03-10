@@ -15,7 +15,9 @@ export interface FormState {
   confirmPassword: string;
 }
 
-export type FormErrors = Partial<Record<keyof FormState, string>>;
+export type FormErrors = Partial<Record<keyof FormState, string>> & {
+  acceptTerms?: string;
+};
 
 export interface StepProps {
   form: FormState;
