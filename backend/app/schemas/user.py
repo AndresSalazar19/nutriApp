@@ -11,6 +11,9 @@ class UserCreate(BaseModel):
     last_name: str
     date_of_birth: date | None = None
 
+class UserRequest(BaseModel):
+    email: EmailStr
+    password: str
 
 class PersonResponse(BaseModel):
     first_name: str
