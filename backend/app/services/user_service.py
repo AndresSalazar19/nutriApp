@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.db.models.user import User, Person
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserResponse
 import uuid
 
 class UserService:
@@ -27,3 +27,10 @@ class UserService:
         db.commit()
         db.refresh(user)
         return user
+    
+    @staticmethod
+    def authenticate(db: Session, email: str, password: str):
+        user_db = db.query(User).filter(User.email == email).first()
+        if user_db and user_db.password_hash == password + "_hash_seguro":
+            return UserResponse.model_validate(user_db)
+        return None
