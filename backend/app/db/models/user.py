@@ -25,6 +25,10 @@ class User(Base):
     person = relationship("Person", back_populates="user", uselist=False, cascade="all, delete-orphan")
     nutritionist_profile = relationship("NutritionistProfile", back_populates="user", foreign_keys="NutritionistProfile.user_id")
 
+class GenderEnum(str, enum.Enum):
+    masculino = "masculino"
+    femenino = "femenino"
+
 
 class Person(Base):
     __tablename__ = "persons"
@@ -33,7 +37,9 @@ class Person(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
+    cedula = Column(String(20), nullable=True, unique=True)
     date_of_birth = Column(Date, nullable=True)
+    gender = Column(SQLEnum(GenderEnum), nullable=True)
     phone = Column(String(20), nullable=True)
     avatar_url = Column(Text, nullable=True)
 
