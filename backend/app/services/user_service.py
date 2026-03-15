@@ -3,7 +3,19 @@ from app.db.models.user import User, Person
 from app.schemas.user import UserCreate, UserResponse
 import uuid
 
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 class UserService:
+    @staticmethod
+    def hash_password(plain_password: str) -> str:
+        return pwd_context.hash(plain_password)
+
+    @staticmethod
+    def verify_password(plain_password: str, hashed_password: str) -> bool:
+        return pwd_context.verify(plain_password, hashed_password)
+
     @staticmethod
     def email_exists(db: Session, email: str) -> bool:
         return db.query(User).filter(User.email == email).first() is not None
@@ -14,7 +26,7 @@ class UserService:
 
     @staticmethod
     def create(db: Session, data: UserCreate) -> User:
-        user = User(email=data.email, password_hash=data.password + "_hash_seguro")
+        user = User(email=data.email, password_hash=UserService.hash_password(data.password))
         db.add(user)
         db.flush()
         person = Person(
