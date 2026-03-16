@@ -24,8 +24,7 @@ class PersonResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-
+        
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: EmailStr
@@ -36,3 +35,7 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ChangePasswordRequest(BaseModel):
+    email: str
+    new_password: str
