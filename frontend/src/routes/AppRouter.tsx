@@ -1,17 +1,15 @@
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+// Unificamos las importaciones de react-router-dom
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ROUTES } from './routes';
 import { PublicRoute } from './PublicRoute';
 import { PrivateRoute } from './PrivateRoute';
-import { useNavigate } from 'react-router-dom';
 
 // Lazy loading
-// Cada página se carga solo cuando el usuario la visita.
-// Mejora el tiempo de carga inicial del bundle.
-const LoginPage          = lazy(() => import('../pages/Login/LoginPage'));
-const RegisterPage       = lazy(() => import('../pages/Register/RegisterPage'));
-const MainView           = lazy(() => import('../pages/MainView/MainView'));
-const AdminDashboard     = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
+const LoginPage         = lazy(() => import('../pages/Login/LoginPage'));
+const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
+const MainView          = lazy(() => import('../pages/MainView/MainView'));
+const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
 const NutritionistsPage = lazy(() => import('../pages/AdminDashboard/NutritionistsPage'));
 
 function PageLoader() {
@@ -26,13 +24,25 @@ function PageLoader() {
 }
 
 // Wrappers de navegación
-// Conecta los props onLogin/onGoToRegister con React Router.
-
 function LoginWrapper() {
   const navigate = useNavigate();
+
+  // Nueva lógica: Recibe el rol y decide a dónde enviar al usuario
+  const handleSuccessfulLogin = (role) => {
+    if (role === 'admin') {
+      navigate(ROUTES.ADMIN);
+    } else if (role === 'nutritionist' || role === 'patient') { 
+      // Nota: Agregué 'patient' basado en tu primer mensaje, 
+      // ajusta esto según cómo se llame el rol en tu base de datos final.
+      navigate(ROUTES.DASHBOARD);
+    } else {
+      navigate(ROUTES.LOGIN);
+    }
+  };
+
   return (
     <LoginPage
-      onLogin={() => navigate(ROUTES.DASHBOARD)}
+      onLogin={handleSuccessfulLogin}
       onGoToRegister={() => navigate(ROUTES.REGISTER)}
     />
   );
@@ -55,51 +65,31 @@ export function AppRouter() {
         <Routes>
 
           {/* ── Rutas públicas ── */}
-          <Route
-            path={ROUTES.LOGIN}
-            element={
-              <PublicRoute>
-                <LoginWrapper />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path={ROUTES.REGISTER}
-            element={
-              <PublicRoute>
-                <RegisterWrapper />
-              </PublicRoute>
-            }
-          />
+          <Route path={ROUTES.LOGIN} element={
+            <PublicRoute>
+              <LoginWrapper />
+            </PublicRoute>
+          } />
+          
+          <Route path={ROUTES.REGISTER} element={
+            <PublicRoute>
+              <RegisterWrapper />
+            </PublicRoute>
+          } />
 
-          {/* ── Rutas nutricionista ── */}
-          <Route
-            path={ROUTES.DASHBOARD}
-            element={
-              <PrivateRoute allowedRoles={['nutritionist']}>
-                <MainView />
-              </PrivateRoute>
-            }
-          />
+          {/* ── Rutas protegidas (Nested Routes) ── */}
+          
+          {/* Dashboard (Nutricionistas / Pacientes) */}
+          <Route element={<PrivateRoute allowedRoles={['nutritionist', 'patient']} />}>
+            <Route path={ROUTES.DASHBOARD} element={<MainView />} />
+            {/* Si agregas más vistas para este rol, simplemente ponlas aquí abajo */}
+          </Route>
 
-          {/* ── Rutas admin ── */}
-          <Route
-            path={ROUTES.ADMIN}
-            element={
-              <PrivateRoute allowedRoles={['admin']}>
-                <AdminDashboard />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path={ROUTES.ADMIN_NUTRITIONISTS}
-            element={
-              <PrivateRoute allowedRoles={['admin']}>
-                <NutritionistsPage />
-              </PrivateRoute>
-            }
-          />
+          {/* Administrador */}
+          <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+            <Route path={ROUTES.ADMIN} element={<AdminDashboard />} />
+            <Route path={ROUTES.ADMIN_NUTRITIONISTS} element={<NutritionistsPage />} />
+          </Route>
 
           {/* Cualquier ruta desconocida → login */}
           <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
