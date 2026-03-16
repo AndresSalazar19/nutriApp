@@ -4,17 +4,12 @@ from app.api.v1.router import router as v1_router
 
 app = FastAPI(title="NutrIA API")
 
-origins = [
-    "http://localhost:5173",  
-    "http://localhost:3000",  
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  
+    allow_credentials=False,  
+    allow_methods=["*"],   
+    allow_headers=["*"],  
 )
 
 app.include_router(v1_router, prefix="/api/v1")
