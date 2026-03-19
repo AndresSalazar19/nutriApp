@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dimensions,
   ScrollView,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
+import { BottomTabBar } from '@/components/ui/BottomTabBar';
 
 const { width } = Dimensions.get('window');
 
@@ -66,26 +67,7 @@ function ActionCard({
   );
 }
 
-// ─── Bottom Tab ───────────────────────────────────────────────────────────────
-function TabItem({
-  emoji,
-  label,
-  active,
-}: {
-  emoji: string;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <TouchableOpacity style={styles.tabItem} activeOpacity={0.7}>
-      <Text style={[styles.tabEmoji, active && styles.tabEmojiActive]}>{emoji}</Text>
-      <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
 export default function HomeScreen() {
-  const [activeTab, setActiveTab] = useState('inicio');
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -193,12 +175,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* ── Bottom Tab Bar ── */}
-      <View style={styles.tabBar}>
-        <TabItem emoji="🏠" label="Inicio" active />
-        <TabItem emoji="🍽️" label="Comidas" />
-        <TabItem emoji="📈" label="Progreso" />
-        <TabItem emoji="👤" label="Perfil" />
-      </View>
+      <BottomTabBar activeTab="inicio" />
     </SafeAreaView>
   );
 }
@@ -483,35 +460,4 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  // ── Tab Bar ──
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingVertical: 10,
-    paddingBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-  },
-  tabEmoji: { fontSize: 22, opacity: 0.4 },
-  tabEmojiActive: { opacity: 1 },
-  tabLabel: {
-    fontSize: 11,
-    color: '#aaa',
-    fontWeight: '500',
-  },
-  tabLabelActive: {
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
 });

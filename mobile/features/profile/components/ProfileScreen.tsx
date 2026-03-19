@@ -1,0 +1,342 @@
+import React, { useMemo } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { COLORS } from '@/constants/colors';
+import { BottomTabBar } from '@/components/ui/BottomTabBar';
+import { EditFieldModal, EditFieldType } from '@/components/ui/EditFieldModal';
+import { InfoRow } from './InfoRow';
+import { AvatarPicker } from './AvatarPicker';
+import { useProfileForm } from '../hooks/useProfileForm';
+import {
+  formatPhoneInput,
+  validatePhoneInput,
+  formatDateInput,
+  validateDateInput,
+  validateHeightInput,
+} from '../utils/validations';
+
+// ─── Field config ─────────────────────────────────────────────────────────────
+// Each entry describes how to display and validate a single editable field.
+// prefix/suffix are shown in the modal and stripped/appended when storing.
+
+interface FieldConfig {
+  title: string;
+  type: EditFieldType;
+  options?: string[];
+  placeholder?: string;
+  hint?: string;
+  /** Shown left of the TextInput; prepended to stored value */
+  prefix?: string;
+  /** Shown right of the TextInput; appended to stored value */
+  suffix?: string;
+  maxLength?: number;
+  onChangeFormat?: (text: string) => string;
+  validate?: (value: string) => string | null;
+}
+
+const FIELD_CONFIG: Record<string, FieldConfig> = {
+  // ── Personal ──
+  phone: {
+    title: 'Teléfono',
+    type: 'phone',
+    prefix: '+593 ',
+    placeholder: 'XXX XXX XXX',
+    maxLength: 11, // "XXX XXX XXX"
+    onChangeFormat: formatPhoneInput,
+    validate: validatePhoneInput,
+  },
+  birthDate: {
+    title: 'Fecha de Nacimiento',
+    type: 'date',
+    placeholder: 'DD/MM/AAAA',
+    maxLength: 10, // "DD/MM/AAAA"
+    onChangeFormat: formatDateInput,
+    validate: validateDateInput,
+  },
+  height: {
+    title: 'Altura',
+    type: 'numeric',
+    suffix: ' cm',
+    placeholder: '175',
+    maxLength: 3,
+    hint: 'Ingresa solo el número en centímetros',
+    validate: validateHeightInput,
+  },
+  gender: {
+    title: 'Género',
+    type: 'select',
+    options: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decirlo'],
+  },
+  // ── Health ──
+  medicalCondition: {
+    title: 'Condición Médica',
+    type: 'text',
+    placeholder: 'Ej: Hipertensión, Diabetes...',
+  },
+  allergies: {
+    title: 'Alergias',
+    type: 'text',
+    placeholder: 'Ej: Lactosa, Gluten... o Ninguna',
+  },
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function SectionTitle({ title }: { title: string }) {
+  return <Text style={styles.sectionTitle}>{title}</Text>;
+}
+
+function Separator() {
+  return <View style={styles.separator} />;
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+export default function ProfileScreen() {
+  const {
+    profile,
+    imageUri,
+    setImageUri,
+    activeModal,
+    activeValue,
+    openModal,
+    closeModal,
+    saveField,
+  } = useProfileForm();
+
+  const { personalInfo: pi, healthInfo: hi } = profile;
+
+  // ── Strip prefix/suffix from stored value for the input ───────────────────
+  const inputValue = useMemo(() => {
+    if (!activeModal) return '';
+    const config = FIELD_CONFIG[activeModal.field];
+    let val = activeValue;
+    if (config?.prefix && val.startsWith(config.prefix)) {
+      val = val.slice(config.prefix.length);
+    }
+    if (config?.suffix && val.endsWith(config.suffix)) {
+      val = val.slice(0, -config.suffix.length);
+    }
+    return val;
+  }, [activeModal, activeValue]);
+
+  // ── Re-attach prefix/suffix before storing ────────────────────────────────
+  function handleSave(value: string) {
+    const config = activeModal ? FIELD_CONFIG[activeModal.field] : null;
+    const stored = `${config?.prefix ?? ''}${value}${config?.suffix ?? ''}`;
+    saveField(stored);
+  }
+
+  const modalConfig = activeModal ? FIELD_CONFIG[activeModal.field] : null;
+
+  return (
+    <SafeAreaView style={styles.root} edges={['top']}>
+
+      {/* ── Header verde ── */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8} onPress={() => router.back()}>
+          <Text style={styles.headerBtnIcon}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Mi Perfil</Text>
+        <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8}>
+          <Text style={styles.headerBtnIcon}>📍</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── Avatar ── */}
+      <View style={styles.avatarSection}>
+        <AvatarPicker imageUri={imageUri} onImageSelected={setImageUri} />
+        <Text style={styles.userName}>{profile.name}</Text>
+        <Text style={styles.userEmail}>{profile.email}</Text>
+        <View style={styles.planBadge}>
+          <Text style={styles.planBadgeText}>✦ Plan {profile.plan}</Text>
+        </View>
+      </View>
+
+      {/* ── Contenido scrolleable ── */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Información Personal */}
+        <SectionTitle title="Información Personal" />
+        <View style={styles.card}>
+          <InfoRow
+            emoji="📱" label="Teléfono" value={pi.phone}
+            onPress={() => openModal('phone', 'personal')}
+          />
+          <Separator />
+          <InfoRow
+            emoji="🎂" label="Fecha de Nacimiento" value={pi.birthDate}
+            onPress={() => openModal('birthDate', 'personal')}
+          />
+          <Separator />
+          <InfoRow
+            emoji="📏" label="Altura" value={pi.height}
+            onPress={() => openModal('height', 'personal')}
+          />
+          <Separator />
+          <InfoRow
+            emoji="⚧️" label="Género" value={pi.gender}
+            onPress={() => openModal('gender', 'personal')}
+          />
+        </View>
+
+        {/* Información de Salud */}
+        <SectionTitle title="Información de Salud" />
+        <View style={styles.card}>
+          <InfoRow
+            emoji="❤️" label="Condición Médica" value={hi.medicalCondition}
+            onPress={() => openModal('medicalCondition', 'health')}
+          />
+          <Separator />
+          <InfoRow
+            emoji="⚠️" label="Alergias" value={hi.allergies}
+            onPress={() => openModal('allergies', 'health')}
+          />
+        </View>
+
+        {/* Mi Nutricionista */}
+        <SectionTitle title="Mi Nutricionista" />
+        <View style={[styles.card, styles.doctorCard]}>
+          <View style={styles.doctorIconWrap}>
+            <Text style={styles.doctorEmoji}>🩺</Text>
+          </View>
+          <View style={styles.doctorInfo}>
+            <Text style={styles.doctorName}>{profile.nutritionist.name}</Text>
+            <Text style={styles.doctorSpecialty}>{profile.nutritionist.specialty}</Text>
+          </View>
+          <TouchableOpacity style={styles.contactBtn} activeOpacity={0.8}>
+            <Text style={styles.contactBtnText}>Contactar</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ height: 24 }} />
+      </ScrollView>
+
+      {/* ── Edit Field Modal ── */}
+      {modalConfig && (
+        <EditFieldModal
+          visible={activeModal !== null}
+          title={modalConfig.title}
+          value={inputValue}
+          type={modalConfig.type}
+          options={modalConfig.options ? [...modalConfig.options] : []}
+          placeholder={modalConfig.placeholder}
+          hint={modalConfig.hint}
+          prefix={modalConfig.prefix}
+          suffix={modalConfig.suffix}
+          maxLength={modalConfig.maxLength}
+          onChangeFormat={modalConfig.onChangeFormat}
+          validate={modalConfig.validate}
+          onSave={handleSave}
+          onClose={closeModal}
+        />
+      )}
+
+      {/* ── Bottom Tab Bar ── */}
+      <BottomTabBar activeTab="perfil" />
+
+    </SafeAreaView>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#f5f6fa' },
+
+  header: {
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 52,
+  },
+  headerBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerBtnIcon: { fontSize: 16, color: '#fff', fontWeight: '700' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: '#fff' },
+
+  avatarSection: {
+    alignItems: 'center',
+    marginTop: -36,
+    paddingBottom: 20,
+    backgroundColor: COLORS.primary,
+  },
+  userName: { fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
+  userEmail: { fontSize: 13, color: 'rgba(255,255,255,0.85)', marginBottom: 10 },
+  planBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  planBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 20 },
+
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#1a1a2e',
+    marginBottom: 10,
+    marginTop: 4,
+  },
+
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  separator: { height: 1, backgroundColor: '#f5f6fa', marginHorizontal: 16 },
+
+  doctorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  doctorIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  doctorEmoji: { fontSize: 26 },
+  doctorInfo: { flex: 1 },
+  doctorName: { fontSize: 14, fontWeight: '700', color: '#222', marginBottom: 2 },
+  doctorSpecialty: { fontSize: 12, color: '#888' },
+  contactBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  contactBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+});
