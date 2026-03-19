@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { COLORS } from '@/constants/colors';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function RegisterScreen() {
 
   const handleRegister = () => {
     // Aquí irá la lógica de registro real
-    router.replace('/(tabs)');
+    router.replace('/(onboarding)/health');
   };
 
   return (
@@ -191,12 +192,12 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#4caf50',
+    backgroundColor: COLORS.primary,
   },
 
   // ── Top ──
   topPanel: {
-    backgroundColor: '#4caf50',
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     paddingTop: 20,
     paddingBottom: 36,
@@ -304,12 +305,12 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 5,
     borderWidth: 2,
-    borderColor: '#4caf50',
+    borderColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxActive: {
-    backgroundColor: '#4caf50',
+    backgroundColor: COLORS.primary,
   },
   checkmark: {
     color: '#fff',
@@ -322,16 +323,16 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   checkLink: {
-    color: '#4caf50',
+    color: COLORS.primary,
     fontWeight: '600',
   },
   btnPrimary: {
-    backgroundColor: '#4caf50',
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 50,
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#4caf50',
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -348,7 +349,9 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   loginLink: {
-    color: '#4caf50',
+    color: COLORS.primary,
     fontWeight: 'bold',
   },
 });
+
+

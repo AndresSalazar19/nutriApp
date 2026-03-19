@@ -10,6 +10,7 @@ class NutritionistStatus(str, enum.Enum):
     pending = "pending"
     verified = "verified"
     rejected = "rejected"
+    suspended = "suspended"
 
 
 class DocumentType(str, enum.Enum):

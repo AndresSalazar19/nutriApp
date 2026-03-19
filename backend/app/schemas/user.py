@@ -21,11 +21,12 @@ class PersonResponse(BaseModel):
     date_of_birth: date | None = None
     phone: str | None = None
     avatar_url: str | None = None
+    cedula: str | None = None
+    gender : str | None = None
 
     class Config:
         from_attributes = True
-
-
+        
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: EmailStr
@@ -36,3 +37,7 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ChangePasswordRequest(BaseModel):
+    email: str
+    new_password: str
