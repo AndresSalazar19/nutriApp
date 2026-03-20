@@ -5,12 +5,17 @@ import { ROUTES } from './routes';
 import { PublicRoute } from './PublicRoute';
 import { PrivateRoute } from './PrivateRoute';
 
-// Lazy loading
+
 const LoginPage         = lazy(() => import('../pages/Login/LoginPage'));
 const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
+//NUTRIONIST
 const MainView          = lazy(() => import('../pages/MainView/MainView'));
+
+//ADMIN
 const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
 const NutritionistsPage = lazy(() => import('../pages/AdminDashboard/NutritionistsPage'));
+const ContentPage       = lazy(() => import('../pages/AdminDashboard/ContentPage'));
+const ClientPage        = lazy(() => import('../pages/AdminDashboard/ClientPage'));
 
 function PageLoader() {
   return (
@@ -89,6 +94,8 @@ export function AppRouter() {
           <Route element={<PrivateRoute allowedRoles={['admin']} />}>
             <Route path={ROUTES.ADMIN} element={<AdminDashboard />} />
             <Route path={ROUTES.ADMIN_NUTRITIONISTS} element={<NutritionistsPage />} />
+            <Route path={ROUTES.ADMIN_CONTENT} element={<ContentPage />} />
+            <Route path={ROUTES.ADMIN_CLIENTS} element={<ClientPage />} />
           </Route>
 
           {/* Cualquier ruta desconocida → login */}
