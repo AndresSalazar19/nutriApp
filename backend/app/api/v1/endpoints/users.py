@@ -63,3 +63,28 @@ def change_password(obj: ChangePasswordRequest, db: Session = Depends(get_db)):
 
     resp = success_response(data={"message": "Contraseña actualizada correctamente"})
     return JSONResponse(status_code=200, content=resp.model_dump())
+
+@router.delete("/{user_id}", response_model=None)
+def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user = UserService.get_by_id(db, user_id)
+
+    if not user:
+        resp = error_response(["Usuario no encontrado"], status_code=404)
+        return JSONResponse(status_code=404, content=resp.model_dump())
+
+    UserService.delete(db, user)
+
+    resp = success_response(data={"message": "Usuario eliminado correctamente"})
+    return JSONResponse(status_code=200, content=resp.model_dump())
+
+
+@router.get("/{user_id}/is-admin", response_model=None)
+def check_is_admin(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    user = UserService.get_by_id(db, user_id)
+
+    if not user:
+        resp = error_response(["Usuario no encontrado"], status_code=404)
+        return JSONResponse(status_code=404, content=resp.model_dump())
+
+    resp = success_response(data={"is_admin": UserService.is_admin(user)})
+    return JSONResponse(status_code=200, content=resp.model_dump())

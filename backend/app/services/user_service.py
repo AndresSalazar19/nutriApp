@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
-from app.db.models.user import User, Person
+from app.db.models.user import User, Person, UserRole
 from app.schemas.user import UserCreate, UserResponse
 import uuid
 from passlib.context import CryptContext
+from fastapi import HTTPException
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -74,3 +75,12 @@ class UserService:
         db.refresh(user)
 
         return user
+        
+    @staticmethod
+    def is_admin(user: User) -> bool:
+        return user.role == UserRole.admin
+
+    @staticmethod
+    def delete(db: Session, user: User) -> None:
+        db.delete(user)
+        db.commit()
