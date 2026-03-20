@@ -4,15 +4,8 @@ import { PersonalInfoStep } from './PersonalInfoStep';
 import { ProfessionalInfoStep } from './ProfessionalInfoStep';
 import { SecurityStep } from './SecurityStep';
 import { useFormValidation } from './useFormValidation';
+import { RegistrerServices } from '../../services/Registrer/RegisterServices';
 
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
-  });
-};
 
 function RegisterPage({ onGoToLogin }: RegisterPageProps) {
   const [step, setStep] = useState(1);
@@ -71,43 +64,28 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
     setIsSubmitting(true);
 
     try {
-      const cvBase64 = cvFile ? await fileToBase64(cvFile) : null;
-      const senescytBase64 = senescytFile ? await fileToBase64(senescytFile) : null;
+      // Separar fullName en first_name + last_name (el backend los requiere por separado)
+      const nameParts = form.fullName.trim().split(/\s+/);
+      const first_name = nameParts[0] ?? '';
+      const last_name = nameParts.slice(1).join(' ') || first_name; // fallback si solo hay un nombre
 
-      const registrationPayload = {
-        personalInfo: {
-          fullName: form.fullName,
-          cedula: form.cedula,
-          birthDate: form.birthDate,
-          gender: form.gender,
-          phone: form.phone,
-        },
-        professionalInfo: {
-          specialties: form.specialties,
-          yearsExperience: Number(form.yearsExperience),
-          documents: {
-            cv: cvBase64,
-            senescyt: senescytBase64
-          }
-        },
-        security: {
-          email: form.email,
-          password: form.password,
-        },
-        metadata: {
-          acceptedTerms: acceptTerms,
-          registeredAt: new Date().toISOString()
-        }
-      };
+      // Enviar solo los campos que el backend espera
+      const response = await RegistrerServices.crearUsuario({
+        email: form.email,
+        password: form.password,
+        first_name,
+        last_name,
+        date_of_birth: form.birthDate, // HTML date input retorna YYYY-MM-DD (formato correcto)
+      });
 
-      console.log('📦 Objeto JSON puro listo para enviar a la API:', registrationPayload);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      alert('¡Registro exitoso revisa la consola!');
+      console.log('✅ Usuario creado exitosamente:', response.data);
+      alert(`¡Registro exitoso! Bienvenido ${response.data.person.first_name} ${response.data.person.last_name}`);
       onGoToLogin();
 
     } catch (error) {
-      console.error('❌ Error procesando el registro:', error);
-      alert('Ocurrió un error al procesar los archivos. Intenta de nuevo.');
+      console.error('❌ Error al registrar usuario:', error);
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`No se pudo completar el registro: ${message}`);
     } finally {
       setIsSubmitting(false);
     }

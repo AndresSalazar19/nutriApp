@@ -9,7 +9,6 @@ import uuid
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-
 @router.post("/", response_model=None)
 def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     if UserService.email_exists(db, user_data.email):

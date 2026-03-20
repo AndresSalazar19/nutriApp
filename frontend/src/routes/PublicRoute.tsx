@@ -1,6 +1,4 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { ROUTES } from './routes';
 import { useAuth } from '../hooks/useAuth';
 
 interface PublicRouteProps {
@@ -8,7 +6,7 @@ interface PublicRouteProps {
 }
 
 export function PublicRoute({ children }: PublicRouteProps) {
-  const { isAuthenticated, role } = useAuth();
+  useAuth();
 
   // Si ya está autenticado, redirige según su rol
   // if (isAuthenticated) {

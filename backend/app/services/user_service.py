@@ -54,6 +54,10 @@ class UserService:
         return user
 
     @staticmethod
+    def get_all(db: Session):
+        return db.query(User).all()
+
+    @staticmethod
     def authenticate(db: Session, email: str, password: str):
         user_db = db.query(User).filter(User.email == email).first()
 

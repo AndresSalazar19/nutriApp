@@ -100,7 +100,7 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
           className="accent-green-500 w-4 h-4 cursor-pointer"
         />
         <label htmlFor="terms" className="text-xs text-gray-500 cursor-pointer">
-          Acepto los <a href="#" className="text-green-600 font-semibold hover:underline">Términos de Servicio</a> y <a href="#" className="text-green-600 font-semibold hover:underline">Política de Privacidad</a>
+          Acepto los <button type="button" className="text-green-600 font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer">Términos de Servicio</button> y <button type="button" className="text-green-600 font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer">Política de Privacidad</button>
         </label>
       </div>
       {errors.acceptTerms && (

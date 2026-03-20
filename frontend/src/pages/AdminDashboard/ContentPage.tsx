@@ -3,7 +3,6 @@ import { AdminLayout }  from '../../components/layout/AdminLayout';
 import { AdminTopBar }  from '../../components/layout/AdminTopBar';
 import { SearchInput }  from '../../components/ui/SearchInput';
 import { FilterTabs }   from '../../components/ui/FilterTabs';
-import { Button }       from '../../components/ui/Button';
 import { EmptyState }   from '../../components/ui/EmptyState';
 import { ArticleCard, Article } from '../../components/ui/Articlecard';
 

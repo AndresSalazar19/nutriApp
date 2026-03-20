@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { AdminLayout } from '../../components/layout/AdminLayout';
 import { Badge } from '../../components/ui/Badge';
 
 const cardIcons = {

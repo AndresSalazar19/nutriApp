@@ -87,7 +87,7 @@ export const ProfessionalInfoStep: React.FC<ProfessionalStepProps> = ({
         <label className="block text-xs font-semibold text-gray-600 mb-1">
           Especialidades <span className="text-red-500">*</span>
         </label>
-
+ 
         <select
           className={`w-full border rounded-lg px-3 py-2.5 text-sm ${errors.specialties ? 'border-red-400' : 'border-gray-200'}`}
           value={form.specialties || ""}
@@ -100,7 +100,7 @@ export const ProfessionalInfoStep: React.FC<ProfessionalStepProps> = ({
             </option>
           ))}
         </select>
-
+ 
         {errors.specialties && (
           <p className="text-xs text-red-500 mt-1">{errors.specialties}</p>
         )}
