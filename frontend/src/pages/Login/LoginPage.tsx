@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { RegistrerServices } from '../../services/Login/LoginServices';
 
 interface LoginPageProps {
-  onLogin: () => void;
+  onLogin: (role: string) => void;
   onGoToRegister: () => void;
 }
 
@@ -9,10 +10,47 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (onLogin) onLogin();
+    
+    if (!email || !password) {
+      setErrorMsg('Por favor, ingresa correo y contraseña.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg('');
+
+    try {
+      // Usamos el servicio que acabamos de crear y tipar
+      const result = await RegistrerServices.iniciarSesion(email, password);
+
+      // Validamos la respuesta usando la estructura de tu ApiResponse
+      if (result.status?.isSuccessfully && result.statusCode === 200) {
+        
+        // Gracias a la interfaz, TypeScript sabe que result.data tiene la propiedad role
+        const userRole = result.data.role;
+        
+        // Aquí debes guardar el token/estado de sesión en tu app 
+        // (idealmente a través de tu hook useAuth o Context API)
+        
+        // Redirigimos al usuario según su rol
+        if (onLogin) onLogin(userRole);
+        
+      } else {
+        // Si la API responde con un 200 pero isSuccessfully es false, o si es un 400/500
+        setErrorMsg('Credenciales inválidas o error en el servidor.');
+      }
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      setErrorMsg('Error de conexión. Verifica tu internet o inténtalo de nuevo más tarde.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -63,6 +101,13 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
           <h2 className="text-3xl font-bold text-green-900 mb-1">Iniciar Sesión</h2>
           <p className="text-gray-400 text-sm mb-7">Ingresa a tu panel profesional</p>
 
+          {/* Mostrar mensaje de error si existe */}
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm text-center">
+              {errorMsg}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
@@ -75,6 +120,7 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-green-500 transition"
+                disabled={isLoading}
               />
             </div>
 
@@ -90,11 +136,13 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 pr-12 text-sm focus:outline-none focus:border-green-500 transition"
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  disabled={isLoading}
                 >
                   {showPassword ? '🙈' : '👁️'}
                 </button>
@@ -104,7 +152,7 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
             {/* Opciones */}
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                <input type="checkbox" className="accent-green-500" />
+                <input type="checkbox" className="accent-green-500" disabled={isLoading} />
                 Recordarme
               </label>
               <a href="/forgot-password" className="text-green-600 text-sm hover:underline">
@@ -115,9 +163,16 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
             {/* Botón submit */}
             <button
               type="submit"
-              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition text-sm"
+              disabled={isLoading}
+              className={`w-full text-white font-bold py-3 rounded-lg transition text-sm flex justify-center items-center ${
+                isLoading ? 'bg-green-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'
+              }`}
             >
-              Ingresar
+              {isLoading ? (
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              ) : (
+                'Ingresar'
+              )}
             </button>
           </form>
 
@@ -128,6 +183,7 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
               type="button"
               onClick={onGoToRegister}
               className="text-green-600 font-bold hover:underline bg-transparent border-none cursor-pointer"
+              disabled={isLoading}
             >
               Regístrate
             </button>
