@@ -18,4 +18,7 @@ class NutritionistProfileResponse(BaseModel):
 
     class Config:
         from_attributes = True
-        
+
+class NutritionistStatusUpdate(BaseModel):
+    status: str
+    verified_by: uuid.UUID 
