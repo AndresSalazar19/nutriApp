@@ -58,8 +58,11 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
       navigate(ROUTES.ADMIN_NUTRITIONISTS);
     } else if (label === 'Panel Principal') {
       navigate(ROUTES.ADMIN);
+    } else if (label === 'Clientes') {
+      navigate(ROUTES.ADMIN_CLIENTS);
+    } else if (label === 'Contenido') {
+      navigate(ROUTES.ADMIN_CONTENT);
     }
-    // Siempre notificamos al padre del cambio para actualizar el estado visual (activeNav)
     onNavChange(label);
   };
 

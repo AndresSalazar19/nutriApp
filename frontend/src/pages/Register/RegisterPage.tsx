@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
-import { FormState, RegisterPageProps } from './types';
+import { FormState, FormErrors, RegisterPageProps } from './types';
 import { PersonalInfoStep } from './PersonalInfoStep';
 import { ProfessionalInfoStep } from './ProfessionalInfoStep';
 import { SecurityStep } from './SecurityStep';
+import { useFormValidation } from './useFormValidation';
+import { RegistrerServices } from '../../services/Registrer/RegisterServices';
 
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
-  });
-};
 
 function RegisterPage({ onGoToLogin }: RegisterPageProps) {
   const [step, setStep] = useState(1);
@@ -19,6 +13,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [senescytFile, setSenescytFile] = useState<File | null>(null);
+  const [touched, setTouched] = useState<Set<keyof FormState>>(new Set());
   const [form, setForm] = useState<FormState>({
     fullName: '',
     cedula: '',
@@ -32,67 +27,65 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
     confirmPassword: '',
   });
 
-  // Función para actualizar cualquier campo de texto
-  const update = (field: keyof FormState, value: string) =>
+  const { errors, isStepValid } = useFormValidation(form, step, acceptTerms, cvFile, senescytFile)
+
+  // Marks field as touched and updates state
+  const update = (field: keyof FormState, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
+    setTouched(prev => {
+      const next = new Set(prev);
+      next.add(field);
+      return next;
+    });
+  };
 
-  // Navegación entre pasos
-  const nextStep = () => setStep(prev => Math.min(prev + 1, 3));
-  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
+  // Only pass errors for fields the user has already interacted with
+  const displayErrors: FormErrors = Object.fromEntries(
+    Object.entries(errors).filter(([field]) => touched.has(field as keyof FormState))
+  );
 
-  // Manejo asíncrono del envío del formulario
+  const nextStep = () => {
+    setTouched(new Set());
+    setStep(prev => Math.min(prev + 1, 3));
+  };
+  const prevStep = () => {
+    setTouched(new Set());
+    setStep(prev => Math.max(prev - 1, 1));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Si no estamos en el último paso, solo avanzamos
     if (step < 3) {
       nextStep();
       return;
     }
 
-    // Iniciamos el estado de carga
     setIsSubmitting(true);
 
     try {
-      // 1. Convertimos los archivos a Base64 si existen
-      const cvBase64 = cvFile ? await fileToBase64(cvFile) : null;
-      const senescytBase64 = senescytFile ? await fileToBase64(senescytFile) : null;
+      // Separar fullName en first_name + last_name (el backend los requiere por separado)
+      const nameParts = form.fullName.trim().split(/\s+/);
+      const first_name = nameParts[0] ?? '';
+      const last_name = nameParts.slice(1).join(' ') || first_name; // fallback si solo hay un nombre
 
-      // 2. Construimos el payload estructurado
-      const registrationPayload = {
-        personalInfo: {
-          fullName: form.fullName,
-          cedula: form.cedula,
-          birthDate: form.birthDate,
-          gender: form.gender,
-          phone: form.phone,
-        },
-        professionalInfo: {
-          specialties: form.specialties,
-          yearsExperience: Number(form.yearsExperience),
-          documents: {
-            cv: cvBase64,
-            senescyt: senescytBase64
-          }
-        },
-        security: {
-          email: form.email,
-          password: form.password,
-        },
-        metadata: {
-          acceptedTerms: acceptTerms,
-          registeredAt: new Date().toISOString()
-        }
-      };
+      // Enviar solo los campos que el backend espera
+      const response = await RegistrerServices.crearUsuario({
+        email: form.email,
+        password: form.password,
+        first_name,
+        last_name,
+        date_of_birth: form.birthDate, // HTML date input retorna YYYY-MM-DD (formato correcto)
+      });
 
-      console.log('📦 Objeto JSON puro listo para enviar a la API:', registrationPayload);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      alert('¡Registro exitoso revisa la consola!');
+      console.log('✅ Usuario creado exitosamente:', response.data);
+      alert(`¡Registro exitoso! Bienvenido ${response.data.person.first_name} ${response.data.person.last_name}`);
       onGoToLogin();
 
     } catch (error) {
-      console.error('❌ Error procesando el registro:', error);
-      alert('Ocurrió un error al procesar los archivos. Intenta de nuevo.');
+      console.error('❌ Error al registrar usuario:', error);
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`No se pudo completar el registro: ${message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -138,9 +131,8 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
         {/* Formulario */}
         <form onSubmit={handleSubmit}>
 
-          {/* Renderizado de Componentes por Paso */}
           {step === 1 && (
-            <PersonalInfoStep form={form} update={update} />
+            <PersonalInfoStep form={form} update={update} errors={displayErrors} />
           )}
 
           {step === 2 && (
@@ -151,6 +143,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
               setCvFile={setCvFile}
               senescytFile={senescytFile}
               setSenescytFile={setSenescytFile}
+              errors={displayErrors}
             />
           )}
 
@@ -160,6 +153,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
               update={update}
               acceptTerms={acceptTerms}
               setAcceptTerms={setAcceptTerms}
+              errors={displayErrors}
             />
           )}
 
@@ -177,7 +171,7 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
             )}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isStepValid}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-xl transition text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
             >
               {isSubmitting

@@ -1,0 +1,134 @@
+import { useMemo } from 'react';
+import { FormState, FormErrors } from './types';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getToday(): string {
+  const now = new Date();
+  const ecuadorOffset = -5 * 60;
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const ecuadorDate = new Date(utc + ecuadorOffset * 60000);
+  const yyyy = ecuadorDate.getFullYear();
+  const mm = String(ecuadorDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(ecuadorDate.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function isStrongPassword(password: string): boolean {
+  return (
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  );
+}
+
+function validateStep1(form: FormState): FormErrors {
+  const errors: FormErrors = {};
+  const today = getToday();
+
+  if (!form.fullName.trim()) {
+    errors.fullName = 'El nombre completo es requerido.';
+  }
+
+  const cedulaRegex = /^(0[1-9]|[1-2][0-9]|30)\d{8}$/;
+  if (!form.cedula) {
+    errors.cedula = 'La cédula es requerida.';
+  } else if (!cedulaRegex.test(form.cedula)) {
+    errors.cedula = 'La cédula no tiene un formato válido o el código de provincia es incorrecto.';
+  }
+
+  if (!form.birthDate) {
+    errors.birthDate = 'La fecha de nacimiento es requerida.';
+  } else if (form.birthDate > today) {
+    errors.birthDate = 'La fecha no puede ser mayor al día actual.';
+  }
+
+  if (!form.phone) {
+    errors.phone = 'El teléfono es requerido.';
+  } else if (!/^09\d{8}$/.test(form.phone)) {
+    errors.phone = 'El teléfono debe tener exactamente 10 dígitos numéricos.';
+  }
+
+  return errors;
+}
+
+function validateStep2(form: FormState, cvFile: File | null, senescytFile: File | null): FormErrors {
+  const errors: FormErrors = {};
+
+  if (!form.specialties) {
+    errors.specialties = 'Debes seleccionar una especialidad.';
+  }
+
+  if (!form.yearsExperience || form.yearsExperience.trim() === '') {
+    errors.yearsExperience = 'Los años de experiencia son requeridos.';
+  } else if (Number(form.yearsExperience) < 0) {
+    errors.yearsExperience = 'Los años de experiencia no pueden ser negativos.';
+  }
+
+  if (!cvFile) {
+    errors.cvFile = 'El Curriculum Vitae es requerido.';
+  } else if (cvFile.type !== 'application/pdf' && !cvFile.name.toLowerCase().endsWith('.pdf')) {
+    errors.cvFile = 'El Curriculum Vitae debe ser un archivo PDF.';
+  }
+
+  if (!senescytFile) {
+    errors.senescytFile = 'El Registro Senescyt es requerido.';
+  } else {
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    const name = senescytFile.name.toLowerCase();
+    const validExt = name.endsWith('.pdf') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png');
+    if (!validTypes.includes(senescytFile.type) && !validExt) {
+      errors.senescytFile = 'El Registro Senescyt debe ser PDF, JPG o PNG.';
+    }
+  }
+
+  return errors;
+}
+
+function validateStep3(form: FormState, acceptTerms: boolean): FormErrors {
+  const errors: FormErrors = {};
+
+  if (!form.email.trim()) {
+    errors.email = 'El correo electrónico es requerido.';
+  } else if (!EMAIL_REGEX.test(form.email)) {
+    errors.email = 'Ingresa un correo electrónico válido (ej: usuario@dominio.com).';
+  }
+
+  if (!form.password) {
+    errors.password = 'La contraseña es requerida.';
+  } else if (!isStrongPassword(form.password)) {
+    errors.password = 'La contraseña no cumple con los requisitos de seguridad.';
+  }
+
+  if (!form.confirmPassword) {
+    errors.confirmPassword = 'Debes confirmar tu contraseña.';
+  } else if (form.password !== form.confirmPassword) {
+    errors.confirmPassword = 'Las contraseñas no coinciden.';
+  }
+
+  if (!acceptTerms) {
+    errors.acceptTerms = 'Debes aceptar los Términos de Servicio y Política de Privacidad.';
+  }
+
+  return errors;
+}
+
+export function useFormValidation(
+  form: FormState,
+  step: number,
+  acceptTerms: boolean = false,
+  cvFile: File | null = null,
+  senescytFile: File | null = null,
+) {
+  const errors = useMemo(() => {
+    if (step === 1) return validateStep1(form);
+    if (step === 2) return validateStep2(form, cvFile, senescytFile);
+    if (step === 3) return validateStep3(form, acceptTerms);
+    return {} as FormErrors;
+  }, [form, step, acceptTerms, cvFile, senescytFile]);
+
+  const isStepValid = Object.keys(errors).length === 0;
+
+  return { errors, isStepValid };
+}

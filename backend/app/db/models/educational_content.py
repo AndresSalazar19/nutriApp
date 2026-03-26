@@ -1,0 +1,59 @@
+import enum
+import uuid
+from sqlalchemy import Column, String, Integer, Text, Boolean, ForeignKey, DateTime, ARRAY
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.sql import func
+from app.db.base import Base
+
+class ContentCategory(str, enum.Enum):
+    nutrition = "nutrition"
+    hypertension = "hypertension"
+    recipes = "recipes"
+    exercise = "exercise"
+    lifestyle = "lifestyle"
+    tips = "tips"
+
+class ContentType(str, enum.Enum):
+    article = "article"
+    video = "video"
+    infographic = "infographic"
+    recipe = "recipe"
+    tip = "tip"
+
+class EducationalContent(Base):
+    __tablename__ = "educational_content"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String(255), nullable=False)
+    body = Column(Text, nullable=False)
+    category = Column(SQLEnum(ContentCategory), nullable=False)
+    content_type = Column(SQLEnum(ContentType), nullable=False)
+    is_premium = Column(Boolean, default=False, nullable=False)
+    is_published = Column(Boolean, default=False, nullable=False)
+    is_approved = Column(Boolean, default=False, nullable=False)
+    view_count = Column(Integer, default=0)
+    tags = Column(ARRAY(String), nullable=True)
+    published_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    archived_at = Column(DateTime(timezone=True), nullable=True)
+    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    approved_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    author = relationship("User", foreign_keys=[author_id])
+    approver = relationship("User", foreign_keys=[approved_by])
+    media = relationship("ContentMedia", back_populates="content", cascade="all, delete-orphan")
+
+
+class ContentMedia(Base):
+    __tablename__ = "content_media"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    content_id = Column(UUID(as_uuid=True), ForeignKey("educational_content.id", ondelete="CASCADE"), nullable=False)
+    media_type = Column(String(50), nullable=False) 
+    media_url = Column(String(500), nullable=False)
+    thumbnail_url = Column(String(500), nullable=True)
+    duration = Column(Integer, nullable=True) 
+
+    content = relationship("EducationalContent", back_populates="media")
