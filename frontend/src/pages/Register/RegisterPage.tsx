@@ -7,7 +7,7 @@ import { useFormValidation } from './useFormValidation';
 import { RegistrerServices } from '../../services/Registrer/RegisterServices';
 
 
-function RegisterPage({ onGoToLogin }: RegisterPageProps) {
+function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -75,12 +75,21 @@ function RegisterPage({ onGoToLogin }: RegisterPageProps) {
         password: form.password,
         first_name,
         last_name,
-        date_of_birth: form.birthDate, // HTML date input retorna YYYY-MM-DD (formato correcto)
+        date_of_birth: form.birthDate,
+        role: 'nutritionist',
       });
 
-      console.log('✅ Usuario creado exitosamente:', response.data);
-      alert(`¡Registro exitoso! Bienvenido ${response.data.person.first_name} ${response.data.person.last_name}`);
-      onGoToLogin();
+      console.log('✅ Nutricionista registrado:', response.data);
+
+      if (onRegistered) {
+        onRegistered({
+          userId: response.data.id,
+          email: response.data.email,
+          role: response.data.role,
+        });
+      } else {
+        onGoToLogin();
+      }
 
     } catch (error) {
       console.error('❌ Error al registrar usuario:', error);

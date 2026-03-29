@@ -1,7 +1,6 @@
 import { ApiResponse } from "../../models/ApiResponse";
 import { LoginData } from "./LoginData";
-
-const API_URL = "http://147.93.176.210:8083/api/v1";
+import { API_URL } from "../../config/api";
 
 export const RegistrerServices = {
   async iniciarSesion(email: string, password: string): Promise<ApiResponse<LoginData>> {

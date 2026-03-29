@@ -1,9 +1,9 @@
 import React, { lazy, Suspense } from 'react';
-// Unificamos las importaciones de react-router-dom
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ROUTES } from './routes';
 import { PublicRoute } from './PublicRoute';
 import { PrivateRoute } from './PrivateRoute';
+import { useAuth, AuthUser } from '../hooks/useAuth';
 
 
 const LoginPage         = lazy(() => import('../pages/Login/LoginPage'));
@@ -28,26 +28,24 @@ function PageLoader() {
   );
 }
 
-// Wrappers de navegación
+// ── Wrappers de navegación ─────────────────────────────────
+
 function LoginWrapper() {
   const navigate = useNavigate();
+  const auth = useAuth();
 
-  // Nueva lógica: Recibe el rol y decide a dónde enviar al usuario
-  const handleSuccessfulLogin = (role) => {
-    if (role === 'admin') {
+  const handleLogin = (userData: { userId: string; email: string; role: string }) => {
+    auth.login(userData as AuthUser);
+    if (userData.role === 'admin') {
       navigate(ROUTES.ADMIN);
-    } else if (role === 'nutritionist' || role === 'patient') { 
-      // Nota: Agregué 'patient' basado en tu primer mensaje, 
-      // ajusta esto según cómo se llame el rol en tu base de datos final.
-      navigate(ROUTES.DASHBOARD);
     } else {
-      navigate(ROUTES.LOGIN);
+      navigate(ROUTES.DASHBOARD);
     }
   };
 
   return (
     <LoginPage
-      onLogin={handleSuccessfulLogin}
+      onLogin={handleLogin}
       onGoToRegister={() => navigate(ROUTES.REGISTER)}
     />
   );
@@ -55,9 +53,17 @@ function LoginWrapper() {
 
 function RegisterWrapper() {
   const navigate = useNavigate();
+  const auth = useAuth();
+
+  const handleRegistered = (userData: { userId: string; email: string; role: string }) => {
+    auth.login(userData as AuthUser);
+    navigate(ROUTES.DASHBOARD);
+  };
+
   return (
     <RegisterPage
       onGoToLogin={() => navigate(ROUTES.LOGIN)}
+      onRegistered={handleRegistered}
     />
   );
 }

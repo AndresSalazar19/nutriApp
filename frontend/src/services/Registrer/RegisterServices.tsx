@@ -1,7 +1,6 @@
 import { ApiResponse } from "../../models/ApiResponse";
 import { Especialidad } from "./Especialidad";
-
-const API_URL = "http://localhost:8000/api/v1";
+import { API_URL } from "../../config/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,12 +11,14 @@ export interface RegisterUserData {
   first_name: string;
   last_name: string;
   date_of_birth: string; // formato ISO: YYYY-MM-DD
+  role: 'patient' | 'nutritionist' | 'admin';
 }
 
 /** Shape del campo data en la respuesta de creación de usuario */
 export interface RegisteredUser {
   id: string;
   email: string;
+  role: string;
   person: {
     first_name: string;
     last_name: string;

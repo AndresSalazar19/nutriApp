@@ -1,45 +1,46 @@
 import { useState } from 'react';
 
-type Role = 'nutritionist' | 'admin' | null;
+export type Role = 'nutritionist' | 'admin' | 'patient' | null;
+
+export interface AuthUser {
+  userId: string;
+  email: string;
+  role: Role;
+}
 
 interface AuthState {
   isAuthenticated: boolean;
   role: Role;
-  login: (role: Role) => void;
+  user: AuthUser | null;
+  login: (user: AuthUser) => void;
   logout: () => void;
 }
 
-// ── MODO DESARROLLO ────────────────────────────────────────
-// Valores para probar diferentes flujos sin backend:
-//
-//   isAuthenticated: false  → siempre va al login
-//   isAuthenticated: true, role: 'nutritionist' → va al dashboard de nutricionista
-//   isAuthenticated: true, role: 'admin'        → va al panel admin
-//
-const DEV_AUTH = {
-  isAuthenticated: true,
-  role: "admin" as const,
-};
+const STORAGE_KEY = 'nutria_session';
+
+function readSession(): { isAuthenticated: boolean; role: Role; user: AuthUser | null } {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { isAuthenticated: false, role: null, user: null };
+    const user = JSON.parse(raw) as AuthUser;
+    return { isAuthenticated: true, role: user.role, user };
+  } catch {
+    return { isAuthenticated: false, role: null, user: null };
+  }
+}
 
 export function useAuth(): AuthState {
-  const [isAuthenticated, setIsAuthenticated] = useState(DEV_AUTH.isAuthenticated);
-  const [role, setRole] = useState<Role>(DEV_AUTH.role);
+  const [state, setState] = useState(readSession);
 
-  const login = (userRole: Role) => {
-    setIsAuthenticated(true);
-    setRole(userRole);
-    // TODO: guardar token en localStorage cuando tengas backend
-    // localStorage.setItem('token', token);
-    // localStorage.setItem('role', userRole);
+  const login = (userData: AuthUser) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+    setState({ isAuthenticated: true, role: userData.role, user: userData });
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
-    setRole(null);
-    // TODO: limpiar token cuando tengas backend
-    // localStorage.removeItem('token');
-    // localStorage.removeItem('role');
+    localStorage.removeItem(STORAGE_KEY);
+    setState({ isAuthenticated: false, role: null, user: null });
   };
 
-  return { isAuthenticated, role, login, logout };
+  return { ...state, login, logout };
 }

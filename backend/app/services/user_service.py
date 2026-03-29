@@ -34,7 +34,8 @@ class UserService:
     def create(db: Session, data: UserCreate) -> User:
         user = User(
             email=data.email,
-            password_hash=UserService.hash_password(data.password)
+            password_hash=UserService.hash_password(data.password),
+            role=data.role,
         )
 
         db.add(user)
@@ -52,10 +53,6 @@ class UserService:
         db.refresh(user)
 
         return user
-
-    @staticmethod
-    def get_all(db: Session):
-        return db.query(User).all()
 
     @staticmethod
     def authenticate(db: Session, email: str, password: str):
