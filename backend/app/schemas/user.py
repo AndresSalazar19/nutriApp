@@ -10,6 +10,7 @@ class UserCreate(BaseModel):
     first_name: str
     last_name: str
     date_of_birth: date | None = None
+    phone: str | None = None
     role: UserRole = UserRole.patient
 
 class UserRequest(BaseModel):
