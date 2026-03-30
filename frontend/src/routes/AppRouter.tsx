@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { ROUTES } from './routes';
 import { PublicRoute } from './PublicRoute';
 import { PrivateRoute } from './PrivateRoute';
+import { NutritionistStatusGuard } from './NutritionistStatusGuard';
 import { useAuth, AuthUser } from '../hooks/useAuth';
 
 
@@ -10,6 +11,7 @@ const LoginPage         = lazy(() => import('../pages/Login/LoginPage'));
 const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
 //NUTRIONIST
 const MainView          = lazy(() => import('../pages/MainView/MainView'));
+const HomePage          = lazy(() => import('../pages/MainView/HomePage'));
 
 //ADMIN
 const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
@@ -90,10 +92,12 @@ export function AppRouter() {
 
           {/* ── Rutas protegidas (Nested Routes) ── */}
           
-          {/* Dashboard (Nutricionistas / Pacientes) */}
-          <Route element={<PrivateRoute allowedRoles={['nutritionist', 'patient']} />}>
-            <Route path={ROUTES.DASHBOARD} element={<MainView />} />
-            {/* Si agregas más vistas para este rol, simplemente ponlas aquí abajo */}
+          {/* Dashboard (Nutricionistas) */}
+          <Route element={<PrivateRoute allowedRoles={['nutritionist']} />}>
+            <Route element={<NutritionistStatusGuard />}>
+              <Route path={ROUTES.DASHBOARD} element={<MainView />} />
+              <Route path={ROUTES.HOME}      element={<HomePage />} />
+            </Route>
           </Route>
 
           {/* Administrador */}

@@ -15,6 +15,19 @@ router = APIRouter(prefix="/nutritionists", tags=["nutritionists"])
 def get_nutritionists(db: Session = Depends(get_db)):
     return NutritionistService.get_all(db)
 
+
+@router.get("/status/{user_id}", response_model=None)
+def get_nutritionist_status(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Devuelve el estado del perfil del nutricionista según su user_id."""
+    profile = NutritionistService.get_by_user_id(db, user_id)
+    if not profile:
+        # Sin perfil aún → tratado como pendiente
+        resp = success_response(data={"status": "pending"})
+        return JSONResponse(status_code=200, content=resp.model_dump())
+
+    resp = success_response(data={"status": profile.status})
+    return JSONResponse(status_code=200, content=resp.model_dump())
+
 @router.patch("/{profile_id}/status", response_model=None)
 def update_nutritionist_status(
     profile_id: uuid.UUID,
