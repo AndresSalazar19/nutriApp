@@ -19,16 +19,19 @@ export function PrivateRoute({ allowedRoles }: PrivateRouteProps) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
-  // 2. Si hay sesión pero el rol no está en la lista de permitidos
-  if (allowedRoles && role && !allowedRoles.includes(role as Role)) {
-    // Redirigimos al usuario a su panel principal correspondiente
-    if (role === 'admin') {
+ if (allowedRoles && role && !allowedRoles.includes(role)) {
+  switch (role) {
+    case 'admin':
       return <Navigate to={ROUTES.ADMIN} replace />;
-    }
-    // Si es nutricionista o paciente, lo mandamos al dashboard general
-    return <Navigate to={ROUTES.DASHBOARD} replace />;
-  }
 
+    case 'nutritionist':
+      return <Navigate to={ROUTES.DASHBOARD} replace />;
+
+    default:
+      // fallback por si aparece otro rol
+      return <Navigate to={ROUTES.LOGIN} replace />;
+  }
+}
   // 3. Si pasa todas las validaciones, Outlet renderiza la ruta anidada
   return <Outlet />;
 }

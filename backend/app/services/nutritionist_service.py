@@ -17,6 +17,10 @@ class NutritionistService:
         return db.query(NutritionistProfile).filter(NutritionistProfile.status != "rejected" 
                                                     or NutritionistProfile.status != "suspended").all()
     @staticmethod
+    def get_by_user_id(db: Session, user_id: uuid.UUID):
+        return db.query(NutritionistProfile).filter(NutritionistProfile.user_id == user_id).first()
+
+    @staticmethod
     def get_by_id(db: Session, profile_id: uuid.UUID):
         return db.query(NutritionistProfile).filter(NutritionistProfile.id == profile_id).first()
 
