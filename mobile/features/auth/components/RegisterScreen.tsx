@@ -1,6 +1,8 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -13,9 +15,29 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
+import { useRegister } from '@/features/auth/hooks/useAuth';
+
+// Convierte "DD/MM/YY" o "DD/MM/YYYY" → "YYYY-MM-DD" para el backend
+function parseDateToISO(input: string): string | null {
+  const parts = input.split('/');
+  if (parts.length !== 3) return null;
+
+  let [day, month, year] = parts;
+  if (year.length === 2) {
+    // Heurística: años >= 25 → 1900s, < 25 → 2000s
+    year = parseInt(year, 10) >= 25 ? `19${year}` : `20${year}`;
+  }
+
+  const d = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+  if (isNaN(d.getTime())) return null;
+
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { register, loading, error } = useRegister();
+
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -29,13 +51,55 @@ export default function RegisterScreen() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
-  const updateField = (field: string, value: string) => {
+  const updateField = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
 
-  const handleRegister = () => {
-    // Aquí irá la lógica de registro real
-    router.replace('/(onboarding)/health');
+  const handleRegister = async () => {
+    // ── Validaciones locales ──────────────────────────────────────────────────
+    const { fullName, email, phone, birthDate, password, confirmPassword } = form;
+
+    if (!fullName.trim() || !email.trim() || !phone.trim() || !birthDate.trim() ||
+        !password.trim() || !confirmPassword.trim()) {
+      Alert.alert('Campos requeridos', 'Por favor completa todos los campos.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Contraseñas', 'Las contraseñas no coinciden.');
+      return;
+    }
+
+    if (!acceptTerms || !acceptPrivacy) {
+      Alert.alert('Términos', 'Debes aceptar los términos y la política de privacidad.');
+      return;
+    }
+
+    // Separar nombre completo en first_name / last_name
+    const nameParts = fullName.trim().split(' ');
+    const first_name = nameParts[0] ?? '';
+    const last_name  = nameParts.slice(1).join(' ') || first_name;
+
+    // Convertir fecha
+    const date_of_birth = parseDateToISO(birthDate);
+    if (!date_of_birth) {
+      Alert.alert('Fecha inválida', 'Usa el formato DD/MM/AAAA (ej: 23/03/1990).');
+      return;
+    }
+
+    // ── Llamada al backend ────────────────────────────────────────────────────
+    const user = await register({
+      first_name,
+      last_name,
+      email: email.trim(),
+      phone: phone.trim(),
+      date_of_birth,
+      password,
+    });
+
+    if (user) {
+      // Registro exitoso → ir al onboarding
+      router.replace('/(onboarding)/health');
+    }
   };
 
   return (
@@ -53,7 +117,6 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             <View style={styles.logoCircle}>
-              {/* Reemplaza por tu imagen/logo */}
               <Text style={styles.logoEmoji}>🌿</Text>
             </View>
             <Text style={styles.title}>Crear Cuenta</Text>
@@ -63,6 +126,13 @@ export default function RegisterScreen() {
           {/* Panel blanco */}
           <View style={styles.bottomPanel}>
 
+            {/* Error del servidor */}
+            {error ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>⚠️ {error}</Text>
+              </View>
+            ) : null}
+
             {/* Nombre completo */}
             <Text style={styles.label}>Nombre Completo</Text>
             <TextInput
@@ -71,6 +141,7 @@ export default function RegisterScreen() {
               placeholderTextColor="#bbb"
               value={form.fullName}
               onChangeText={(v) => updateField('fullName', v)}
+              editable={!loading}
             />
 
             {/* Correo */}
@@ -83,9 +154,10 @@ export default function RegisterScreen() {
               autoCapitalize="none"
               value={form.email}
               onChangeText={(v) => updateField('email', v)}
+              editable={!loading}
             />
 
-            {/* Teléfono + Fecha de nacimiento (en fila) */}
+            {/* Teléfono + Fecha de nacimiento */}
             <View style={styles.rowFields}>
               <View style={{ flex: 1, marginRight: 10 }}>
                 <Text style={styles.label}>Teléfono</Text>
@@ -96,16 +168,18 @@ export default function RegisterScreen() {
                   keyboardType="phone-pad"
                   value={form.phone}
                   onChangeText={(v) => updateField('phone', v)}
+                  editable={!loading}
                 />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.label}>Fecha de nacimiento</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="23/03/73"
+                  placeholder="23/03/1990"
                   placeholderTextColor="#bbb"
                   value={form.birthDate}
                   onChangeText={(v) => updateField('birthDate', v)}
+                  editable={!loading}
                 />
               </View>
             </View>
@@ -120,6 +194,7 @@ export default function RegisterScreen() {
                 secureTextEntry={!showPassword}
                 value={form.password}
                 onChangeText={(v) => updateField('password', v)}
+                editable={!loading}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Text style={styles.inputIcon}>{showPassword ? '🙈' : '👁️'}</Text>
@@ -136,6 +211,7 @@ export default function RegisterScreen() {
                 secureTextEntry={!showConfirm}
                 value={form.confirmPassword}
                 onChangeText={(v) => updateField('confirmPassword', v)}
+                editable={!loading}
               />
               <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
                 <Text style={styles.inputIcon}>{showConfirm ? '🙈' : '👁️'}</Text>
@@ -170,8 +246,16 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             {/* Botón crear cuenta */}
-            <TouchableOpacity style={styles.btnPrimary} onPress={handleRegister}>
-              <Text style={styles.btnPrimaryText}>Crear Cuenta</Text>
+            <TouchableOpacity
+              style={[styles.btnPrimary, loading && styles.btnDisabled]}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.btnPrimaryText}>Crear Cuenta</Text>
+              )}
             </TouchableOpacity>
 
             {/* Login */}
@@ -194,8 +278,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.primary,
   },
-
-  // ── Top ──
   topPanel: {
     backgroundColor: COLORS.primary,
     alignItems: 'center',
@@ -243,8 +325,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255,255,255,0.85)',
   },
-
-  // ── Bottom ──
   bottomPanel: {
     flex: 1,
     backgroundColor: '#fff',
@@ -253,6 +333,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 32,
     paddingBottom: 32,
+  },
+  errorBox: {
+    backgroundColor: '#fff0f0',
+    borderWidth: 1,
+    borderColor: '#ffcccc',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#cc0000',
+    fontSize: 13,
   },
   label: {
     fontSize: 13,
@@ -338,6 +430,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+  btnDisabled: {
+    opacity: 0.7,
+  },
   btnPrimaryText: {
     color: '#fff',
     fontSize: 16,
@@ -353,5 +448,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-
