@@ -17,14 +17,10 @@ import { useProfileForm } from '../hooks/useProfileForm';
 import {
   formatPhoneInput,
   validatePhoneInput,
-  formatDateInput,
-  validateDateInput,
   validateHeightInput,
 } from '../utils/validations';
 
 // ─── Field config ─────────────────────────────────────────────────────────────
-// Each entry describes how to display and validate a single editable field.
-// prefix/suffix are shown in the modal and stripped/appended when storing.
 
 interface FieldConfig {
   title: string;
@@ -32,9 +28,7 @@ interface FieldConfig {
   options?: string[];
   placeholder?: string;
   hint?: string;
-  /** Shown left of the TextInput; prepended to stored value */
   prefix?: string;
-  /** Shown right of the TextInput; appended to stored value */
   suffix?: string;
   maxLength?: number;
   onChangeFormat?: (text: string) => string;
@@ -48,17 +42,14 @@ const FIELD_CONFIG: Record<string, FieldConfig> = {
     type: 'phone',
     prefix: '+593 ',
     placeholder: 'XXX XXX XXX',
-    maxLength: 11, // "XXX XXX XXX"
+    maxLength: 11,
     onChangeFormat: formatPhoneInput,
     validate: validatePhoneInput,
   },
   birthDate: {
     title: 'Fecha de Nacimiento',
     type: 'date',
-    placeholder: 'DD/MM/AAAA',
-    maxLength: 10, // "DD/MM/AAAA"
-    onChangeFormat: formatDateInput,
-    validate: validateDateInput,
+    // Sin onChangeFormat ni validate — el DatePicker garantiza una fecha válida
   },
   height: {
     title: 'Altura',
@@ -115,6 +106,8 @@ export default function ProfileScreen() {
   const inputValue = useMemo(() => {
     if (!activeModal) return '';
     const config = FIELD_CONFIG[activeModal.field];
+    // Date fields go straight to the DatePicker — no stripping needed
+    if (config?.type === 'date') return activeValue;
     let val = activeValue;
     if (config?.prefix && val.startsWith(config.prefix)) {
       val = val.slice(config.prefix.length);
@@ -128,6 +121,11 @@ export default function ProfileScreen() {
   // ── Re-attach prefix/suffix before storing ────────────────────────────────
   function handleSave(value: string) {
     const config = activeModal ? FIELD_CONFIG[activeModal.field] : null;
+    // Date fields already come formatted as "DD/MM/AAAA" from the picker
+    if (config?.type === 'date') {
+      saveField(value);
+      return;
+    }
     const stored = `${config?.prefix ?? ''}${value}${config?.suffix ?? ''}`;
     saveField(stored);
   }
