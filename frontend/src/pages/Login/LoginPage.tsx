@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { RegistrerServices } from '../../services/Login/LoginServices';
 
 interface LoginPageProps {
-  onLogin: (userData: { userId: string; email: string; role: string }) => void;
+  onLogin: (userData: { userId: string; email: string; role: string; token: string }) => void;
   onGoToRegister: () => void;
 }
 
@@ -37,6 +37,7 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
           userId: result.data.id,
           email:  result.data.email,
           role:   result.data.role,
+          token:  result.data.token,
         });
         
       } else {

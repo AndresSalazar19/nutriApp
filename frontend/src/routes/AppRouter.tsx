@@ -36,8 +36,8 @@ function LoginWrapper() {
   const navigate = useNavigate();
   const auth = useAuth();
 
-  const handleLogin = (userData: { userId: string; email: string; role: string }) => {
-    auth.login(userData as AuthUser);
+  const handleLogin = (userData: { userId: string; email: string; role: string; token: string }) => {
+    auth.login(userData as AuthUser, userData.token);
     if (userData.role === 'admin') {
       navigate(ROUTES.ADMIN);
     } else {
@@ -57,8 +57,8 @@ function RegisterWrapper() {
   const navigate = useNavigate();
   const auth = useAuth();
 
-  const handleRegistered = (userData: { userId: string; email: string; role: string }) => {
-    auth.login(userData as AuthUser);
+  const handleRegistered = (userData: { userId: string; email: string; role: string; token?: string }) => {
+    auth.login(userData as AuthUser, userData.token ?? '');
     navigate(ROUTES.DASHBOARD);
   };
 

@@ -1,4 +1,4 @@
-import { API_URL } from '../config/api';
+import { httpClient } from '../config/httpClient';
 import { ApiResponse } from '../models/ApiResponse';
 
 export type NutritionistStatusValue = 'pending' | 'verified' | 'rejected' | 'suspended';
@@ -9,7 +9,8 @@ export interface NutritionistStatusData {
 
 export const NutritionistService = {
   async getStatus(userId: string): Promise<ApiResponse<NutritionistStatusData>> {
-    const response = await fetch(`${API_URL}/nutritionists/status/${userId}`);
-    return response.json();
+    return httpClient.get<ApiResponse<NutritionistStatusData>>(
+      `/nutritionists/status/${userId}`,
+    );
   },
 };
