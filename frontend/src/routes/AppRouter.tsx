@@ -1,15 +1,17 @@
 import React, { lazy, Suspense } from 'react';
-// Unificamos las importaciones de react-router-dom
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ROUTES } from './routes';
 import { PublicRoute } from './PublicRoute';
 import { PrivateRoute } from './PrivateRoute';
+import { NutritionistStatusGuard } from './NutritionistStatusGuard';
+import { useAuth, AuthUser } from '../hooks/useAuth';
 
 
 const LoginPage         = lazy(() => import('../pages/Login/LoginPage'));
 const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
 //NUTRIONIST
 const MainView          = lazy(() => import('../pages/MainView/MainView'));
+const HomePage          = lazy(() => import('../pages/MainView/HomePage'));
 
 //ADMIN
 const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
@@ -28,26 +30,24 @@ function PageLoader() {
   );
 }
 
-// Wrappers de navegación
+// ── Wrappers de navegación ─────────────────────────────────
+
 function LoginWrapper() {
   const navigate = useNavigate();
+  const auth = useAuth();
 
-  // Nueva lógica: Recibe el rol y decide a dónde enviar al usuario
-  const handleSuccessfulLogin = (role) => {
-    if (role === 'admin') {
+  const handleLogin = (userData: { userId: string; email: string; role: string; token: string }) => {
+    auth.login(userData as AuthUser, userData.token);
+    if (userData.role === 'admin') {
       navigate(ROUTES.ADMIN);
-    } else if (role === 'nutritionist' || role === 'patient') { 
-      // Nota: Agregué 'patient' basado en tu primer mensaje, 
-      // ajusta esto según cómo se llame el rol en tu base de datos final.
-      navigate(ROUTES.DASHBOARD);
     } else {
-      navigate(ROUTES.LOGIN);
+      navigate(ROUTES.DASHBOARD);
     }
   };
 
   return (
     <LoginPage
-      onLogin={handleSuccessfulLogin}
+      onLogin={handleLogin}
       onGoToRegister={() => navigate(ROUTES.REGISTER)}
     />
   );
@@ -55,9 +55,17 @@ function LoginWrapper() {
 
 function RegisterWrapper() {
   const navigate = useNavigate();
+  const auth = useAuth();
+
+  const handleRegistered = (userData: { userId: string; email: string; role: string; token?: string }) => {
+    auth.login(userData as AuthUser, userData.token ?? '');
+    navigate(ROUTES.DASHBOARD);
+  };
+
   return (
     <RegisterPage
       onGoToLogin={() => navigate(ROUTES.LOGIN)}
+      onRegistered={handleRegistered}
     />
   );
 }
@@ -84,10 +92,12 @@ export function AppRouter() {
 
           {/* ── Rutas protegidas (Nested Routes) ── */}
           
-          {/* Dashboard (Nutricionistas / Pacientes) */}
-          <Route element={<PrivateRoute allowedRoles={['nutritionist', 'patient']} />}>
-            <Route path={ROUTES.DASHBOARD} element={<MainView />} />
-            {/* Si agregas más vistas para este rol, simplemente ponlas aquí abajo */}
+          {/* Dashboard (Nutricionistas) */}
+          <Route element={<PrivateRoute allowedRoles={['nutritionist']} />}>
+            <Route element={<NutritionistStatusGuard />}>
+              <Route path={ROUTES.DASHBOARD} element={<MainView />} />
+              <Route path={ROUTES.HOME}      element={<HomePage />} />
+            </Route>
           </Route>
 
           {/* Administrador */}

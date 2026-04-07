@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { RegistrerServices } from '../../services/Login/LoginServices';
 
 interface LoginPageProps {
-  onLogin: (role: string) => void;
+  onLogin: (userData: { userId: string; email: string; role: string; token: string }) => void;
   onGoToRegister: () => void;
 }
 
@@ -33,13 +33,12 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
       if (result.status?.isSuccessfully && result.statusCode === 200) {
         
         // Gracias a la interfaz, TypeScript sabe que result.data tiene la propiedad role
-        const userRole = result.data.role;
-        
-        // Aquí debes guardar el token/estado de sesión en tu app 
-        // (idealmente a través de tu hook useAuth o Context API)
-        
-        // Redirigimos al usuario según su rol
-        if (onLogin) onLogin(userRole);
+        if (onLogin) onLogin({
+          userId: result.data.id,
+          email:  result.data.email,
+          role:   result.data.role,
+          token:  result.data.token,
+        });
         
       } else {
         // Si la API responde con un 200 pero isSuccessfully es false, o si es un 400/500

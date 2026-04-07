@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { COLORS } from '@/constants/colors';
+import { DatePickerField } from '@/components/ui/DatePickerField';
 
 export type EditFieldType = 'text' | 'phone' | 'date' | 'numeric' | 'select';
 
@@ -66,7 +67,6 @@ export function EditFieldModal({
   function handleChange(text: string) {
     const formatted = onChangeFormat ? onChangeFormat(text) : text;
     setDraft(formatted);
-    // Clear error as user types
     if (error) setError(null);
   }
 
@@ -74,19 +74,17 @@ export function EditFieldModal({
     const trimmed = draft.trim();
     if (validate) {
       const err = validate(trimmed);
-      if (err) {
-        setError(err);
-        return;
-      }
+      if (err) { setError(err); return; }
     }
     onSave(trimmed);
     onClose();
   }
 
   const keyboardType =
-    type === 'phone' || type === 'date' || type === 'numeric'
-      ? 'number-pad'
-      : 'default';
+    type === 'phone' || type === 'numeric' ? 'number-pad' : 'default';
+
+  // ── Date type: no keyboard, taller sheet to fit the picker ────────────────
+  const isDate = type === 'date';
 
   return (
     <Modal
@@ -98,17 +96,25 @@ export function EditFieldModal({
     >
       <Pressable style={styles.backdrop} onPress={onClose} />
 
+      {/* Date picker doesn't need KeyboardAvoidingView */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.kvWrapper}
+        enabled={!isDate}
       >
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, isDate && styles.sheetDate]}>
           <View style={styles.handle} />
 
           <Text style={styles.title}>{title}</Text>
 
-          {/* ── Select type ── */}
-          {type === 'select' ? (
+          {/* ── Date picker ── */}
+          {isDate ? (
+            <DatePickerField
+              value={draft}
+              onChange={(val) => { setDraft(val); setError(null); }}
+            />
+          ) : type === 'select' ? (
+            /* ── Select ── */
             <View style={styles.optionList}>
               {options.map(opt => (
                 <TouchableOpacity
@@ -125,7 +131,7 @@ export function EditFieldModal({
               ))}
             </View>
           ) : (
-            /* ── Text / phone / date / numeric ── */
+            /* ── Text / phone / numeric ── */
             <>
               <View style={[styles.inputRow, error ? styles.inputRowError : null]}>
                 {prefix ? (
@@ -154,7 +160,6 @@ export function EditFieldModal({
                 ) : null}
               </View>
 
-              {/* Error */}
               {error ? (
                 <Text style={styles.errorText}>⚠ {error}</Text>
               ) : hint ? (
@@ -162,6 +167,11 @@ export function EditFieldModal({
               ) : null}
             </>
           )}
+
+          {/* Error for date type */}
+          {isDate && error ? (
+            <Text style={styles.errorText}>⚠ {error}</Text>
+          ) : null}
 
           {/* Actions */}
           <View style={styles.actions}>
@@ -177,6 +187,8 @@ export function EditFieldModal({
     </Modal>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   backdrop: {
@@ -202,6 +214,10 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 20,
   },
+  // Extra padding for the date picker spinner on iOS
+  sheetDate: {
+    paddingBottom: Platform.OS === 'ios' ? 48 : 36,
+  },
   handle: {
     width: 40,
     height: 4,
@@ -217,7 +233,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // Input row (with optional prefix/suffix)
+  // Input row
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -263,7 +279,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 
-  // Select options
+  // Select
   optionList: {
     marginBottom: 20,
     gap: 8,
@@ -298,7 +314,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Action buttons
+  // Actions
   actions: {
     flexDirection: 'row',
     gap: 12,
