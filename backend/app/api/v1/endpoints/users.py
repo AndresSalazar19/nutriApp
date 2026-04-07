@@ -5,6 +5,8 @@ from app.db.base import get_db
 from app.schemas.user import UserCreate, UserResponse, UserRequest, ChangePasswordRequest
 from app.core.response import success_response, error_response
 from app.services.user_service import UserService
+from app.core.security import create_access_token
+
 import uuid
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -41,12 +43,16 @@ def login(obj: UserRequest, db: Session = Depends(get_db)):
     user = UserService.authenticate(db, obj.email, obj.password)
 
     if not user:
-        resp = error_response(["Usuario no encontrado"], status_code=404)
-        return JSONResponse(status_code=404, content=resp.model_dump())
+        resp = error_response(["Credenciales incorrectas"], status_code=401)
+        return JSONResponse(status_code=401, content=resp.model_dump())
 
-    resp = success_response(
-        data=UserResponse.model_validate(user).model_dump(mode="json")
-    )
+    token = create_access_token(user.id, user.role)
+
+    resp = success_response(data={
+        "access_token": token,
+        "token_type": "bearer",
+        "user": UserResponse.model_validate(user).model_dump(mode="json")
+    })
     return JSONResponse(status_code=200, content=resp.model_dump())
 
 
