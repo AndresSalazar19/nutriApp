@@ -33,11 +33,16 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
       if (result.status?.isSuccessfully && result.statusCode === 200) {
         
         // Gracias a la interfaz, TypeScript sabe que result.data tiene la propiedad role
+        if (result.data.user.role === 'patient') {
+          setErrorMsg('Esta plataforma es solo para nutricionistas y administradores. Los pacientes no tienen acceso.');
+          return;
+        }
+
         if (onLogin) onLogin({
-          userId: result.data.id,
-          email:  result.data.email,
-          role:   result.data.role,
-          token:  result.data.token,
+          userId: result.data.user.id,
+          email:  result.data.user.email,
+          role:   result.data.user.role,
+          token:  result.data.access_token,
         });
         
       } else {

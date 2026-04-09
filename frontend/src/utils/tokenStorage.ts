@@ -1,4 +1,4 @@
-const TOKEN_KEY = 'nutria_token';
+const TOKEN_KEY = 'nutria_token'; /*CAMBIAR */
 
 function decodePayload(token: string): Record<string, unknown> | null {
   try {
