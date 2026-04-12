@@ -1,5 +1,7 @@
 export interface RegisterPageProps {
   onGoToLogin: () => void;
+  /** Llamado tras registro exitoso: hace auto-login y redirige al dashboard */
+  onRegistered?: (userData: { userId: string; email: string; role: string }) => void;
 }
 
 export interface FormState {

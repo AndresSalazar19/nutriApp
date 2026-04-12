@@ -1,6 +1,8 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -13,17 +15,30 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
+import { useLogin } from '@/features/auth/hooks/useAuth';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login, loading, error } = useLogin();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleLogin = () => {
-    // Aquí irá la lógica de autenticación real
-    router.replace('/(tabs)');
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Campos requeridos', 'Por favor ingresa tu correo y contraseña.');
+      return;
+    }
+
+    const result = await login({ email: email.trim(), password });
+
+    if (result) {
+      // Autenticación exitosa → navegar al home
+      router.replace('/(tabs)');
+    }
+    // Si result es null, el error ya está en `error` y se muestra abajo
   };
 
   return (
@@ -41,7 +56,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <View style={styles.logoCircle}>
-              {/* Reemplaza por tu imagen/logo */}
               <Text style={styles.logoEmoji}>🌿</Text>
             </View>
             <Text style={styles.title}>Iniciar Sesión</Text>
@@ -50,6 +64,13 @@ export default function LoginScreen() {
 
           {/* Panel blanco inferior */}
           <View style={styles.bottomPanel}>
+
+            {/* Error del servidor */}
+            {error ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>⚠️ {error}</Text>
+              </View>
+            ) : null}
 
             {/* Correo */}
             <Text style={styles.label}>Correo Electrónico</Text>
@@ -62,6 +83,7 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 value={email}
                 onChangeText={setEmail}
+                editable={!loading}
               />
               <Text style={styles.inputIcon}>✉️</Text>
             </View>
@@ -76,6 +98,7 @@ export default function LoginScreen() {
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
+                editable={!loading}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Text style={styles.inputIcon}>{showPassword ? '🙈' : '👁️'}</Text>
@@ -99,8 +122,16 @@ export default function LoginScreen() {
             </View>
 
             {/* Botón principal */}
-            <TouchableOpacity style={styles.btnPrimary} onPress={handleLogin}>
-              <Text style={styles.btnPrimaryText}>Iniciar Sesión</Text>
+            <TouchableOpacity
+              style={[styles.btnPrimary, loading && styles.btnDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.btnPrimaryText}>Iniciar Sesión</Text>
+              )}
             </TouchableOpacity>
 
             {/* Divisor */}
@@ -135,7 +166,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.primary,
   },
-
   topPanel: {
     backgroundColor: COLORS.primary,
     alignItems: 'center',
@@ -183,8 +213,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255,255,255,0.85)',
   },
-
-  // ── Bottom ──
   bottomPanel: {
     flex: 1,
     backgroundColor: '#fff',
@@ -193,6 +221,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 32,
     paddingBottom: 32,
+  },
+  errorBox: {
+    backgroundColor: '#fff0f0',
+    borderWidth: 1,
+    borderColor: '#ffcccc',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#cc0000',
+    fontSize: 13,
   },
   label: {
     fontSize: 13,
@@ -268,6 +308,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+  btnDisabled: {
+    opacity: 0.7,
+  },
   btnPrimaryText: {
     color: '#fff',
     fontSize: 16,
@@ -311,5 +354,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-
