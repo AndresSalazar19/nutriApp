@@ -12,6 +12,9 @@ const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
 //NUTRIONIST
 const MainView          = lazy(() => import('../pages/MainView/MainView'));
 const HomePage          = lazy(() => import('../pages/MainView/HomePage'));
+const PatientsPage      = lazy(() => import('../pages/MainView/PatientsPage'));
+const AgendaPage        = lazy(() => import('../pages/MainView/AgendaPage'));
+const ReportsPage       = lazy(() => import('../pages/MainView/ReportsPage'));
 
 //ADMIN
 const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
@@ -86,10 +89,10 @@ function AppRoutes() {
             <Route path={ROUTES.DASHBOARD}  element={<MainView />} />
             {/* verified → acceso completo */}
             <Route path={ROUTES.HOME}       element={<HomePage />} />
-            {/* <Route path={ROUTES.PATIENTS}   element={<PatientsPage />} />
-            <Route path={ROUTES.PLANS}      element={<PlansPage />} />
-            <Route path={ROUTES.AGENDA}     element={<AgendaPage />} />
-            <Route path={ROUTES.REPORTS}    element={<ReportsPage />} />
+            <Route path={ROUTES.PATIENTS} element={<PatientsPage />} />
+            <Route path={ROUTES.AGENDA} element={<AgendaPage />} />
+            <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
+            {/*<Route path={ROUTES.REPORTS}    element={<ReportsPage />} />
             <Route path={ROUTES.MESSAGES}   element={<MessagesPage />} />
             <Route path={ROUTES.RESOURCES}  element={<ResourcesPage />} /> */}
           </Route>
