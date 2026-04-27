@@ -4,7 +4,7 @@ import { ROUTES } from './routes';
 import { PublicRoute } from './PublicRoute';
 import { PrivateRoute } from './PrivateRoute';
 import { NutritionistStatusGuard } from './NutritionistStatusGuard';
-import { useAuth, AuthUser } from '../hooks/useAuth';
+import { AuthProvider, useAuth, AuthUser } from '../hooks/useAuth';
 
 
 const LoginPage         = lazy(() => import('../pages/Login/LoginPage'));
@@ -12,6 +12,9 @@ const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
 //NUTRIONIST
 const MainView          = lazy(() => import('../pages/MainView/MainView'));
 const HomePage          = lazy(() => import('../pages/MainView/HomePage'));
+const PatientsPage      = lazy(() => import('../pages/MainView/PatientsPage'));
+const AgendaPage        = lazy(() => import('../pages/MainView/AgendaPage'));
+const ReportsPage       = lazy(() => import('../pages/MainView/ReportsPage'));
 
 //ADMIN
 const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
@@ -34,17 +37,17 @@ function PageLoader() {
 
 function LoginWrapper() {
   const navigate = useNavigate();
-  const auth = useAuth();
-
+  const { login } = useAuth();
+ 
   const handleLogin = (userData: { userId: string; email: string; role: string; token: string }) => {
-    auth.login(userData as AuthUser, userData.token);
+    login(userData as AuthUser, userData.token);
     if (userData.role === 'admin') {
-      navigate(ROUTES.ADMIN);
+      navigate(ROUTES.ADMIN, { replace: true });
     } else {
-      navigate(ROUTES.DASHBOARD);
+      navigate(ROUTES.DASHBOARD, { replace: true });
     }
   };
-
+ 
   return (
     <LoginPage
       onLogin={handleLogin}
@@ -55,13 +58,13 @@ function LoginWrapper() {
 
 function RegisterWrapper() {
   const navigate = useNavigate();
-  const auth = useAuth();
-
+  const { login } = useAuth();
+ 
   const handleRegistered = (userData: { userId: string; email: string; role: string; token?: string }) => {
-    auth.login(userData as AuthUser, userData.token ?? '');
-    navigate(ROUTES.DASHBOARD);
+    login(userData as AuthUser, userData.token ?? '');
+    navigate(ROUTES.DASHBOARD, { replace: true });
   };
-
+ 
   return (
     <RegisterPage
       onGoToLogin={() => navigate(ROUTES.LOGIN)}
@@ -70,49 +73,56 @@ function RegisterWrapper() {
   );
 }
 
-// ── Router principal ───────────────────────────────────────
+function AppRoutes() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+ 
+        {/* ── Públicas ── */}
+        <Route path={ROUTES.LOGIN}    element={<PublicRoute><LoginWrapper /></PublicRoute>} />
+        <Route path={ROUTES.REGISTER} element={<PublicRoute><RegisterWrapper /></PublicRoute>} />
+ 
+        {/* ── Nutricionista (requiere rol + guard de estado) ── */}
+        <Route element={<PrivateRoute allowedRoles={['nutritionist']} />}>
+          <Route element={<NutritionistStatusGuard />}>
+            {/* pending → MainView (pantalla de verificación) */}
+            <Route path={ROUTES.DASHBOARD}  element={<MainView />} />
+            {/* verified → acceso completo */}
+            <Route path={ROUTES.HOME}       element={<HomePage />} />
+            <Route path={ROUTES.PATIENTS} element={<PatientsPage />} />
+            <Route path={ROUTES.AGENDA} element={<AgendaPage />} />
+            <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
+            {/*<Route path={ROUTES.REPORTS}    element={<ReportsPage />} />
+            <Route path={ROUTES.MESSAGES}   element={<MessagesPage />} />
+            <Route path={ROUTES.RESOURCES}  element={<ResourcesPage />} /> */}
+          </Route>
+        </Route>
+ 
+        {/* ── Admin ── */}
+        <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+          <Route path={ROUTES.ADMIN}               element={<AdminDashboard />} />
+          <Route path={ROUTES.ADMIN_NUTRITIONISTS} element={<NutritionistsPage />} />
+          <Route path={ROUTES.ADMIN_CONTENT}       element={<ContentPage />} />
+          <Route path={ROUTES.ADMIN_CLIENTS}       element={<ClientPage />} />
+        </Route>
+ 
+        {/* ── Fallback ── */}
+        <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
+ 
+      </Routes>
+    </Suspense>
+  );
+}
+ 
+// ─── Root: BrowserRouter → AuthProvider → Rutas ──────────────────────────────
+// AuthProvider debe estar DENTRO de BrowserRouter para poder usar useNavigate.
+ 
 export function AppRouter() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-
-          {/* ── Rutas públicas ── */}
-          <Route path={ROUTES.LOGIN} element={
-            <PublicRoute>
-              <LoginWrapper />
-            </PublicRoute>
-          } />
-          
-          <Route path={ROUTES.REGISTER} element={
-            <PublicRoute>
-              <RegisterWrapper />
-            </PublicRoute>
-          } />
-
-          {/* ── Rutas protegidas (Nested Routes) ── */}
-          
-          {/* Dashboard (Nutricionistas) */}
-          <Route element={<PrivateRoute allowedRoles={['nutritionist']} />}>
-            <Route element={<NutritionistStatusGuard />}>
-              <Route path={ROUTES.DASHBOARD} element={<MainView />} />
-              <Route path={ROUTES.HOME}      element={<HomePage />} />
-            </Route>
-          </Route>
-
-          {/* Administrador */}
-          <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-            <Route path={ROUTES.ADMIN} element={<AdminDashboard />} />
-            <Route path={ROUTES.ADMIN_NUTRITIONISTS} element={<NutritionistsPage />} />
-            <Route path={ROUTES.ADMIN_CONTENT} element={<ContentPage />} />
-            <Route path={ROUTES.ADMIN_CLIENTS} element={<ClientPage />} />
-          </Route>
-
-          {/* Cualquier ruta desconocida → login */}
-          <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
-
-        </Routes>
-      </Suspense>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
