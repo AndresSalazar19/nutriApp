@@ -78,5 +78,43 @@ class ContentService:
 
     @staticmethod
     def get_any_by_id(db: Session, content_id: UUID) -> EducationalContent | None:
-        """Para uso de admin — sin filtro de publicado"""
         return db.query(EducationalContent).filter(EducationalContent.id == content_id).first()
+
+    @staticmethod
+    def get_all_for_admin(
+        db: Session,
+        q: str | None = None,
+        skip: int = 0,
+        limit: int = 50,
+    ) -> list[EducationalContent]:
+        query = db.query(EducationalContent).filter(
+            EducationalContent.archived_at == None,
+        )
+        if q:
+            query = query.filter(EducationalContent.title.ilike(f"%{q}%"))
+        return query.order_by(EducationalContent.created_at.desc()).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def get_by_author(
+        db: Session,
+        author_id: UUID,
+        skip: int = 0,
+        limit: int = 50,
+    ) -> list[EducationalContent]:
+        return (
+            db.query(EducationalContent)
+            .filter(EducationalContent.author_id == author_id, EducationalContent.archived_at == None)
+            .order_by(EducationalContent.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+    @staticmethod
+    def reject(db: Session, content: EducationalContent) -> EducationalContent:
+        content.is_approved = False
+        content.is_published = False
+        content.published_at = None
+        db.commit()
+        db.refresh(content)
+        return content

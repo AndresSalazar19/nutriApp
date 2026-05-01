@@ -6,11 +6,13 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { display: 'none' }, // ocultamos el tab bar nativo
+        tabBarStyle: { display: 'none' },
       }}
     >
-      <Tabs.Screen name="index"   options={{ title: 'Home' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Perfil' }} />
+      <Tabs.Screen name="index"         options={{ title: 'Home'      }} />
+      <Tabs.Screen name="profile"       options={{ title: 'Perfil'    }} />
+      <Tabs.Screen name="content"       options={{ title: 'Recursos'  }} />
+      <Tabs.Screen name="content/[id]"  options={{ title: 'Detalle'   }} />
     </Tabs>
   );
 }
