@@ -1,19 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { AdminTopBar } from '../../components/layout/AdminTopBar';
 import { SearchInput } from '../../components/ui/SearchInput';
 import { FilterTabs } from '../../components/ui/FilterTabs';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ArticleCard, Article } from '../../components/ui/Articlecard';
-import { ContentService, ContentItem } from '../../services/Content/ContentService';
-
-const SECTION_TABS = ['Artículos', 'Recursos', 'Biblioteca'];
-
-const STATUS_TABS = [
-  { label: 'Todos',      count: 128 },
-  { label: 'Publicados',  count: 96  },
-  { label: 'Borradores',  count: 32  },
-];
+import { ContentService, ContentItem, CONTENT_CATEGORIES, CONTENT_TYPES } from '../../services/Content/ContentService';
 
 const SORT_OPTIONS = ['Más reciente', 'Más antiguo', 'A-Z', 'Z-A'];
 
@@ -26,92 +18,180 @@ const CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
   tips:         { color: 'bg-red-500',    bg: 'bg-red-50'    },
 };
 
+function categoryLabel(value: string) {
+  return CONTENT_CATEGORIES.find(c => c.value === value)?.label ?? value;
+}
+
+function typeLabel(value: string) {
+  return CONTENT_TYPES.find(t => t.value === value)?.label ?? value;
+}
+
+// ── Modal de vista de contenido ──────────────────────────────────────────────
+
+function ViewModal({ item, onClose }: { item: ContentItem; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-gray-100">
+          <div className="min-w-0 pr-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full text-white ${CATEGORY_STYLES[item.category]?.color ?? 'bg-gray-400'}`}>
+                {categoryLabel(item.category)}
+              </span>
+              <span className="text-xs text-gray-400">{typeLabel(item.content_type)}</span>
+              {item.is_premium && (
+                <span className="text-xs font-bold bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">⭐ Premium</span>
+              )}
+            </div>
+            <h2 className="text-lg font-bold text-gray-800 leading-snug">{item.title}</h2>
+          </div>
+          <button onClick={onClose}
+            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition text-lg font-bold">
+            ×
+          </button>
+        </div>
+
+        {/* Meta */}
+        <div className="flex items-center gap-4 px-6 py-3 text-xs text-gray-400 border-b border-gray-50">
+          <span>👁 {item.view_count} vistas</span>
+          {item.tags && item.tags.length > 0 && (
+            <span>🏷 {item.tags.join(', ')}</span>
+          )}
+          <span>📅 {item.created_at ? new Date(item.created_at).toLocaleDateString('es-EC') : '—'}</span>
+        </div>
+
+        {/* Cuerpo */}
+        <div className="overflow-y-auto px-6 py-5 flex-1">
+          <p className="text-sm text-gray-700 leading-7 whitespace-pre-wrap">{item.body}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Componente principal ─────────────────────────────────────────────────────
+
 function ContentPage() {
-  // Estados de UI
-  const [activeNav, setActiveNav]       = useState('Contenido');
-  const [section, setSection]           = useState('Artículos');
-  const [activeStatus, setActiveStatus] = useState('Todos');
-  const [search, setSearch]             = useState('');
-  const [sortOpen, setSortOpen]         = useState(false);
-  const [sortBy, setSortBy]             = useState('Más reciente');
+  const [activeNav, setActiveNav]         = useState('Contenido');
+  const [activeStatus, setActiveStatus]   = useState('Todos');
+  const [search, setSearch]               = useState('');
+  const [sortOpen, setSortOpen]           = useState(false);
+  const [sortBy, setSortBy]               = useState('Más reciente');
+  const [items, setItems]                 = useState<ContentItem[]>([]);
+  const [loading, setLoading]             = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [viewItem, setViewItem]           = useState<ContentItem | null>(null);
 
-  // Estados de Datos
-  const [items, setItems]               = useState<ContentItem[]>([]);
-  const [loading, setLoading]           = useState(false);
-
-  // Fetch de datos al cambiar la búsqueda
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true);
-    ContentService.getAll({ q: search || undefined })
+    ContentService.getAllForAdmin({ q: search || undefined })
       .then(setItems)
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [search]);
 
-  // Mapeo y filtrado de datos para el componente UI
-  const filtered: Article[] = items
-    .filter((item) => {
-      if (activeStatus === 'Publicados') return !!item.published_at;
-      if (activeStatus === 'Borradores') return !item.published_at;
-      return true;
-    })
-    .map((item) => {
-      const style = CATEGORY_STYLES[item.category] ?? { color: 'bg-gray-500', bg: 'bg-gray-50' };
-      return {
-        id:            item.id,
-        title:         item.title,
-        description:   item.tags?.join(', ') ?? 'Sin descripción',
-        category:      item.category,
-        categoryColor: style.color,
-        cardBg:        style.bg,
-        status:        'active' as const, // Placeholder según lógica actual
-        date:          item.published_at 
-                       ? `Publicado: ${new Date(item.published_at).toLocaleDateString('es-EC')}` 
-                       : 'Sin publicar',
-      };
-    });
+  useEffect(() => { load(); }, [load]);
+
+  const handleApprove = async (article: Article) => {
+    setActionLoading(article.id);
+    try { await ContentService.approve(article.id); load(); }
+    catch (e) { console.error(e); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleDelete = async (article: Article) => {
+    setActionLoading(article.id);
+    try { await ContentService.archive(article.id); load(); }
+    catch (e) { console.error(e); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleView = (article: Article) => {
+    const raw = items.find(i => i.id === article.id) ?? null;
+    setViewItem(raw);
+  };
+
+  // Filtrar
+  let filtered = items.filter((item) => {
+    if (activeStatus === 'Aprobados')  return item.is_approved && item.is_published;
+    if (activeStatus === 'Pendientes') return !item.is_approved;
+    return true;
+  });
+
+  // Ordenar por fecha de envío (created_at); A-Z/Z-A por título
+  filtered = [...filtered].sort((a, b) => {
+    if (sortBy === 'A-Z')        return a.title.localeCompare(b.title);
+    if (sortBy === 'Z-A')        return b.title.localeCompare(a.title);
+    if (sortBy === 'Más antiguo') return (a.created_at ?? '').localeCompare(b.created_at ?? '');
+    // "Más reciente" — orden de envío desc (ya viene así del backend, pero aplicamos igual)
+    return (b.created_at ?? '').localeCompare(a.created_at ?? '');
+  });
+
+  const articles: Article[] = filtered.map((item) => {
+    const style = CATEGORY_STYLES[item.category] ?? { color: 'bg-gray-500', bg: 'bg-gray-50' };
+    return {
+      id:            item.id,
+      title:         item.title,
+      body:          item.body,
+      description:   item.tags?.join(', ') ?? categoryLabel(item.category),
+      category:      categoryLabel(item.category),
+      categoryColor: style.color,
+      cardBg:        style.bg,
+      status:        (item.is_published ? 'active' : 'draft') as 'active' | 'draft',
+      date:          item.created_at
+                     ? `Enviado: ${new Date(item.created_at).toLocaleDateString('es-EC')}`
+                     : '—',
+      is_approved:   item.is_approved,
+      is_published:  item.is_published,
+    };
+  });
+
+  const pendingCount  = items.filter(i => !i.is_approved).length;
+  const approvedCount = items.filter(i => i.is_approved && i.is_published).length;
+
+  const statusTabs = [
+    { label: 'Todos',      count: items.length  },
+    { label: 'Aprobados',  count: approvedCount  },
+    { label: 'Pendientes', count: pendingCount    },
+  ];
 
   return (
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
       <AdminTopBar title="Biblioteca de Contenido" />
 
       <div className="px-8 pb-8 pt-4">
-        
-        {/* Tabs de Sección */}
-        <div className="flex gap-6 border-b border-gray-200 mb-6">
-          {SECTION_TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setSection(tab)}
-              className={`pb-2 text-sm font-semibold transition border-b-2 -mb-px ${
-                section === tab
-                  ? 'border-red-500 text-red-500'
-                  : 'border-transparent text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
 
-        {/* Filtros y Búsqueda */}
+        {/* Alerta pendientes */}
+        {pendingCount > 0 && (
+          <div className="mb-5 flex items-center gap-3 bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm rounded-xl px-4 py-3">
+            <span className="text-lg">⏳</span>
+            <span>
+              Hay <strong>{pendingCount}</strong> contenido{pendingCount !== 1 ? 's' : ''} pendiente{pendingCount !== 1 ? 's' : ''} de aprobación.
+            </span>
+          </div>
+        )}
+
+        {/* Filtros */}
         <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
           <div className="flex items-center gap-3 flex-wrap">
             <SearchInput
-              placeholder="Buscar artículos por título o categoría..."
+              placeholder="Buscar por título…"
               value={search}
               onChange={setSearch}
               className="w-72"
             />
             <FilterTabs
-              tabs={STATUS_TABS}
+              tabs={statusTabs}
               active={activeStatus}
-              onChange={(t) => { setActiveStatus(t); }}
+              onChange={setActiveStatus}
               accentColor="red"
             />
           </div>
 
-          {/* Selector de Orden */}
           <div className="relative">
             <button
               onClick={() => setSortOpen(!sortOpen)}
@@ -140,32 +220,38 @@ function ContentPage() {
           </div>
         </div>
 
-        {/* Contenido Principal */}
+        {/* Grid */}
         {loading ? (
           <div className="flex justify-center py-16">
             <span className="w-10 h-10 border-4 border-red-400 border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : articles.length === 0 ? (
           <EmptyState
             icon="📝"
-            title="No hay artículos"
-            description="No se encontraron resultados para tu búsqueda o filtros seleccionados."
+            title="No hay contenido"
+            description="No se encontraron resultados para los filtros seleccionados."
             accentColor="red"
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filtered.map((article) => (
-              <ArticleCard
-                key={article.id}
-                article={article}
-                onView={(a)  => console.log('Ver', a.id)}
-                onEdit={(a)  => console.log('Editar', a.id)}
-                onDownload={(a) => console.log('Descargar', a.id)}
-              />
+            {articles.map((article) => (
+              <div key={article.id} className={actionLoading === article.id ? 'opacity-60 pointer-events-none' : ''}>
+                <ArticleCard
+                  article={article}
+                  onView={handleView}
+                  onApprove={handleApprove}
+                  onDelete={handleDelete}
+                />
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Modal de vista */}
+      {viewItem && (
+        <ViewModal item={viewItem} onClose={() => setViewItem(null)} />
+      )}
     </AdminLayout>
   );
 }
