@@ -3,13 +3,14 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 
-export type TabKey = 'inicio' | 'comidas' | 'progreso' | 'perfil';
+export type TabKey = 'inicio' | 'comidas' | 'progreso' | 'recursos' | 'perfil';
 
 const TABS: { key: TabKey; emoji: string; label: string; href: string }[] = [
-  { key: 'inicio',   emoji: '🏠',  label: 'Inicio',   href: '/(tabs)/' },
-  { key: 'comidas',  emoji: '🍽️', label: 'Comidas',  href: '/(tabs)/' },
-  { key: 'progreso', emoji: '📈',  label: 'Progreso', href: '/(tabs)/' },
-  { key: 'perfil',   emoji: '👤',  label: 'Perfil',   href: '/(tabs)/profile' },
+  { key: 'inicio',   emoji: '🏠',  label: 'Inicio',    href: '/(tabs)/'         },
+  { key: 'comidas',  emoji: '🍽️', label: 'Comidas',   href: '/(tabs)/'         },
+  { key: 'progreso', emoji: '📈',  label: 'Progreso',  href: '/(tabs)/'         },
+  { key: 'recursos', emoji: '📚',  label: 'Recursos',  href: '/(tabs)/content'  },
+  { key: 'perfil',   emoji: '👤',  label: 'Perfil',    href: '/(tabs)/profile'  },
 ];
 
 interface BottomTabBarProps {
@@ -58,10 +59,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 3,
   },
-  tabEmoji: { fontSize: 22, opacity: 0.4 },
+  tabEmoji:       { fontSize: 20, opacity: 0.4 },
   tabEmojiActive: { opacity: 1 },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#aaa',
     fontWeight: '500',
   },
