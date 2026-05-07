@@ -21,4 +21,17 @@ class NutritionistProfileResponse(BaseModel):
 
 class NutritionistStatusUpdate(BaseModel):
     status: str
-    verified_by: uuid.UUID 
+    verified_by: uuid.UUID
+
+class NutritionistCreateRequest(BaseModel):
+    email: str
+    password: str
+    first_name: str
+    last_name: str
+    cedula: str | None = None
+    date_of_birth: str | None = None
+    gender: str | None = None
+    phone: str | None = None
+    specialty_id: int
+    years_experience: int | None = None
+    license_number: str | None = None

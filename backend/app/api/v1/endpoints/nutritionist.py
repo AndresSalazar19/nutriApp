@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.db.base import get_db
-from app.schemas.nutritionist import NutritionistProfileResponse, NutritionistStatusUpdate
+from app.schemas.nutritionist import NutritionistProfileResponse, NutritionistStatusUpdate, NutritionistCreateRequest
 from app.core.response import success_response, error_response
 from app.services.nutritionist_service import NutritionistService
+from app.services.user_service import UserService
 
 router = APIRouter(prefix="/nutritionists", tags=["nutritionists"])
 
@@ -18,7 +19,6 @@ def get_nutritionists(db: Session = Depends(get_db)):
 
 @router.get("/status/{user_id}", response_model=None)
 def get_nutritionist_status(user_id: uuid.UUID, db: Session = Depends(get_db)):
-    """Devuelve el estado del perfil del nutricionista según su user_id."""
     profile = NutritionistService.get_by_user_id(db, user_id)
     if not profile:
         # Sin perfil aún → tratado como pendiente
@@ -56,3 +56,18 @@ def update_nutritionist_status(
         data=NutritionistProfileResponse.model_validate(updated).model_dump(mode="json")
     )
     return JSONResponse(status_code=200, content=resp.model_dump())
+
+@router.post("", response_model=None)
+def create_nutritionist(payload: NutritionistCreateRequest, db: Session = Depends(get_db)):
+    if UserService.email_exists(db, payload.email):
+        resp = error_response(["El email ya esta registrado"], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
+    try:
+        profile = NutritionistService.create(db, payload)
+    except Exception as e:
+        resp = error_response([f"Error al crear nutricionista: {str(e)}"], status_code=500)
+        return JSONResponse(status_code=500, content=resp.model_dump())
+    resp = success_response(
+        data=NutritionistProfileResponse.model_validate(profile).model_dump(mode="json")
+    )
+    return JSONResponse(status_code=201, content=resp.model_dump())
