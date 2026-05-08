@@ -20,13 +20,18 @@ class ContentListResponse(BaseModel):
 
     id: UUID
     title: str
+    body: str
     category: ContentCategory
     content_type: ContentType
     tags: Optional[list[str]]
     media_url: Optional[str]
     is_premium: bool
+    is_approved: bool
+    is_published: bool
     published_at: Optional[datetime]
+    created_at: Optional[datetime]
     view_count: int
+    author_id: UUID
 
 
 class ContentDetailResponse(BaseModel):
@@ -40,8 +45,12 @@ class ContentDetailResponse(BaseModel):
     tags: Optional[list[str]]
     media_url: Optional[str]
     is_premium: bool
+    is_approved: bool
+    is_published: bool
     published_at: Optional[datetime]
+    created_at: Optional[datetime]
     view_count: int
+    author_id: UUID
     media: list[ContentMediaResponse] = []
 
 

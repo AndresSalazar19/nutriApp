@@ -11,3 +11,7 @@ frontend/node_modules/
 frontend/build/
 .eslintcache
 .env
+.claude/
+__pycache__/
+venv/
+*.pyc
