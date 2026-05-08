@@ -1,5 +1,8 @@
 from pydantic import BaseModel
+from app.db.models.nutritionist import NutritionistStatus
+from app.db.models.user import GenderEnum
 from app.schemas.user  import UserResponse
+from typing import Literal
 from app.schemas.catalog import SpecialistResponse
 import uuid
 
@@ -20,7 +23,7 @@ class NutritionistProfileResponse(BaseModel):
         from_attributes = True
 
 class NutritionistStatusUpdate(BaseModel):
-    status: str
+    status: Literal[NutritionistStatus.verified, NutritionistStatus.rejected]
     verified_by: uuid.UUID
 
 class NutritionistCreateRequest(BaseModel):
@@ -30,7 +33,7 @@ class NutritionistCreateRequest(BaseModel):
     last_name: str
     cedula: str | None = None
     date_of_birth: str | None = None
-    gender: str | None = None
+    gender: GenderEnum | None = None
     phone: str | None = None
     specialty_id: int
     years_experience: int | None = None
