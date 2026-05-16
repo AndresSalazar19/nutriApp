@@ -2,24 +2,20 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import Optional
-
+import uuid
 from app.db.base import get_db
-from app.schemas.aliment import (
-    AlimentRequest,
-    AlimentResponse
-)
-from app.services.aliment_service import AlimentService
+from app.schemas.food_item import (FoodItemRequest, FoodItemResponse)
+from app.services.food_item_service import FoodItemService
 from app.core.response import success_response, error_response
 
-router = APIRouter(prefix="/aliment", tags=["Alimentos"]
-)
+router = APIRouter(prefix="/food-items", tags=["Food Items"])
 
 
-@router.post("", response_model=AlimentResponse)
-def create_aliment(data: AlimentRequest, db: Session = Depends(get_db)
+@router.post("", response_model=FoodItemResponse)
+def create_food_item(data: FoodItemRequest, db: Session = Depends(get_db)
 ):
     try:
-        alimento = AlimentService.create(db, data)
+        alimento = FoodItemService.create(db, data)
         return alimento
 
     except Exception as e:
@@ -31,14 +27,14 @@ def create_aliment(data: AlimentRequest, db: Session = Depends(get_db)
         )
 
 
-@router.get("", response_model=list[AlimentResponse])
-def list_alimentos(
+@router.get("", response_model=list[FoodItemResponse])
+def list_food_items(
     category: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     try:
-        alimentos = AlimentService.list(db, category, search )
+        alimentos = FoodItemService.list(db, category, search )
 
         return alimentos
 
@@ -51,13 +47,10 @@ def list_alimentos(
         )
 
 
-@router.get("/{alimento_id}", response_model=AlimentResponse)
-def get_aliment(
-    alimento_id: int,
-    db: Session = Depends(get_db)
-):
+@router.get("/{id}", response_model=FoodItemResponse)
+def get_food_item(id: uuid.UUID, db: Session = Depends(get_db)):
     try:
-        alimento = AlimentService.get_by_id(db, alimento_id )
+        alimento = FoodItemService.get_by_id(db, id)
 
         return alimento
 
@@ -70,18 +63,10 @@ def get_aliment(
         )
 
 
-@router.put("/{alimento_id}", response_model=AlimentResponse)
-def update_aliment(
-    alimento_id: int,
-    data: AlimentRequest,
-    db: Session = Depends(get_db)
-):
+@router.put("/{id}", response_model=FoodItemResponse)
+def update_food_item(id: uuid.UUID, data: FoodItemRequest, db: Session = Depends(get_db)):
     try:
-        alimento = AlimentService.update(
-            db,
-            alimento_id,
-            data
-        )
+        alimento = FoodItemService.update(db, id, data)
 
         return alimento
 
@@ -94,13 +79,10 @@ def update_aliment(
         )
 
 
-@router.delete("/{alimento_id}")
-def delete_alimento(alimento_id: int, db: Session = Depends(get_db)):
+@router.delete("/{id}")
+def delete_food_item(id: uuid.UUID, db: Session = Depends(get_db)):
     try:
-        AlimentService.delete(
-            db,
-            alimento_id
-        )
+        FoodItemService.delete(db, id)
 
         resp = success_response(
             messages=["Alimento eliminado correctamente"]
