@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { AdminTopBar } from '../../components/layout/AdminTopBar';
 import { Avatar } from '../../components/ui/Avatar';
@@ -9,99 +9,78 @@ import { FilterTabs } from '../../components/ui/FilterTabs';
 import { DataTable, Column } from '../../components/ui/DataTable';
 import { Pagination } from '../../components/ui/Pagination';
 import { Modal } from '../../components/ui/Modal';
+import { NutritionistService, NutritionistProfile } from '../../services/NutritionistService';
+import { useAuth } from '../../hooks/useAuth';
 
-interface Nutritionist {
+// ─── View model ───────────────────────────────────────────────────────────────
+
+type RowStatus = 'active' | 'pending' | 'rejected';
+
+interface NutritionistRow {
   id: string;
+  profileId: string;
   initials: string;
   color: string;
   name: string;
   email: string;
   specialty: string;
-  subSpecialty: string;
-  clients: number;
   credential: string;
   credentialStatus: 'verified' | 'pending';
-  status: 'active' | 'pending';
-  // Datos extra para el modal
+  status: RowStatus;
   fullName: string;
   licenseNumber: string;
   phone: string;
   yearsExperience: string;
-  university: string;
+  education: string;
 }
 
-const nutritionistsMock: Nutritionist[] = [
-  {
-    id: '1', initials: 'AS', color: 'bg-green-500',
-    name: 'Dr. Alfonso Silva',    email: 'alfonso.silva@nutria.com',
-    specialty: 'Hipertensión',    subSpecialty: 'Nutrición clínica',
-    clients: 24, credential: 'Lic. MSP-2021-4567', credentialStatus: 'verified',
-    status: 'active',
-    fullName: 'Alfonso Javier Silva Mora', licenseNumber: 'LIC-NUT-2021-4567',
-    phone: '+593 99 111 2222', yearsExperience: '12 años',
-    university: 'Escuela Superior Politécnica del Litoral',
-  },
-  {
-    id: '2', initials: 'MG', color: 'bg-pink-500',
-    name: 'Dra. María García',    email: 'maria.garcia@nutria.com',
-    specialty: 'Diabetes',        subSpecialty: 'Endocrinología',
-    clients: 31, credential: 'Lic. MSP-2022-8901', credentialStatus: 'verified',
-    status: 'active',
-    fullName: 'María Elena García Ruiz', licenseNumber: 'LIC-NUT-2022-8901',
-    phone: '+593 98 222 3333', yearsExperience: '9 años',
-    university: 'Universidad San Francisco de Quito',
-  },
-  {
-    id: '3', initials: 'JR', color: 'bg-orange-500',
-    name: 'Dr. Juan Rodríguez',   email: 'juan.rodriguez@nutria.com',
-    specialty: 'Obesidad',        subSpecialty: 'Nutrición deportiva',
-    clients: 18, credential: 'Lic. MSP-2023-1234', credentialStatus: 'verified',
-    status: 'active',
-    fullName: 'Juan Pablo Rodríguez Vega', licenseNumber: 'LIC-NUT-2023-1234',
-    phone: '+593 97 333 4444', yearsExperience: '6 años',
-    university: 'Escuela Superior Politécnica del Litoral',
-  },
-  {
-    id: '4', initials: 'LC', color: 'bg-teal-500',
-    name: 'Dra. Laura Castro',    email: 'laura.castro@nutria.com',
-    specialty: 'Deportiva',       subSpecialty: 'Nutrición deportiva',
-    clients: 0,  credential: 'Documentos en revisión', credentialStatus: 'pending',
-    status: 'pending',
-    fullName: 'Laura María Castro Rodríguez', licenseNumber: 'LIC-NUT-2023-4567',
-    phone: '+593 99 123 4567', yearsExperience: '8 años',
-    university: 'Universidad Central del Ecuador',
-  },
-  {
-    id: '5', initials: 'PM', color: 'bg-indigo-500',
-    name: 'Dr. Pedro Morales',    email: 'pedro.morales@nutria.com',
-    specialty: 'Cardiología',     subSpecialty: 'Nutrición cardiovascular',
-    clients: 27, credential: 'Lic. MSP-2021-5678', credentialStatus: 'verified',
-    status: 'active',
-    fullName: 'Pedro Antonio Morales León', licenseNumber: 'LIC-NUT-2021-5678',
-    phone: '+593 96 444 5555', yearsExperience: '15 años',
-    university: 'Universidad de Guayaquil',
-  },
-  {
-    id: '6', initials: 'ST', color: 'bg-purple-500',
-    name: 'Dra. Sara Torres',     email: 'sara.torres@nutria.com',
-    specialty: 'Pediatría',       subSpecialty: 'Nutrición infantil',
-    clients: 22, credential: 'Lic. MSP-2022-3456', credentialStatus: 'verified',
-    status: 'active',
-    fullName: 'Sara Patricia Torres Salinas', licenseNumber: 'LIC-NUT-2022-3456',
-    phone: '+593 95 555 6666', yearsExperience: '7 años',
-    university: 'Escuela Superior Politécnica del Litoral',
-  },
-  {
-    id: '7', initials: 'DF', color: 'bg-blue-700',
-    name: 'Dr. Daniel Fernández', email: 'daniel.fernandez@nutria.com',
-    specialty: 'Renal',           subSpecialty: 'Nefrología nutricional',
-    clients: 0,  credential: 'Esperando aprobación', credentialStatus: 'pending',
-    status: 'pending',
-    fullName: 'Daniel Esteban Fernández Cruz', licenseNumber: 'LIC-NUT-2023-7890',
-    phone: '+593 94 666 7777', yearsExperience: '3 años',
-    university: 'Universidad Técnica Particular de Loja',
-  },
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const AVATAR_COLORS = [
+  'bg-green-500', 'bg-pink-500', 'bg-orange-500', 'bg-teal-500',
+  'bg-indigo-500', 'bg-purple-500', 'bg-blue-700', 'bg-red-500', 'bg-yellow-500',
 ];
+
+function getAvatarColor(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function mapProfileToRow(p: NutritionistProfile): NutritionistRow {
+  const firstName = p.user?.person?.first_name ?? '';
+  const lastName  = p.user?.person?.last_name  ?? '';
+  const fullName  = `${firstName} ${lastName}`.trim();
+  const initials  = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase() || '??';
+
+  const rowStatus: RowStatus =
+    p.status === 'verified' ? 'active' :
+    p.status === 'rejected' ? 'rejected' : 'pending';
+
+  return {
+    id:               p.id,
+    profileId:        p.id,
+    initials,
+    color:            getAvatarColor(fullName || p.id),
+    name:             fullName || p.user?.email,
+    email:            p.user?.email ?? '—',
+    specialty:        p.specialty?.name ?? '—',
+    credential:       p.license_number ?? '—',
+    credentialStatus: p.status === 'verified' ? 'verified' : 'pending',
+    status:           rowStatus,
+    fullName,
+    licenseNumber:    p.license_number ?? '—',
+    phone:            p.user?.person?.phone ?? '—',
+    yearsExperience:  p.years_experience != null ? `${p.years_experience} años` : '—',
+    education:        p.education ?? '—',
+  };
+}
+
+const PAGE_SIZE = 10;
+
+// ─── CredentialCell ───────────────────────────────────────────────────────────
 
 function CredentialCell({ status, text }: { status: 'verified' | 'pending'; text: string }) {
   return (
@@ -113,24 +92,40 @@ function CredentialCell({ status, text }: { status: 'verified' | 'pending'; text
         <p className={`text-xs font-medium ${status === 'verified' ? 'text-green-600' : 'text-orange-500'}`}>
           {status === 'verified' ? 'Verificado' : 'Pendiente'}
         </p>
-        <p className="text-xs text-gray-400">{text}</p>
+        <p className="text-xs text-gray-400 truncate max-w-[120px]">{text}</p>
       </div>
     </div>
   );
 }
 
+// ─── StatusBadge (tabla) ──────────────────────────────────────────────────────
+
+function StatusBadge({ status }: { status: RowStatus }) {
+  if (status === 'active')   return <Badge variant="active" />;
+  if (status === 'rejected') return <Badge variant="rejected" />;
+  return <Badge variant="pending" />;
+}
+
+// ─── ActionButtons ────────────────────────────────────────────────────────────
+
 function ActionButtons({
-  nutritionist,
+  row,
   onView,
+  onQuickAction,
+  loadingId,
 }: {
-  nutritionist: Nutritionist;
-  onView: (n: Nutritionist) => void;
+  row: NutritionistRow;
+  onView: (r: NutritionistRow) => void;
+  onQuickAction: (profileId: string, action: 'verified' | 'rejected') => Promise<void>;
+  loadingId: string | null;
 }) {
+  const busy = loadingId === row.id;
+
   return (
     <div className="flex items-center gap-1">
-      {/* Ver */}
+      {/* Ver detalles */}
       <button
-        onClick={() => onView(nutritionist)}
+        onClick={() => onView(row)}
         className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
         title="Ver detalles"
       >
@@ -140,48 +135,65 @@ function ActionButtons({
         </svg>
       </button>
 
-      {/* Editar */}
-      <button
-        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
-        title="Editar"
-      >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-        </svg>
-      </button>
-
-      {/* Acción según estado */}
-      {nutritionist.status === 'pending' ? (
-        <button
-          onClick={() => onView(nutritionist)}
-          className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white transition"
-          title="Revisar"
-        >
-          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-        </button>
-      ) : (
-        <button
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-red-500 transition"
-          title="Eliminar"
-        >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-        </button>
+      {/* PENDIENTE: botones de aprobar y rechazar */}
+      {row.status === 'pending' && (
+        <>
+          <button
+            disabled={busy}
+            onClick={() => onQuickAction(row.id, 'rejected')}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 disabled:opacity-40 transition"
+            title="Rechazar"
+          >
+            {busy ? <span className="text-[10px]">…</span> : (
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            )}
+          </button>
+          <button
+            disabled={busy}
+            onClick={() => onQuickAction(row.id, 'verified')}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-green-100 hover:bg-green-200 text-green-600 disabled:opacity-40 transition"
+            title="Aprobar"
+          >
+            {busy ? <span className="text-[10px]">…</span> : (
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
+          </button>
+        </>
       )}
+
     </div>
   );
 }
 
-function ReviewModal({
-  nutritionist,
-  onClose,
-}: {
-  nutritionist: Nutritionist;
+// ─── ReviewModal ──────────────────────────────────────────────────────────────
+
+interface ReviewModalProps {
+  row: NutritionistRow;
   onClose: () => void;
-}) {
+  onAction: (profileId: string, action: 'verified' | 'rejected') => Promise<void>;
+}
+
+function ReviewModal({ row, onClose, onAction }: ReviewModalProps) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
+
+  const handleAction = async (action: 'verified' | 'rejected') => {
+    setLoading(true);
+    setError(null);
+    try {
+      await onAction(row.id, action);
+      onClose();
+    } catch (e: any) {
+      setError(e?.message ?? 'Error al procesar la solicitud.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const InfoField = ({ label, value }: { label: string; value: string }) => (
     <div>
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{label}</p>
@@ -191,95 +203,209 @@ function ReviewModal({
     </div>
   );
 
+  const statusBadge = row.status === 'active'
+    ? <Badge variant="active" />
+    : row.status === 'rejected'
+    ? <Badge variant="rejected" />
+    : <Badge variant="pending" />;
+
   return (
     <Modal isOpen={true} onClose={onClose} size="md">
-      {/* Header del modal */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6 -mt-1">
         <div className="flex items-center gap-3">
-          <Avatar initials={nutritionist.initials} color={nutritionist.color} size="lg" />
+          <Avatar initials={row.initials} color={row.color} size="lg" />
           <div>
-            <h3 className="font-bold text-gray-800 text-lg leading-tight">{nutritionist.fullName}</h3>
-            <div className="mt-1">
-              <Badge variant="pending" />
-            </div>
+            <h3 className="font-bold text-gray-800 text-lg leading-tight">{row.fullName || row.name}</h3>
+            <div className="mt-1">{statusBadge}</div>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition"
+          className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold text-sm transition"
         >
           ×
         </button>
       </div>
 
-      {/* Campos de información */}
+      {/* Datos */}
       <div className="space-y-3">
-        <InfoField label="Nombre Completo"    value={nutritionist.fullName} />
-        <InfoField label="Número de Licencia" value={nutritionist.licenseNumber} />
-
+        <InfoField label="Nombre Completo"    value={row.fullName || '—'} />
+        <InfoField label="Número de Licencia" value={row.licenseNumber} />
         <div className="grid grid-cols-2 gap-3">
-          <InfoField label="Teléfono"           value={nutritionist.phone} />
-          <InfoField label="Años de Experiencia" value={nutritionist.yearsExperience} />
+          <InfoField label="Teléfono"            value={row.phone} />
+          <InfoField label="Años de Experiencia" value={row.yearsExperience} />
         </div>
-
-        <InfoField label="Especialidad"  value={`${nutritionist.specialty} · ${nutritionist.subSpecialty}`} />
-        <InfoField label="Universidad"   value={nutritionist.university} />
-        <InfoField label="Correo Electrónico" value={nutritionist.email} />
+        <InfoField label="Especialidad"       value={row.specialty} />
+        <InfoField label="Educación"          value={row.education} />
+        <InfoField label="Correo Electrónico" value={row.email} />
       </div>
 
-      {/* Botones de acción */}
-      <div className="grid grid-cols-2 gap-3 mt-6">
-        <button className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition flex items-center justify-center gap-2">
-          <span>✕</span> Rechazar
-        </button>
-        <button className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition flex items-center justify-center gap-2">
-          <span>✓</span> Aprobar
-        </button>
+      {/* Error del backend */}
+      {error && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      {/* Acciones según estado */}
+      <div className="mt-6">
+        {row.status === 'pending' && (
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              disabled={loading}
+              onClick={() => handleAction('rejected')}
+              className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-semibold text-sm transition flex items-center justify-center gap-2"
+            >
+              {loading ? 'Procesando...' : <><span>✕</span> Rechazar</>}
+            </button>
+            <button
+              disabled={loading}
+              onClick={() => handleAction('verified')}
+              className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-semibold text-sm transition flex items-center justify-center gap-2"
+            >
+              {loading ? 'Procesando...' : <><span>✓</span> Aprobar</>}
+            </button>
+          </div>
+        )}
+
+        {(row.status === 'active' || row.status === 'rejected') && (
+          <p className="text-center text-xs text-gray-400 py-2">
+            Solo se pueden revisar nutricionistas en estado pendiente.
+          </p>
+        )}
       </div>
     </Modal>
   );
 }
 
-const TABS = [
-  { label: 'Todos',      count: 15 },
-  { label: 'Activos',    count: 13 },
-  { label: 'Pendientes', count: 2  },
-];
+// ─── NutritionistsPage ────────────────────────────────────────────────────────
 
 function NutritionistsPage() {
-  const [activeNav, setActiveNav]         = useState('Nutricionistas');
-  const [activeTab, setActiveTab]         = useState('Todos');
-  const [search, setSearch]               = useState('');
-  const [currentPage, setCurrentPage]     = useState(1);
-  const [selectedNutritionist, setSelected] = useState<Nutritionist | null>(null);
+  const { user } = useAuth();
 
-  // Filtrado local
-  const filtered = nutritionistsMock.filter((n) => {
-    const matchesTab =
-      activeTab === 'Todos'      ? true :
-      activeTab === 'Activos'    ? n.status === 'active' :
-      activeTab === 'Pendientes' ? n.status === 'pending' : true;
+  const [activeNav, setActiveNav]     = useState('Nutricionistas');
+  const [activeTab, setActiveTab]     = useState('Todos');
+  const [search, setSearch]           = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selected, setSelected]       = useState<NutritionistRow | null>(null);
+  const [loadingId, setLoadingId]     = useState<string | null>(null);
 
-    const matchesSearch =
-      search === '' ||
-      n.name.toLowerCase().includes(search.toLowerCase()) ||
-      n.email.toLowerCase().includes(search.toLowerCase()) ||
-      n.specialty.toLowerCase().includes(search.toLowerCase());
+  const [rows, setRows]       = useState<NutritionistRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
 
-    return matchesTab && matchesSearch;
+  // ── Carga: incluye todos los estados ───────────────────────────────────────
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // El endpoint sin filtro devuelve verified + pending.
+      // Con status=rejected devuelve los rechazados.
+      const [main, rejected] = await Promise.all([
+        NutritionistService.getAll(),
+        NutritionistService.getAll('rejected'),
+      ]);
+
+      // Deduplica por id por si acaso
+      const seen = new Set<string>();
+      const all  = [...main, ...rejected].filter(p => {
+        if (seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      });
+
+      setRows(all.map(mapProfileToRow));
+    } catch {
+      setError('No se pudo cargar la lista de nutricionistas. Verifica tu conexión.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // ── Tabs dinámicos ─────────────────────────────────────────────────────────
+
+  const totalCount    = rows.length;
+  const activeCount   = rows.filter(r => r.status === 'active').length;
+  const pendingCount  = rows.filter(r => r.status === 'pending').length;
+  const rejectedCount = rows.filter(r => r.status === 'rejected').length;
+
+  const TABS = [
+    { label: 'Todos',      count: totalCount    },
+    { label: 'Activos',    count: activeCount   },
+    { label: 'Pendientes', count: pendingCount  },
+    { label: 'Rechazados', count: rejectedCount },
+  ];
+
+  // ── Filtrado ───────────────────────────────────────────────────────────────
+
+  const filtered = rows.filter((r) => {
+    const matchTab =
+      activeTab === 'Activos'    ? r.status === 'active'   :
+      activeTab === 'Pendientes' ? r.status === 'pending'  :
+      activeTab === 'Rechazados' ? r.status === 'rejected' : true;
+
+    const q = search.toLowerCase();
+    const matchSearch =
+      !q ||
+      r.name.toLowerCase().includes(q) ||
+      r.email.toLowerCase().includes(q) ||
+      r.specialty.toLowerCase().includes(q);
+
+    return matchTab && matchSearch;
   });
 
-  // Columnas de la tabla
-  const columns: Column<Nutritionist>[] = [
+  // ── Paginación ─────────────────────────────────────────────────────────────
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated  = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const from = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const to   = Math.min(currentPage * PAGE_SIZE, filtered.length);
+
+  // ── Acción: actualiza estado en la lista sin recargar ─────────────────────
+
+  const handleAction = async (profileId: string, action: 'verified' | 'rejected') => {
+    if (!user?.userId) throw new Error('Sin sesión activa');
+    await NutritionistService.review(profileId, action, user.userId);
+
+    setRows(prev => prev.map(r => {
+      if (r.id !== profileId) return r;
+      const newStatus: RowStatus = action === 'verified' ? 'active' : 'rejected';
+      return {
+        ...r,
+        status:           newStatus,
+        credentialStatus: action === 'verified' ? 'verified' : 'pending',
+      };
+    }));
+  };
+
+  // handleAction rápido (botones inline de la tabla)
+  const handleQuickAction = async (profileId: string, action: 'verified' | 'rejected') => {
+    setLoadingId(profileId);
+    try {
+      await handleAction(profileId, action);
+    } catch {
+      // error silencioso en botón rápido — el modal sí muestra errores
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // ── Columnas ───────────────────────────────────────────────────────────────
+
+  const columns: Column<NutritionistRow>[] = [
     {
       key: 'nutricionista',
       header: 'Nutricionista',
-      render: (row) => (
+      render: (r) => (
         <div className="flex items-center gap-2.5">
-          <Avatar initials={row.initials} color={row.color} size="md" />
+          <Avatar initials={r.initials} color={r.color} size="md" />
           <div>
-            <p className="font-semibold text-gray-700 text-xs leading-tight">{row.name}</p>
-            <p className="text-gray-400 text-xs">{row.email}</p>
+            <p className="font-semibold text-gray-700 text-xs leading-tight">{r.name}</p>
+            <p className="text-gray-400 text-xs">{r.email}</p>
           </div>
         </div>
       ),
@@ -287,49 +413,51 @@ function NutritionistsPage() {
     {
       key: 'especialidad',
       header: 'Especialidad',
-      render: (row) => (
-        <div>
-          <p className="text-xs font-medium text-gray-700">{row.specialty}</p>
-          <p className="text-xs text-gray-400">{row.subSpecialty}</p>
-        </div>
-      ),
-    },
-    {
-      key: 'clientes',
-      header: 'Clientes',
-      render: (row) => (
-        <span className={`text-sm font-bold ${row.clients > 0 ? 'text-red-500' : 'text-gray-400'}`}>
-          {row.clients}
-        </span>
-      ),
+      render: (r) => <span className="text-xs font-medium text-gray-700">{r.specialty}</span>,
     },
     {
       key: 'credenciales',
       header: 'Credenciales',
-      render: (row) => (
-        <CredentialCell status={row.credentialStatus} text={row.credential} />
-      ),
+      render: (r) => <CredentialCell status={r.credentialStatus} text={r.credential} />,
     },
     {
       key: 'estado',
       header: 'Estado',
-      render: (row) => <Badge variant={row.status === 'active' ? 'active' : 'pending'} />,
+      render: (r) => <StatusBadge status={r.status} />,
     },
     {
       key: 'acciones',
       header: 'Acciones',
-      render: (row) => (
-        <ActionButtons nutritionist={row} onView={setSelected} />
+      render: (r) => (
+        <ActionButtons
+          row={r}
+          onView={setSelected}
+          onQuickAction={handleQuickAction}
+          loadingId={loadingId}
+        />
       ),
     },
   ];
 
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
-      {/* TopBar */}
       <AdminTopBar title="Gestión de Nutricionistas" />
 
       <div className="px-8 pb-8 pt-4">
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={fetchData}
+              className="text-xs font-semibold underline ml-4 hover:text-red-800"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
 
         {/* Barra de herramientas */}
         <div className="flex items-center justify-between mb-5">
@@ -337,7 +465,7 @@ function NutritionistsPage() {
             <SearchInput
               placeholder="Buscar por nombre, email o especialidad..."
               value={search}
-              onChange={setSearch}
+              onChange={(v) => { setSearch(v); setCurrentPage(1); }}
               className="w-72"
             />
             <span className="text-sm text-gray-400 font-medium">Filtrar por:</span>
@@ -349,17 +477,13 @@ function NutritionistsPage() {
             />
           </div>
           <div className="flex items-center gap-2">
-            {/* Exportar Excel */}
             <button className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50 transition">
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
               Excel
             </button>
-            {/* Agregar */}
-            <Button variant="danger">
-              + Agregar Nutricionista
-            </Button>
+            <Button variant="danger">+ Agregar Nutricionista</Button>
           </div>
         </div>
 
@@ -367,29 +491,30 @@ function NutritionistsPage() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <DataTable
             columns={columns}
-            data={filtered}
-            keyExtractor={(row) => row.id}
+            data={paginated}
+            keyExtractor={(r) => r.id}
+            isLoading={loading}
             emptyIcon="🏥"
             emptyTitle="No hay nutricionistas"
             emptyDescription="No se encontraron resultados para tu búsqueda."
           />
 
-          {/* Footer: total + paginación */}
           <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-50">
             <p className="text-xs text-gray-400">
-              Mostrando 1-{filtered.length} de {filtered.length} nutricionistas
+              Mostrando {from}–{to} de {filtered.length} nutricionistas
             </p>
-            <Pagination current={currentPage} total={3} onChange={setCurrentPage} />
+            <Pagination current={currentPage} total={totalPages} onChange={setCurrentPage} />
           </div>
         </div>
 
       </div>
 
-      {/* Modal de revisión */}
-      {selectedNutritionist && (
+      {/* Modal de detalle / acción */}
+      {selected && (
         <ReviewModal
-          nutritionist={selectedNutritionist}
+          row={selected}
           onClose={() => setSelected(null)}
+          onAction={handleAction}
         />
       )}
     </AdminLayout>

@@ -27,7 +27,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
     confirmPassword: '',
   });
 
-  const { errors, isStepValid } = useFormValidation(form, step, acceptTerms, cvFile, senescytFile)
+  const { errors, isStepValid } = useFormValidation(form, step, acceptTerms, cvFile, senescytFile);
 
   // Marks field as touched and updates state
   const update = (field: keyof FormState, value: string) => {
@@ -64,35 +64,49 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
     setIsSubmitting(true);
 
     try {
-      // Separar fullName en first_name + last_name (el backend los requiere por separado)
+      // Separar fullName en first_name + last_name
       const nameParts = form.fullName.trim().split(/\s+/);
       const first_name = nameParts[0] ?? '';
-      const last_name = nameParts.slice(1).join(' ') || first_name; // fallback si solo hay un nombre
+      const last_name = nameParts.slice(1).join(' ') || first_name;
 
-      // Enviar solo los campos que el backend espera
-      const response = await RegistrerServices.crearUsuario({
-        email: form.email,
-        password: form.password,
+      // Payload JSON con todos los campos que NutritionistCreateRequest espera
+      // Los archivos (CV, Senescyt) se subirán en un paso posterior desde el perfil
+      const payload = {
+        // ── Tabla users + persons ──────────────────────────────
+        email:            form.email,
+        password:         form.password,
         first_name,
         last_name,
-        date_of_birth: form.birthDate,
-        role: 'nutritionist',
-      });
+        date_of_birth:    form.birthDate,
+        phone:            form.phone,
+        gender:           form.gender,   // enum: 'masculino' | 'femenino'
+
+        // ── Tabla nutritionist_profile ─────────────────────────
+        cedula:           form.cedula,
+        specialty_id:     Number(form.specialties),    // el select guarda el id como string
+        years_experience: Number(form.yearsExperience),
+      };
+
+      console.log('📤 Enviando registro de nutricionista:', payload);
+
+      const response = await RegistrerServices.crearNutricionista(payload);
 
       console.log('✅ Nutricionista registrado:', response.data);
 
+      const profileData = response.data;
+
       if (onRegistered) {
         onRegistered({
-          userId: response.data.id,
-          email: response.data.email,
-          role: response.data.role,
+          userId: profileData.user_id ?? profileData.id,
+          email: form.email,
+          role: 'nutritionist',
         });
       } else {
         onGoToLogin();
       }
 
     } catch (error) {
-      console.error('❌ Error al registrar usuario:', error);
+      console.error('❌ Error al registrar nutricionista:', error);
       const message = error instanceof Error ? error.message : 'Error desconocido';
       alert(`No se pudo completar el registro: ${message}`);
     } finally {
@@ -131,8 +145,9 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
           {[1, 2, 3].map(i => (
             <div
               key={i}
-              className={`h-2 flex-1 rounded-full transition-colors duration-300 ${step >= i ? 'bg-green-500' : 'bg-gray-100'
-                }`}
+              className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+                step >= i ? 'bg-green-500' : 'bg-gray-100'
+              }`}
             />
           ))}
         </div>
