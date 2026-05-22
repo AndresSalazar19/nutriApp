@@ -109,13 +109,12 @@ class FoodItemService:
     @staticmethod
     def list(db: Session, category: Optional[str] = None, search: Optional[str] = None) -> List[FoodItemResponse]:
 
-        query = db.query(FoodItem)
-
+        query = db.query(FoodItem).filter(FoodItem.is_active == True)
         if category:
-            query = query.filter(FoodItem.category.ilike(f"%{category}%" ), FoodItem.is_active == True)
+            query = query.filter(FoodItem.category.ilike(f"%{category}%"))
 
         if search:
-            query = query.filter(FoodItem.name.ilike(f"%{search}%"), FoodItem.is_active == True)
+            query = query.filter(FoodItem.name.ilike(f"%{search}%"))
 
         return query.order_by(FoodItem.name.asc()).all()
 
