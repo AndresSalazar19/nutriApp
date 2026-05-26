@@ -3,9 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // ── La BASE_URL debe ser solo el origen, sin trailing slash
 // ── Ejemplo en .env:  EXPO_PUBLIC_API_URL=http://192.168.1.10:8000
 // ── El prefijo /api/v1 se añade aquí una sola vez
-const BASE_URL = (
-  process.env.EXPO_PUBLIC_API_URL ?? process.env.REACT_APP_API_URL ?? ''
-).replace(/\/$/, ''); // elimina slash final si existe
+//const BASE_URL = (
+//  process.env.EXPO_PUBLIC_API_URL ?? process.env.REACT_APP_API_URL ?? ''
+//).replace(/\/$/, ''); // elimina slash final si existe
+
+const BASE_URL="http://147.93.176.210:8083"
 
 const API = `${BASE_URL}/api/v1`;
 
