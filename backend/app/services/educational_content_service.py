@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.db.models.educational_content import EducationalContent, ContentMedia
+from app.db.models.content import EducationalContent, ContentMedia
 from app.schemas.educational_content import EducationalContentRequest
 import uuid
 
