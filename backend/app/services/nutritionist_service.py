@@ -4,7 +4,8 @@ from app.schemas.user import UserResponse, UserCreate
 from app.services.user_service import UserService
 from app.db.models.user import UserRole
 from app.db.models.nutritionist import NutritionistProfile, NutritionistStatus, Specialty
-from datetime import datetime
+from datetime import datetime, timezone
+from fastapi import HTTPException
 from app.schemas.nutritionist import NutritionistProfileResponse
 import uuid
 from passlib.context import CryptContext
@@ -15,9 +16,23 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class NutritionistService:
 
     @staticmethod
-    def get_all(db: Session):
-        return db.query(NutritionistProfile).filter(NutritionistProfile.status != "rejected" 
-                                                    or NutritionistProfile.status != "suspended").all()
+    def get_all(db: Session, status: NutritionistStatus | None = None):
+        query = db.query(NutritionistProfile)
+
+        if status:
+            query = query.filter(
+                NutritionistProfile.status == status.value
+            )
+        else:
+            query = query.filter(
+                NutritionistProfile.status.notin_([
+                    NutritionistStatus.rejected.value,
+                    NutritionistStatus.suspended.value
+                ])
+            )
+
+        return query.all()
+    
     @staticmethod
     def get_by_user_id(db: Session, user_id: uuid.UUID):
         return db.query(NutritionistProfile).filter(NutritionistProfile.user_id == user_id).first()
@@ -27,12 +42,25 @@ class NutritionistService:
         return db.query(NutritionistProfile).filter(NutritionistProfile.id == profile_id).first()
 
     @staticmethod
-    def update_status(db: Session, profile: NutritionistProfile, new_status: str, admin_id: uuid.UUID) -> NutritionistProfile:
-        profile.status = NutritionistStatus(new_status)
+    def review_profile(
+        db: Session, profile_id: uuid.UUID, status: NutritionistStatus, admin_id: uuid.UUID
+    ) -> NutritionistProfile:
+
+        profile = NutritionistService.get_by_id(db, profile_id)
+
+        if not profile:
+            raise HTTPException(status_code=400, detail="Perfil de nutricionista no encontrado")
+
+        if profile.status != NutritionistStatus.pending:
+            raise HTTPException(status_code=400, detail=f"Solo se pueden revisar perfiles pendientes. Estado actual: {profile.status}" )
+
+        profile.status = status
         profile.verified_by = admin_id
-        profile.verified_at = datetime.utcnow()
+        profile.verified_at = datetime.now(timezone.utc)
+
         db.commit()
         db.refresh(profile)
+
         return profile
 
     @staticmethod

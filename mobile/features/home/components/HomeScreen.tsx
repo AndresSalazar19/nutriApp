@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   ScrollView,
   StyleSheet,
@@ -8,8 +9,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
+import { useContent } from '@/features/content/hooks/useContent';
+import { CATEGORY_EMOJI, CATEGORY_LABEL } from '@/features/content/services/contentService';
 
 const { width } = Dimensions.get('window');
 
@@ -68,6 +72,9 @@ function ActionCard({
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { items: contentItems, loading: contentLoading } = useContent();
+  const previewItems = contentItems.slice(0, 3);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -155,20 +162,43 @@ export default function HomeScreen() {
         </View>
 
         {/* ── Recursos Educativos ── */}
-        <Text style={styles.sectionTitle}>Recursos Educativos</Text>
+        <View style={styles.sectionRow}>
+          <Text style={styles.sectionTitle}>Recursos Educativos</Text>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/content' as any)}>
+            <Text style={styles.sectionLink}>Ver todos ›</Text>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity style={styles.resourceRow} activeOpacity={0.8}>
-          <View style={styles.resourceIconWrap}>
-            <Text style={styles.resourceIcon}>📖</Text>
+        {contentLoading ? (
+          <View style={styles.resourceLoading}>
+            <ActivityIndicator size="small" color={COLORS.primary} />
           </View>
-          <View style={styles.resourceBody}>
-            <Text style={styles.resourceTitle}>Alimentación para hipertensión</Text>
-            <Text style={styles.resourceSubtitle}>
-              Conoce los alimentos que te ayudan a controlar la presión arterial
-            </Text>
+        ) : previewItems.length === 0 ? (
+          <View style={styles.resourceEmpty}>
+            <Text style={styles.resourceEmptyText}>No hay recursos disponibles aún.</Text>
           </View>
-          <Text style={styles.resourceArrow}>›</Text>
-        </TouchableOpacity>
+        ) : (
+          previewItems.map(item => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.resourceRow}
+              activeOpacity={0.8}
+              onPress={() => router.push(`/(tabs)/content/${item.id}` as any)}
+            >
+              <View style={styles.resourceIconWrap}>
+                <Text style={styles.resourceIcon}>{CATEGORY_EMOJI[item.category] ?? '📖'}</Text>
+              </View>
+              <View style={styles.resourceBody}>
+                <Text style={styles.resourceTitle} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.resourceSubtitle}>
+                  {CATEGORY_LABEL[item.category] ?? item.category}
+                  {item.tags && item.tags.length > 0 ? ` · ${item.tags[0]}` : ''}
+                </Text>
+              </View>
+              <Text style={styles.resourceArrow}>›</Text>
+            </TouchableOpacity>
+          ))
+        )}
 
         {/* Bottom spacing for tab bar */}
         <View style={{ height: 20 }} />
@@ -416,6 +446,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#795548',
     lineHeight: 18,
+  },
+
+  // ── Section header row ──
+  sectionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  sectionLink: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  resourceLoading: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  resourceEmpty: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  resourceEmptyText: {
+    fontSize: 13,
+    color: '#aaa',
   },
 
   // ── Resource Row ──
