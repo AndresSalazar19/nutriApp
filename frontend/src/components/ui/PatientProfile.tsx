@@ -3,6 +3,8 @@ import { Patient } from '../../components/mock/patientsMock';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/charts/WeightChart';
+import { Modal } from './Modal';
+import { AnthropometricForm, AnthropometricRecord } from './AnthropometricForm';
 
 function bmiColor(bmi: number) {
   if (bmi < 18.5) return 'text-blue-500';
@@ -37,7 +39,7 @@ function Metric({ label, value, sub, highlight }: {
 
 // ─── Info tab ─────────────────────────────────────────────────────────────────
 
-function InfoTab({ patient }: { patient: Patient }) {
+function InfoTab({ patient, onAddMeasurement }: { patient: Patient; onAddMeasurement: () => void }) {
   return (
     <div className="grid grid-cols-2 gap-6">
 
@@ -89,9 +91,14 @@ function InfoTab({ patient }: { patient: Patient }) {
 
       {/* Datos antropométricos */}
       <div className="col-span-2">
-        <h4 className="font-bold text-gray-800 text-sm mb-3">Datos Antropométricos</h4>
-        <div className="flex items-center gap-2 mb-3 text-xs text-green-600">
-          <a href="#" className="hover:underline">Ver historial →</a>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-bold text-gray-800 text-sm">Datos Antropométricos</h4>
+          <button
+            onClick={onAddMeasurement}
+            className="text-green-600 text-xs hover:underline flex items-center gap-1"
+          >
+            ➕ Registrar medición
+          </button>
         </div>
         <div className="grid grid-cols-6 gap-3">
           <Metric label="Peso" value={`${patient.weight}`}
@@ -155,6 +162,14 @@ interface PatientProfileProps {
 
 export function PatientProfile({ patient, onBack }: PatientProfileProps) {
   const [activeTab, setActiveTab] = useState<Tab>('Información');
+
+  const [showAnthropometricForm, setShowAnthropometricForm] = useState(false);
+
+  const handleSaveAnthropometric = (record: AnthropometricRecord) => {
+    console.log('Medición antropométrica guardada:', record);
+    // TODO: conectar con el backend cuando el endpoint esté listo
+    setShowAnthropometricForm(false);
+  };
 
   const statusVariant =
     patient.status === 'active'   ? 'active'  :
@@ -266,10 +281,27 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
 
         {/* ── Tab content ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          {activeTab === 'Información' ? <InfoTab patient={patient} /> : <PlaceholderTab label={activeTab} />}
+          {activeTab === 'Información'
+            ? <InfoTab patient={patient} onAddMeasurement={() => setShowAnthropometricForm(true)} />
+            : <PlaceholderTab label={activeTab} />}
         </div>
 
       </div>
+
+      {/* Modal de registro antropométrico */}
+      <Modal
+        isOpen={showAnthropometricForm}
+        onClose={() => setShowAnthropometricForm(false)}
+        title="Registro de Datos Antropométricos"
+        size="lg"
+      >
+        <AnthropometricForm
+          patientName={`${patient.firstName} ${patient.lastName}`}
+          onCancel={() => setShowAnthropometricForm(false)}
+          onSave={handleSaveAnthropometric}
+        />
+      </Modal>
+      
     </div>
   );
 }
