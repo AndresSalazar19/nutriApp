@@ -40,25 +40,6 @@ export default function WelcomeScreen() {
         </View>
 
         <Text style={styles.brandName}>NutrIA</Text>
-        <Text style={styles.brandSubtitle}>Tu compañero nutricional inteligente</Text>
-
-        {/* Features */}
-        <View style={styles.featureListWrapper}>
-            <View style={styles.featureList}>
-                {[
-                { emoji: '🥗', label: 'Planes personalizados' },
-                { emoji: '📊', label: 'Seguimiento de progreso' },
-                { emoji: '💬', label: 'Chat con nutricionista' },
-                ].map((item) => (
-                <View key={item.label} style={styles.featureItem}>
-                    <View style={styles.featureIcon}>
-                    <Text style={styles.featureEmoji}>{item.emoji}</Text>
-                    </View>
-                    <Text style={styles.featureLabel}>{item.label}</Text>
-                </View>
-                ))}
-            </View>
-        </View>
       </View>
 
       {/* Panel inferior blanco */}
