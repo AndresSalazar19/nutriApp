@@ -8,7 +8,7 @@ export type TabKey = 'inicio' | 'comidas' | 'progreso' | 'recursos' | 'perfil';
 const TABS: { key: TabKey; emoji: string; label: string; href: string }[] = [
   { key: 'inicio',   emoji: '🏠',  label: 'Inicio',    href: '/(tabs)/'         },
   { key: 'comidas',  emoji: '🍽️', label: 'Comidas',   href: '/(tabs)/'         },
-  { key: 'progreso', emoji: '📈',  label: 'Progreso',  href: '/(tabs)/'         },
+  { key: 'progreso', emoji: '📈',  label: 'Progreso',  href: '/(tabs)/progress' },
   { key: 'recursos', emoji: '📚',  label: 'Recursos',  href: '/(tabs)/content'  },
   { key: 'perfil',   emoji: '👤',  label: 'Perfil',    href: '/(tabs)/profile'  },
 ];
