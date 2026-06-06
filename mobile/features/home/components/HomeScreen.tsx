@@ -150,17 +150,6 @@ export default function HomeScreen() {
           <Text style={styles.pdfArrow}>›</Text>
         </TouchableOpacity>
 
-        {/* ── Recordatorio del día ── */}
-        <View style={styles.reminderCard}>
-          <Text style={styles.reminderBulb}>💡</Text>
-          <View style={styles.reminderBody}>
-            <Text style={styles.reminderTitle}>Recordatorio del día</Text>
-            <Text style={styles.reminderText}>
-              Registra tu peso y presión arterial{'\n'}antes del desayuno
-            </Text>
-          </View>
-        </View>
-
         {/* ── Recursos Educativos ── */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Recursos Educativos</Text>
