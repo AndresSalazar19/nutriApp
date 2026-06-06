@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
+import { AIFloatingButton } from './AIFloatingButton';
 import { useContent } from '@/features/content/hooks/useContent';
 import { CATEGORY_EMOJI, CATEGORY_LABEL } from '@/features/content/services/contentService';
 
@@ -192,6 +193,11 @@ export default function HomeScreen() {
         {/* Bottom spacing for tab bar */}
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      <AIFloatingButton 
+        onPress={() => {}}
+        style={{ bottom: 100 }} 
+      />
 
       {/* ── Bottom Tab Bar ── */}
       <BottomTabBar activeTab="inicio" />
