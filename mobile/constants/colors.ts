@@ -17,4 +17,20 @@ export const COLORS = {
 
   /** Alias for primary — use when explicitly describing a background. */
   backgroundPrimary: '#4CAF50',
+
+  accent: '#FF6B6B',
+  accentBlue: '#4A90D9',
+  accentOrange: '#FF9800',
+  accentPurple: '#9C6FD6',
+  success: '#4CAF82',
+  warning: '#FF9800',
+  danger: '#FF6B6B',
+  background: '#F7FAF8',
+  surface: '#FFFFFF',
+  surfaceAlt: '#F0F7F3',
+  border: '#E0EDE6',
+  textPrimary: '#1A2E25',
+  textSecondary: '#6B8C7A',
+  textMuted: '#9BB5A8',
+  white: '#FFFFFF',
 } as const;

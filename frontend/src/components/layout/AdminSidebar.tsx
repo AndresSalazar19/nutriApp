@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '../../routes/routes';
+import { ROUTES } from '../../routes/routes'; // Asegúrate de que la ruta de importación sea la correcta
 
-const icons = {
+const icons: Record<string, React.ReactNode> = {
   dashboard: (
     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
       <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 8a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8-8a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zm0 8a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
@@ -23,6 +23,13 @@ const icons = {
       <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
     </svg>
   ),
+  database: (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
+      <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
+      <path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z" />
+    </svg>
+  ),
   settings: (
     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
       <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
@@ -40,10 +47,10 @@ const navItems = [
   { label: 'Nutricionistas',  icon: 'nutritionist' },
   { label: 'Clientes',        icon: 'clients' },
   { label: 'Contenido',       icon: 'content' },
+  { label: 'Bases de Datos',  icon: 'database' },
   { label: 'Configuración',   icon: 'settings' },
   { label: 'Reportes',        icon: 'reports' },
-  
-] ;
+];
 
 interface AdminSidebarProps {
   activeNav: string;
@@ -51,18 +58,25 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
-
   const navigate = useNavigate();
+
   const handleNavClick = (label: string) => {
-    if (label === 'Nutricionistas') {
-      navigate(ROUTES.ADMIN_NUTRITIONISTS);
-    } else if (label === 'Panel Principal') {
-      navigate(ROUTES.ADMIN);
-    } else if (label === 'Clientes') {
-      navigate(ROUTES.ADMIN_CLIENTS);
-    } else if (label === 'Contenido') {
-      navigate(ROUTES.ADMIN_CONTENT);
+    const routeMap: Record<string, string> = {
+      'Panel Principal': ROUTES.ADMIN,
+      'Nutricionistas':  ROUTES.ADMIN_NUTRITIONISTS,
+      'Clientes':        ROUTES.ADMIN_CLIENTS,
+      'Contenido':       ROUTES.ADMIN_CONTENT,
+      'Bases de Datos':  ROUTES.ADMIN_DATABASES,
+      'Configuración':   ROUTES.ADMIN_SETTINGS,
+      'Reportes':        ROUTES.ADMIN_REPORTS,
+    };
+
+    const routeToNavigate = routeMap[label];
+    
+    if (routeToNavigate) {
+      navigate(routeToNavigate);
     }
+    
     onNavChange(label);
   };
 
