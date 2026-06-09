@@ -102,7 +102,7 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
         </a>
 
         <div className="bg-white rounded-2xl shadow-md p-10 w-full max-w-md">
-          <h2 className="text-3xl font-bold text-green-900 mb-1">Iniciar Sesión</h2>
+          <h2 className="text-3xl font-bold text-green-900 mb-1">Iniciarr Sesión</h2>
           <p className="text-gray-400 text-sm mb-7">Ingresa a tu panel profesional</p>
 
           {/* Mostrar mensaje de error si existe */}
