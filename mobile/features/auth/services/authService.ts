@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //  process.env.EXPO_PUBLIC_API_URL ?? process.env.REACT_APP_API_URL ?? ''
 //).replace(/\/$/, ''); // elimina slash final si existe
 
-const BASE_URL="http://147.93.176.210:8083"
+const BASE_URL = "http://147.93.176.210:8083"
 
 const API = `${BASE_URL}/api/v1`;
 
@@ -21,6 +21,8 @@ export interface RegisterPayload {
   date_of_birth: string; // "YYYY-MM-DD"
   password: string;
   role?: string;
+  cedula: string;
+  gender: string;
 }
 
 export interface LoginPayload {
@@ -72,7 +74,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     // FastAPI estándar: { detail: "..." }
     const detail = data?.detail;
     if (typeof detail === 'string') throw new Error(detail);
-    if (Array.isArray(detail))      throw new Error(detail[0]?.msg ?? 'Error desconocido');
+    if (Array.isArray(detail)) throw new Error(detail[0]?.msg ?? 'Error desconocido');
     throw new Error(`Error ${response.status}`);
   }
 

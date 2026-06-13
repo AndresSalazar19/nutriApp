@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useRegister } from '@/features/auth/hooks/useAuth';
 import { DatePickerField } from '@/components/ui/DatePickerField';
+import { Picker } from '@react-native-picker/picker';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -109,11 +110,13 @@ export default function RegisterScreen() {
 
   const [form, setForm] = useState({
     fullName: '',
+    identification: '',
     email: '',
     phone: '',
     birthDate: '',   // formato "DD/MM/AAAA"
     password: '',
     confirmPassword: '',
+    gender: '',
   });
   const [showPassword, setShowPassword]     = useState(false);
   const [showConfirm, setShowConfirm]       = useState(false);
@@ -125,7 +128,7 @@ export default function RegisterScreen() {
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleRegister = async () => {
-    const { fullName, email, phone, birthDate, password, confirmPassword } = form;
+    const { fullName, email, phone, birthDate, password, confirmPassword, gender, identification } = form;
 
     if (!fullName.trim() || !email.trim() || !phone.trim() || !birthDate.trim() ||
         !password.trim() || !confirmPassword.trim()) {
@@ -151,6 +154,16 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (gender.trim() === '') {
+      Alert.alert('Género', 'Selecciona tu género.');
+      return;
+    }
+
+    if (identification.trim().length !== 10 ) {
+      Alert.alert('Cédula inválida', 'La cédula debe tener exactamente 10 caracteres.');
+      return;
+    }
+
     const user = await register({
       first_name,
       last_name,
@@ -158,6 +171,8 @@ export default function RegisterScreen() {
       phone: phone.trim(),
       date_of_birth,
       password,
+      gender,
+      cedula: identification.trim(),
     });
 
     if (user) router.replace('/(onboarding)/health');
@@ -202,6 +217,32 @@ export default function RegisterScreen() {
               onChangeText={(v) => updateField('fullName', v)}
               editable={!loading}
             />
+
+            {/* Cédula */}
+            <Text style={styles.label}>Cédula</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="0934567890"
+              keyboardType="phone-pad"
+              placeholderTextColor="#bbb"
+              value={form.identification}
+              onChangeText={(v) => updateField('identification', v)}
+              editable={!loading}
+            />
+
+            {/* Género */}
+            <Text style={styles.label}>Género</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={form.gender}
+                onValueChange={(value) => updateField('gender', value)}
+                enabled={!loading}
+              >
+                <Picker.Item label="Seleccione un género" value="" color="#bbb" />
+                <Picker.Item label="Femenino" value="femenino" />
+                <Picker.Item label="Masculino" value="masculino" />
+              </Picker>
+            </View>
 
             {/* Correo */}
             <Text style={styles.label}>Correo Electrónico</Text>
@@ -369,6 +410,19 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 13,
     fontSize: 14, color: '#333', backgroundColor: '#fafafa', marginBottom: 16,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    backgroundColor: '#fafafa',
+    marginBottom: 16,
+    overflow: 'hidden',
+  },  
+
+  picker: {
+    paddingHorizontal: 14,
+    color: '#333',
   },
   // Fecha — mismo aspecto que input pero como botón
   dateRow:         { justifyContent: 'center' },
