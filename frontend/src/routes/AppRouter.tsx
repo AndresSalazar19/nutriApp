@@ -6,9 +6,9 @@ import { PrivateRoute } from './PrivateRoute';
 import { NutritionistStatusGuard } from './NutritionistStatusGuard';
 import { AuthProvider, useAuth, AuthUser } from '../hooks/useAuth';
 
-
 const LoginPage         = lazy(() => import('../pages/Login/LoginPage'));
 const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
+
 //NUTRIONIST
 const MainView          = lazy(() => import('../pages/MainView/MainView'));
 const HomePage          = lazy(() => import('../pages/MainView/HomePage'));
@@ -22,6 +22,8 @@ const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashbo
 const NutritionistsPage = lazy(() => import('../pages/AdminDashboard/NutritionistsPage'));
 const ContentPage       = lazy(() => import('../pages/AdminDashboard/ContentPage'));
 const ClientPage        = lazy(() => import('../pages/AdminDashboard/ClientPage'));
+// NUEVO COMPONENTE DE BASES DE DATOS
+const DatabasesPage     = lazy(() => import('../pages/AdminDashboard/DatabasesPage')); 
 
 function PageLoader() {
   return (
@@ -39,7 +41,7 @@ function PageLoader() {
 function LoginWrapper() {
   const navigate = useNavigate();
   const { login } = useAuth();
- 
+
   const handleLogin = (userData: { userId: string; email: string; role: string; token: string }) => {
     login(userData as AuthUser, userData.token);
     if (userData.role === 'admin') {
@@ -48,7 +50,7 @@ function LoginWrapper() {
       navigate(ROUTES.DASHBOARD, { replace: true });
     }
   };
- 
+
   return (
     <LoginPage
       onLogin={handleLogin}
@@ -60,12 +62,12 @@ function LoginWrapper() {
 function RegisterWrapper() {
   const navigate = useNavigate();
   const { login } = useAuth();
- 
+
   const handleRegistered = (userData: { userId: string; email: string; role: string; token?: string }) => {
     login(userData as AuthUser, userData.token ?? '');
     navigate(ROUTES.DASHBOARD, { replace: true });
   };
- 
+
   return (
     <RegisterPage
       onGoToLogin={() => navigate(ROUTES.LOGIN)}
@@ -78,11 +80,11 @@ function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
- 
+
         {/* ── Públicas ── */}
         <Route path={ROUTES.LOGIN}    element={<PublicRoute><LoginWrapper /></PublicRoute>} />
         <Route path={ROUTES.REGISTER} element={<PublicRoute><RegisterWrapper /></PublicRoute>} />
- 
+
         {/* ── Nutricionista (requiere rol + guard de estado) ── */}
         <Route element={<PrivateRoute allowedRoles={['nutritionist']} />}>
           <Route element={<NutritionistStatusGuard />}>
@@ -96,26 +98,28 @@ function AppRoutes() {
             <Route path={ROUTES.RESOURCES}  element={<ResourcesPage />} />
           </Route>
         </Route>
- 
+
         {/* ── Admin ── */}
         <Route element={<PrivateRoute allowedRoles={['admin']} />}>
           <Route path={ROUTES.ADMIN}               element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN_NUTRITIONISTS} element={<NutritionistsPage />} />
           <Route path={ROUTES.ADMIN_CONTENT}       element={<ContentPage />} />
           <Route path={ROUTES.ADMIN_CLIENTS}       element={<ClientPage />} />
+          {/* NUEVA RUTA DE BASES DE DATOS */}
+          <Route path={ROUTES.ADMIN_DATABASES}     element={<DatabasesPage />} />
         </Route>
- 
+
         {/* ── Fallback ── */}
         <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
- 
+
       </Routes>
     </Suspense>
   );
 }
- 
+
 // ─── Root: BrowserRouter → AuthProvider → Rutas ──────────────────────────────
 // AuthProvider debe estar DENTRO de BrowserRouter para poder usar useNavigate.
- 
+
 export function AppRouter() {
   return (
     <BrowserRouter>

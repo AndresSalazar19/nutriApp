@@ -4,6 +4,7 @@
  */
 
 import { Platform } from 'react-native';
+import { TextStyle } from 'react-native';
 
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
@@ -51,3 +52,47 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const Radius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  full: 999,
+};
+
+export const Typography: Record<string, TextStyle> = {
+  h1: { fontSize: 36, fontWeight: '700', letterSpacing: -0.5 },
+  h2: { fontSize: 28, fontWeight: '700', letterSpacing: -0.3 },
+  h3: { fontSize: 20, fontWeight: '600' },
+  h4: { fontSize: 16, fontWeight: '600' },
+  body: { fontSize: 14, fontWeight: '400' },
+  bodySmall: { fontSize: 12, fontWeight: '400' },
+  label: { fontSize: 11, fontWeight: '500', letterSpacing: 0.5 },
+};
+
+export const Shadows = {
+  sm: {
+    shadowColor: '#1A2E25',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#1A2E25',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+};

@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
+import { AIFloatingButton } from './AIFloatingButton';
 import { useContent } from '@/features/content/hooks/useContent';
 import { CATEGORY_EMOJI, CATEGORY_LABEL } from '@/features/content/services/contentService';
 
@@ -150,17 +151,6 @@ export default function HomeScreen() {
           <Text style={styles.pdfArrow}>›</Text>
         </TouchableOpacity>
 
-        {/* ── Recordatorio del día ── */}
-        <View style={styles.reminderCard}>
-          <Text style={styles.reminderBulb}>💡</Text>
-          <View style={styles.reminderBody}>
-            <Text style={styles.reminderTitle}>Recordatorio del día</Text>
-            <Text style={styles.reminderText}>
-              Registra tu peso y presión arterial{'\n'}antes del desayuno
-            </Text>
-          </View>
-        </View>
-
         {/* ── Recursos Educativos ── */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Recursos Educativos</Text>
@@ -203,6 +193,11 @@ export default function HomeScreen() {
         {/* Bottom spacing for tab bar */}
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      <AIFloatingButton 
+        onPress={() => {}}
+        style={{ bottom: 100 }} 
+      />
 
       {/* ── Bottom Tab Bar ── */}
       <BottomTabBar activeTab="inicio" />
