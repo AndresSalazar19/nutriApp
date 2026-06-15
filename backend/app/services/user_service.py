@@ -47,6 +47,8 @@ class UserService:
             last_name=data.last_name,
             date_of_birth=data.date_of_birth,
             phone=data.phone,
+            cedula=data.cedula,
+            gender=data.gender,
         )
 
         db.add(person)
