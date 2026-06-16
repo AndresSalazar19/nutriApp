@@ -15,6 +15,7 @@ import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { AIFloatingButton } from './AIFloatingButton';
 import { useContent } from '@/features/content/hooks/useContent';
 import { CATEGORY_EMOJI, CATEGORY_LABEL } from '@/features/content/services/contentService';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -72,6 +73,38 @@ function ActionCard({
   );
 }
 
+// ── Recordatorio del día ──────────────────────────────────────────────────────
+function ReminderCard() {
+  return (
+    <View style={styles.reminderCard}>
+      <View style={styles.reminderIconWrap}>
+        <Text style={styles.reminderBulb}>💡</Text>
+      </View>
+      <View style={styles.reminderBody}>
+        <Text style={styles.reminderTitle}>Recordatorio del día</Text>
+        <Text style={styles.reminderText}>
+          Registra tu peso y presión arterial antes del desayuno
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// ── FAB de Nutricionista ──────────────────────────────────────────────────────
+function NutritionistFloatingButton({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      style={styles.nutritionistFab}
+      activeOpacity={0.85}
+      onPress={onPress}
+    >
+      <View style={styles.fabInner}>
+        <MaterialCommunityIcons name="chat" size={28} color="#fff" />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const { items: contentItems, loading: contentLoading } = useContent();
@@ -110,6 +143,9 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* ── Recordatorio del día ── */}
+        <ReminderCard />
+
         {/* ── Acciones Rápidas ── */}
         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
 
@@ -129,7 +165,6 @@ export default function HomeScreen() {
           />
         </View>
 
-        
         {/* ── Recursos Educativos ── */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Recursos Educativos</Text>
@@ -169,13 +204,18 @@ export default function HomeScreen() {
           ))
         )}
 
-        {/* Bottom spacing for tab bar */}
-        <View style={{ height: 20 }} />
+        {/* Bottom spacing for tab bar + FABs */}
+        <View style={{ height: 100 }} />
       </ScrollView>
 
-      <AIFloatingButton 
+      {/* ── Dual FABs ───────────────────────────────────────────────────────── */}
+      {/* FAB nutricionista: verde (COLORS.primary), ícono chat, posición derecha */}
+      <NutritionistFloatingButton onPress={() => {}} />
+
+      {/* FAB IA: azul (robot), se desplaza a la izquierda del nutricionista */}
+      <AIFloatingButton
         onPress={() => {}}
-        style={{ bottom: 100 }} 
+        style={{ bottom: 100, right: 90 }}
       />
 
       {/* ── Bottom Tab Bar ── */}
@@ -270,6 +310,46 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 18,
     paddingTop: 18,
+  },
+
+  // ── Reminder Card ──
+  reminderCard: {
+    backgroundColor: '#fffde7',
+    borderRadius: 14,
+    borderLeftWidth: 4,
+    borderLeftColor: '#fdd835',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+    shadowColor: '#f9a825',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  reminderIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(253,216,53,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  reminderBulb: { fontSize: 20 },
+  reminderBody: { flex: 1 },
+  reminderTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#f57f17',
+    marginBottom: 3,
+  },
+  reminderText: {
+    fontSize: 12,
+    color: '#795548',
+    lineHeight: 17,
   },
 
   // ── Section Title ──
@@ -394,6 +474,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 2,
+    marginBottom: 10,
   },
   resourceIconWrap: {
     width: 48,
@@ -423,4 +504,28 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
+  // ── Nutritionist FAB ──
+  nutritionistFab: {
+    position: 'absolute',
+    bottom: 100,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  fabInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
