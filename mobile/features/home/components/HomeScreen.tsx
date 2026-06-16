@@ -115,16 +115,10 @@ export default function HomeScreen() {
 
         <View style={styles.actionsGrid}>
           <ActionCard
-            emoji="🥗"
-            title="Mi Plan de Comidas"
+            emoji="🩺"
+            title="Registrar la presión"
             subtitle="Ver menú de hoy"
             accentColor={COLORS.primary}
-          />
-          <ActionCard
-            emoji="📊"
-            title="Diario de Progreso"
-            subtitle="Registrar datos"
-            accentColor="#1e88e5"
           />
           <ActionCard
             emoji="📅"
@@ -133,24 +127,9 @@ export default function HomeScreen() {
             accentColor="#fb8c00"
             badge={2}
           />
-          <ActionCard
-            emoji="💬"
-            title="Chat con Nutricionista"
-            subtitle=""
-            accentColor="#8e24aa"
-            dot
-          />
         </View>
 
-        {/* ── Obtener Reporte PDF ── */}
-        <TouchableOpacity style={styles.pdfRow} activeOpacity={0.8}>
-          <View style={styles.pdfIconWrap}>
-            <Text style={styles.pdfIcon}>📄</Text>
-          </View>
-          <Text style={styles.pdfText}>Obtener reporte PDF</Text>
-          <Text style={styles.pdfArrow}>›</Text>
-        </TouchableOpacity>
-
+        
         {/* ── Recursos Educativos ── */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Recursos Educativos</Text>
@@ -375,72 +354,6 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: COLORS.primary,
-  },
-
-  // ── PDF Row ──
-  pdfRow: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  pdfIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: COLORS.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  pdfIcon: { fontSize: 20 },
-  pdfText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  pdfArrow: {
-    fontSize: 20,
-    color: '#ccc',
-  },
-
-  // ── Reminder ──
-  reminderCard: {
-    backgroundColor: '#fffde7',
-    borderRadius: 14,
-    borderLeftWidth: 4,
-    borderLeftColor: '#fdd835',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 22,
-  },
-  reminderBulb: {
-    fontSize: 22,
-    marginRight: 12,
-    marginTop: 2,
-  },
-  reminderBody: { flex: 1 },
-  reminderTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#f57f17',
-    marginBottom: 4,
-  },
-  reminderText: {
-    fontSize: 12,
-    color: '#795548',
-    lineHeight: 18,
   },
 
   // ── Section header row ──
