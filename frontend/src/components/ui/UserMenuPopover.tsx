@@ -101,7 +101,10 @@ export function UserMenuPopover({
             {/* Mi Perfil */}
             <li>
               <button
-                onClick={() => { setOpen(false); /* navigate(ROUTES.PROFILE) cuando exista */ }}
+                onClick={() => { 
+                  setOpen(false); 
+                  navigate(ROUTES.ADMIN_PROFILE); 
+                }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700
                   hover:bg-gray-50 transition text-left"
               >
@@ -113,7 +116,10 @@ export function UserMenuPopover({
             {/* Configuración */}
             <li>
               <button
-                onClick={() => { setOpen(false); /* navigate(ROUTES.SETTINGS) cuando exista */ }}
+                onClick={() => { 
+                  setOpen(false); 
+                  navigate(ROUTES.ADMIN_SETTINGS); 
+                }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700
                   hover:bg-gray-50 transition text-left"
               >

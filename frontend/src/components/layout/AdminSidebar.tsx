@@ -84,7 +84,13 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
     <aside className="w-52 bg-red-600 flex flex-col justify-between py-5 px-3 flex-shrink-0">
       <div>
         {/* Logo */}
-        <div className="flex items-center gap-2 px-2 mb-7">
+        <div
+          onClick={() => {
+            navigate(ROUTES.ADMIN);
+            onNavChange('Panel Principal');
+          }}
+          className="flex items-center gap-2 px-2 mb-7 cursor-pointer select-none hover:opacity-90 transition-opacity"
+        >
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0">
             {/* Reemplazar por imagen/logo */}
             <span className="text-base">🥗</span>

@@ -22,6 +22,7 @@ export const ROUTES = {
   ADMIN_DATABASES:      '/admin/databases',
   ADMIN_REPORTS:        '/admin/reports',
   ADMIN_SETTINGS:       '/admin/settings',
+  ADMIN_PROFILE:        '/admin/profile',
 } as const;
 
 export function buildRoute(
