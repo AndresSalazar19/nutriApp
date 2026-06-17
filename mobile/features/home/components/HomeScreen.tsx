@@ -73,13 +73,10 @@ function ActionCard({
   );
 }
 
-// ── Recordatorio del día ──────────────────────────────────────────────────────
 function ReminderCard() {
   return (
     <View style={styles.reminderCard}>
-      <View style={styles.reminderIconWrap}>
-        <Text style={styles.reminderBulb}>💡</Text>
-      </View>
+      <Text style={styles.reminderBulb}>💡</Text>
       <View style={styles.reminderBody}>
         <Text style={styles.reminderTitle}>Recordatorio del día</Text>
         <Text style={styles.reminderText}>
@@ -143,10 +140,8 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Recordatorio del día ── */}
         <ReminderCard />
-
-        {/* ── Acciones Rápidas ── */}
+        
         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
 
         <View style={styles.actionsGrid}>
@@ -208,11 +203,7 @@ export default function HomeScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ── Dual FABs ───────────────────────────────────────────────────────── */}
-      {/* FAB nutricionista: verde (COLORS.primary), ícono chat, posición derecha */}
       <NutritionistFloatingButton onPress={() => {}} />
-
-      {/* FAB IA: azul (robot), se desplaza a la izquierda del nutricionista */}
       <AIFloatingButton
         onPress={() => {}}
         style={{ bottom: 100, right: 90 }}
@@ -504,7 +495,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  // ── Nutritionist FAB ──
   nutritionistFab: {
     position: 'absolute',
     bottom: 100,
