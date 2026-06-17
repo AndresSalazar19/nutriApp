@@ -25,13 +25,13 @@ export interface ContentDetail extends ContentItem {
   media: { id: string; media_type: string | null; media_url: string; thumbnail_url: string | null }[];
 }
 
-export const CATEGORY_EMOJI: Record<string, string> = {
-  nutrition:    '🥗',
-  hypertension: '❤️',
-  recipes:      '🍳',
-  exercise:     '🏃',
-  lifestyle:    '🌿',
-  tips:         '💡',
+export const CATEGORY_ICON: Record<string, string> = {
+  nutrition:    'food-apple',
+  hypertension: 'heart-pulse',
+  recipes:      'silverware-fork-knife',
+  exercise:     'run',
+  lifestyle:    'leaf',
+  tips:         'lightbulb-on-outline',
 };
 
 export const CATEGORY_LABEL: Record<string, string> = {
