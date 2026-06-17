@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { StepProps, FormErrors } from './types';
 import { SectionTitle } from './SectionTitle';
 import { InputField } from './InputField';
+import {
+  FaCheckCircle,
+} from 'react-icons/fa';
+
+import { FiCircle } from 'react-icons/fi';
+import { PasswordVisibilityToggle } from '../../components/PasswordVisibilityToggle';
 
 export interface SecurityStepProps extends StepProps {
   acceptTerms: boolean;
@@ -38,16 +44,32 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
         <p className="text-xs text-gray-500 font-semibold mb-2">La contraseña debe contener:</p>
         <ul className="text-xs space-y-1">
           <li className={`flex items-center gap-2 ${hasMinLength ? 'text-green-600' : 'text-gray-400'}`}>
-            <span className="text-sm">{hasMinLength ? '✓' : '○'}</span> Mínimo 8 caracteres
+              {hasMinLength ? (
+                <FaCheckCircle size={14} />
+              ) : (
+                <FiCircle size={14} />
+              )} Mínimo 8 caracteres
           </li>
           <li className={`flex items-center gap-2 ${hasUppercase ? 'text-green-600' : 'text-gray-400'}`}>
-            <span className="text-sm">{hasUppercase ? '✓' : '○'}</span> Al menos una letra mayúscula
+            {hasUppercase ? (
+              <FaCheckCircle size={14} />
+            ) : (
+              <FiCircle size={14} />
+            )} Al menos una letra mayúscula
           </li>
           <li className={`flex items-center gap-2 ${hasNumber ? 'text-green-600' : 'text-gray-400'}`}>
-            <span className="text-sm">{hasNumber ? '✓' : '○'}</span> Al menos un número
+            {hasNumber ? (
+              <FaCheckCircle size={14} />
+            ) : (
+              <FiCircle size={14} />
+            )} Al menos un número
           </li>
           <li className={`flex items-center gap-2 ${hasSpecialChar ? 'text-green-600' : 'text-gray-400'}`}>
-            <span className="text-sm">{hasSpecialChar ? '✓' : '○'}</span> Un carácter especial (Ej: !@#$%)
+            {hasSpecialChar ? (
+              <FaCheckCircle size={14} />
+            ) : (
+              <FiCircle size={14} />
+            )} Un carácter especial (Ej: !@#$%)
           </li>
         </ul>
       </div>
@@ -67,7 +89,10 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
           onClick={() => setShowPassword(!showPassword)}
           className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
         >
-          {showPassword ? '🙈' : '👁️'}
+          <PasswordVisibilityToggle
+            visible={showPassword}
+            onClick={() => setShowPassword(!showPassword)}
+          />
         </button>
       </div>
 
@@ -86,7 +111,10 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
           onClick={() => setShowConfirm(!showConfirm)}
           className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
         >
-          {showConfirm ? '🙈' : '👁️'}
+          <PasswordVisibilityToggle
+            visible={showPassword}
+            onClick={() => setShowPassword(!showPassword)}
+          />
         </button>
       </div>
 
