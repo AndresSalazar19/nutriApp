@@ -22,8 +22,10 @@ const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashbo
 const NutritionistsPage = lazy(() => import('../pages/AdminDashboard/NutritionistsPage'));
 const ContentPage       = lazy(() => import('../pages/AdminDashboard/ContentPage'));
 const ClientPage        = lazy(() => import('../pages/AdminDashboard/ClientPage'));
-// NUEVO COMPONENTE DE BASES DE DATOS
-const DatabasesPage     = lazy(() => import('../pages/AdminDashboard/DatabasesPage')); 
+const SettingsPage      = lazy(() => import('../pages/AdminDashboard/SettingsPage'));
+const AdminReportsPage  = lazy(() => import('../pages/AdminDashboard/ReportsPage'));
+const DatabasesPage     = lazy(() => import('../pages/AdminDashboard/DatabasesPage'));
+const ProfilePage       = lazy(() => import('../pages/AdminDashboard/ProfilePage'));
 
 function PageLoader() {
   return (
@@ -105,8 +107,10 @@ function AppRoutes() {
           <Route path={ROUTES.ADMIN_NUTRITIONISTS} element={<NutritionistsPage />} />
           <Route path={ROUTES.ADMIN_CONTENT}       element={<ContentPage />} />
           <Route path={ROUTES.ADMIN_CLIENTS}       element={<ClientPage />} />
-          {/* NUEVA RUTA DE BASES DE DATOS */}
+          <Route path={ROUTES.ADMIN_SETTINGS}      element={<SettingsPage />} />
+          <Route path={ROUTES.ADMIN_REPORTS}       element={<AdminReportsPage />} />
           <Route path={ROUTES.ADMIN_DATABASES}     element={<DatabasesPage />} />
+          <Route path={ROUTES.ADMIN_PROFILE}       element={<ProfilePage />} />
         </Route>
 
         {/* ── Fallback ── */}
