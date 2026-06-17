@@ -16,6 +16,8 @@ const PatientsPage      = lazy(() => import('../pages/MainView/PatientsPage'));
 const AgendaPage        = lazy(() => import('../pages/MainView/AgendaPage'));
 const ReportsPage       = lazy(() => import('../pages/MainView/ReportsPage'));
 const ResourcesPage     = lazy(() => import('../pages/MainView/ResourcesPage'));
+const PlansPage         = lazy(() => import('../pages/MainView/PlansPage'));
+const MessagesPage      = lazy(() => import('../pages/MainView/MessagesPage'));
 
 //ADMIN
 const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
@@ -98,6 +100,8 @@ function AppRoutes() {
             <Route path={ROUTES.AGENDA}     element={<AgendaPage />} />
             <Route path={ROUTES.REPORTS}    element={<ReportsPage />} />
             <Route path={ROUTES.RESOURCES}  element={<ResourcesPage />} />
+            <Route path={ROUTES.PLANS}      element={<PlansPage />} />
+            <Route path={ROUTES.MESSAGES}   element={<MessagesPage />} />
           </Route>
         </Route>
 

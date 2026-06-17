@@ -58,11 +58,14 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
   const isItemLocked = (index: number) => locked && index !== 0;
  
   return (
-    <aside className="w-52 bg-green-800 flex flex-col justify-between py-5 px-3 flex-shrink-0">
+    <aside className="w-72 bg-green-800 flex flex-col justify-between py-5 px-3 flex-shrink-0">
  
       {/* ── Logo ── */}
       <div>
-        <div className="flex items-center gap-2 px-2 mb-7">
+        <div
+          onClick={() => navigate(ROUTES.HOME)}
+          className="flex items-center gap-2 px-2 mb-7 cursor-pointer select-none hover:opacity-80 transition-opacity"
+        >
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-base">🥗</span>
           </div>
@@ -116,7 +119,7 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
             {initials}
           </div>
           <div className="min-w-0">
-            <p className="text-white text-xs font-semibold leading-tight truncate max-w-[90px]">{display}</p>
+            <p className="text-white text-xs font-semibold leading-tight truncate ">{display}</p>
             <p className="text-green-300 text-xs">Nutricionista</p>
           </div>
         </div>
