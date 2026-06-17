@@ -1,8 +1,8 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ROUTES } from './routes';
-import { PublicRoute } from './PublicRoute';
-import { PrivateRoute } from './PrivateRoute';
+import { PublicRoute } from '../components/auth/PublicRoute';
+import { PrivateRoute } from '../components/auth/ProtectedRoute';
 import { NutritionistStatusGuard } from './NutritionistStatusGuard';
 import { AuthProvider, useAuth, AuthUser } from '../hooks/useAuth';
 
