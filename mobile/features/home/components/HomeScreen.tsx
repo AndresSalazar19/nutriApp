@@ -15,6 +15,7 @@ import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { AIFloatingButton } from './AIFloatingButton';
 import { useContent } from '@/features/content/hooks/useContent';
 import { CATEGORY_EMOJI, CATEGORY_LABEL } from '@/features/content/services/contentService';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -72,6 +73,35 @@ function ActionCard({
   );
 }
 
+function ReminderCard() {
+  return (
+    <View style={styles.reminderCard}>
+      <Text style={styles.reminderBulb}>💡</Text>
+      <View style={styles.reminderBody}>
+        <Text style={styles.reminderTitle}>Recordatorio del día</Text>
+        <Text style={styles.reminderText}>
+          Registra tu peso y presión arterial antes del desayuno
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// ── FAB de Nutricionista ──────────────────────────────────────────────────────
+function NutritionistFloatingButton({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      style={styles.nutritionistFab}
+      activeOpacity={0.85}
+      onPress={onPress}
+    >
+      <View style={styles.fabInner}>
+        <MaterialCommunityIcons name="chat" size={28} color="#fff" />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const { items: contentItems, loading: contentLoading } = useContent();
@@ -110,21 +140,16 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Acciones Rápidas ── */}
+        <ReminderCard />
+        
         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
 
         <View style={styles.actionsGrid}>
           <ActionCard
-            emoji="🥗"
-            title="Mi Plan de Comidas"
+            emoji="🩺"
+            title="Registrar la presión"
             subtitle="Ver menú de hoy"
             accentColor={COLORS.primary}
-          />
-          <ActionCard
-            emoji="📊"
-            title="Diario de Progreso"
-            subtitle="Registrar datos"
-            accentColor="#1e88e5"
           />
           <ActionCard
             emoji="📅"
@@ -133,23 +158,7 @@ export default function HomeScreen() {
             accentColor="#fb8c00"
             badge={2}
           />
-          <ActionCard
-            emoji="💬"
-            title="Chat con Nutricionista"
-            subtitle=""
-            accentColor="#8e24aa"
-            dot
-          />
         </View>
-
-        {/* ── Obtener Reporte PDF ── */}
-        <TouchableOpacity style={styles.pdfRow} activeOpacity={0.8}>
-          <View style={styles.pdfIconWrap}>
-            <Text style={styles.pdfIcon}>📄</Text>
-          </View>
-          <Text style={styles.pdfText}>Obtener reporte PDF</Text>
-          <Text style={styles.pdfArrow}>›</Text>
-        </TouchableOpacity>
 
         {/* ── Recursos Educativos ── */}
         <View style={styles.sectionRow}>
@@ -190,13 +199,14 @@ export default function HomeScreen() {
           ))
         )}
 
-        {/* Bottom spacing for tab bar */}
-        <View style={{ height: 20 }} />
+        {/* Bottom spacing for tab bar + FABs */}
+        <View style={{ height: 100 }} />
       </ScrollView>
 
-      <AIFloatingButton 
+      <NutritionistFloatingButton onPress={() => {}} />
+      <AIFloatingButton
         onPress={() => {}}
-        style={{ bottom: 100 }} 
+        style={{ bottom: 100, right: 90 }}
       />
 
       {/* ── Bottom Tab Bar ── */}
@@ -481,6 +491,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 2,
+    marginBottom: 10,
   },
   resourceIconWrap: {
     width: 48,
@@ -510,4 +521,27 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
+  nutritionistFab: {
+    position: 'absolute',
+    bottom: 100,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  fabInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
