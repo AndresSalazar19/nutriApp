@@ -8,6 +8,14 @@ import { SearchInput }  from '../../components/ui/SearchInput';
 import { FilterTabs }   from '../../components/ui/FilterTabs';
 import { DataTable, Column } from '../../components/ui/DataTable';
 import { Pagination }   from '../../components/ui/Pagination';
+import {  MdVisibility,
+  MdEdit,
+  MdHistory,
+  MdPersonAdd,
+  MdPeople, 
+  MdDescription,
+  MdNewReleases, 
+  MdEmojiEvents } from 'react-icons/md';
 
 type SubscriptionType = 'premium' | 'basic';
 
@@ -73,19 +81,19 @@ const clientsMock: Client[] = [
 
 const statsCards = [
   {
-    icon: '👥', iconBg: 'bg-blue-100',   label: 'Total Clientes',
+    icon: MdPeople, iconBg: 'bg-blue-100',   label: 'Total Clientes',
     value: '347', change: '↑ 23 este mes',     changeType: 'positive' as const, accentColor: 'text-red-500',
   },
   {
-    icon: '📋', iconBg: 'bg-purple-100', label: 'Suscripciones Activas',
+    icon: MdDescription, iconBg: 'bg-purple-100', label: 'Suscripciones Activas',
     value: '289', change: '33% del total',      changeType: 'neutral'  as const, accentColor: 'text-red-500',
   },
   {
-    icon: '🆕', iconBg: 'bg-green-100',  label: 'Nuevos este mes',
+    icon: MdNewReleases, iconBg: 'bg-green-100',  label: 'Nuevos este mes',
     value: '23',  change: '↑ 12% vs mes anterior', changeType: 'positive' as const, accentColor: 'text-red-500',
   },
   {
-    icon: '🏅', iconBg: 'bg-yellow-100', label: 'Con Nutricionista',
+    icon: MdEmojiEvents, iconBg: 'bg-yellow-100', label: 'Con Nutricionista',
     value: '334', change: '96% asignados',      changeType: 'positive' as const, accentColor: 'text-red-500',
   },
 ];
@@ -117,31 +125,38 @@ function NutritionistCell({ nutritionist }: { nutritionist: Client['nutritionist
 function ActionButtons({ client }: { client: Client }) {
   return (
     <div className="flex items-center gap-1">
-      <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition" title="Ver">
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-        </svg>
+      
+      {/* View */}
+      <button
+        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+        title="Ver"
+      >
+        <MdVisibility className="w-4 h-4" />
       </button>
 
+      {/* Assign / Edit */}
       {client.nutritionist === null ? (
-        <button className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white transition" title="Asignar nutricionista">
-          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"/>
-          </svg>
+        <button
+          className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 text-white transition"
+          title="Asignar nutricionista"
+        >
+          <MdPersonAdd className="w-4 h-4" />
         </button>
       ) : (
-        <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition" title="Editar">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-          </svg>
+        <button
+          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+          title="Editar"
+        >
+          <MdEdit className="w-4 h-4" />
         </button>
       )}
 
-      <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition" title="Ver historial">
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd"/>
-        </svg>
+      {/* History */}
+      <button
+        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+        title="Ver historial"
+      >
+        <MdHistory className="w-4 h-4" />
       </button>
     </div>
   );
@@ -216,9 +231,22 @@ function ClientsPage() {
       <div className="px-8 pb-8 pt-4">
 
         <div className="grid grid-cols-4 gap-4 mb-6">
-          {statsCards.map((card) => (
-            <StatCard key={card.label} {...card} />
-          ))}
+          {statsCards.map((card) => {
+            const Icon = card.icon;
+
+            return (
+              <StatCard
+                key={card.label}
+                icon={<Icon className="w-5 h-5 text-gray-600" />}
+                iconBg={card.iconBg}
+                label={card.label}
+                value={card.value}
+                change={card.change}
+                changeType={card.changeType}
+                accentColor={card.accentColor}
+              />
+            );
+          })}
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">

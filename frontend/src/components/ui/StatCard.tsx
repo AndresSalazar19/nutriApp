@@ -1,7 +1,7 @@
-import React from 'react';
+import { ReactNode } from 'react';
 
 interface StatCardProps {
-  icon: string;
+  icon: ReactNode;
   iconBg?: string;
   label: string;
   value: string;

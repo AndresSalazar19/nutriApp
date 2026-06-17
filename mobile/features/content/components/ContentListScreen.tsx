@@ -14,7 +14,8 @@ import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { useContent } from '../hooks/useContent';
-import { ContentItem, CATEGORY_EMOJI, CATEGORY_LABEL } from '../services/contentService';
+import { ContentItem, CATEGORY_ICON, CATEGORY_LABEL } from '../services/contentService';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CATEGORY_BG: Record<string, string> = {
   nutrition:    '#E3F2FD',
@@ -39,7 +40,7 @@ const ALL_CATEGORIES = ['Todas', 'nutrition', 'hypertension', 'recipes', 'exerci
 function ContentCard({ item, onPress }: { item: ContentItem; onPress: () => void }) {
   const bg     = CATEGORY_BG[item.category]     ?? '#F5F5F5';
   const accent = CATEGORY_ACCENT[item.category] ?? COLORS.primary;
-  const emoji  = CATEGORY_EMOJI[item.category]  ?? '📄';
+  const icon = CATEGORY_ICON[item.category] ?? 'file-document-outline';
   const label  = CATEGORY_LABEL[item.category]  ?? item.category;
 
   return (
@@ -47,13 +48,26 @@ function ContentCard({ item, onPress }: { item: ContentItem; onPress: () => void
       <View style={[styles.cardAccent, { backgroundColor: accent }]} />
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardEmoji}>{emoji}</Text>
+          <MaterialCommunityIcons
+            name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
+            size={24}
+            color={accent}
+          />
           <View style={[styles.categoryTag, { backgroundColor: accent + '22' }]}>
             <Text style={[styles.categoryTagText, { color: accent }]}>{label}</Text>
           </View>
           {item.is_premium && (
             <View style={styles.premiumTag}>
-              <Text style={styles.premiumText}>⭐ Premium</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <MaterialCommunityIcons
+                  name="star-outline"
+                  size={12}
+                  color="#F57F17"
+                />
+                <Text style={styles.premiumText}>
+                  Premium
+                </Text>
+              </View>
             </View>
           )}
         </View>
@@ -66,7 +80,16 @@ function ContentCard({ item, onPress }: { item: ContentItem; onPress: () => void
           </View>
         )}
         <View style={styles.cardFooter}>
-          <Text style={styles.cardViews}>👁 {item.view_count}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <MaterialCommunityIcons
+              name="eye-outline"
+              size={14}
+              color="#aaa"
+            />
+            <Text style={styles.cardViews}>
+              {item.view_count}
+            </Text>
+          </View>
           <Text style={styles.cardArrow}>Leer más ›</Text>
         </View>
       </View>
@@ -97,7 +120,12 @@ export default function ContentListScreen() {
       {/* Búsqueda */}
       <View style={styles.searchWrapper}>
         <View style={styles.searchBox}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <MaterialCommunityIcons
+            name="magnify"
+            size={20}
+            color="#aaa"
+            style={{ marginRight: 8 }}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar recursos…"
@@ -125,7 +153,15 @@ export default function ContentListScreen() {
               style={[styles.filterBtn, isActive && { backgroundColor: accent, borderColor: accent }]}
               activeOpacity={0.8}
             >
-              {cat !== 'Todas' && <Text style={styles.filterEmoji}>{CATEGORY_EMOJI[cat]}</Text>}
+              <MaterialCommunityIcons
+                name={
+                  cat === 'Todas'
+                    ? 'view-grid-outline'
+                    : (CATEGORY_ICON[cat] as keyof typeof MaterialCommunityIcons.glyphMap)
+                }
+                size={14}
+                color={isActive ? '#fff' : accent}
+              />
               <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
                 {cat === 'Todas' ? 'Todas' : CATEGORY_LABEL[cat]}
               </Text>
@@ -148,7 +184,11 @@ export default function ContentListScreen() {
         </View>
       ) : filtered.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.emptyEmoji}>📚</Text>
+          <MaterialCommunityIcons
+            name="book-open-page-variant-outline"
+            size={56}
+            color="#bbb"
+          />
           <Text style={styles.emptyTitle}>Sin resultados</Text>
           <Text style={styles.emptyText}>No hay recursos disponibles para esta búsqueda.</Text>
         </View>
@@ -200,7 +240,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  searchIcon:  { fontSize: 16, marginRight: 8 },
   searchInput: { flex: 1, fontSize: 14, color: '#333' },
 
   filtersScroll:  { flexGrow: 0 },
@@ -216,7 +255,6 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
     gap: 5,
   },
-  filterEmoji:     { fontSize: 14 },
   filterText:      { fontSize: 12, fontWeight: '600', color: '#666' },
   filterTextActive:{ color: '#fff' },
 
@@ -234,7 +272,6 @@ const styles = StyleSheet.create({
   cardAccent:  { height: 4 },
   cardContent: { padding: 16 },
   cardHeader:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  cardEmoji:   { fontSize: 24 },
   categoryTag: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
   categoryTagText: { fontSize: 11, fontWeight: '700' },
   premiumTag:  { backgroundColor: '#FFF9C4', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
@@ -253,7 +290,6 @@ const styles = StyleSheet.create({
   errorText: { color: '#e53935', fontSize: 14, textAlign: 'center', marginBottom: 16 },
   retryBtn:  { backgroundColor: COLORS.primary, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 12 },
   retryText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  emptyEmoji:{ fontSize: 48, marginBottom: 12 },
   emptyTitle:{ fontSize: 16, fontWeight: '700', color: '#333', marginBottom: 6 },
   emptyText: { fontSize: 13, color: '#999', textAlign: 'center', lineHeight: 20 },
 });

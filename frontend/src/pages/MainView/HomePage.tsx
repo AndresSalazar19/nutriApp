@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
+import { NutritionistTopBar } from '../../components/layout/NutritionistTopBar';
 import { StatCard }           from '../../components/ui/StatCard';
 import { Avatar }             from '../../components/ui/Avatar';
 import { Badge }              from '../../components/ui/Badge';
 import { Button }             from '../../components/ui/Button';
-import { SearchInput }        from '../../components/ui/SearchInput';
 import { BarChart }           from '../../components/charts/BarChart';
 import { useAuth }            from '../../hooks/useAuth';
 import { ROUTES }             from '../../routes/routes';
@@ -81,21 +81,11 @@ export default function HomePage() {
     <NutritionistLayout>
 
       {/* ── TopBar ── */}
-      <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-gray-800">Panel Principal</h1>
-        <div className="flex items-center gap-3">
-          <SearchInput
-            placeholder="Buscar pacientes..."
-            value={search}
-            onChange={setSearch}
-            className="w-56"
-          />
-          <button className="relative w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
-            <span className="text-lg">🔔</span>
-            <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
-        </div>
-      </div>
+      <NutritionistTopBar 
+        title="Panel Principal" 
+        searchValue={search} 
+        onSearchChange={setSearch} 
+      />
 
       <div className="px-8 py-6">
 

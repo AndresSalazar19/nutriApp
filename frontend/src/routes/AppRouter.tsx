@@ -1,8 +1,8 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ROUTES } from './routes';
-import { PublicRoute } from './PublicRoute';
-import { PrivateRoute } from './PrivateRoute';
+import { PublicRoute } from '../components/auth/PublicRoute';
+import { PrivateRoute } from '../components/auth/ProtectedRoute';
 import { NutritionistStatusGuard } from './NutritionistStatusGuard';
 import { AuthProvider, useAuth, AuthUser } from '../hooks/useAuth';
 
@@ -16,14 +16,18 @@ const PatientsPage      = lazy(() => import('../pages/MainView/PatientsPage'));
 const AgendaPage        = lazy(() => import('../pages/MainView/AgendaPage'));
 const ReportsPage       = lazy(() => import('../pages/MainView/ReportsPage'));
 const ResourcesPage     = lazy(() => import('../pages/MainView/ResourcesPage'));
+const PlansPage         = lazy(() => import('../pages/MainView/PlansPage'));
+const MessagesPage      = lazy(() => import('../pages/MainView/MessagesPage'));
 
 //ADMIN
 const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
 const NutritionistsPage = lazy(() => import('../pages/AdminDashboard/NutritionistsPage'));
 const ContentPage       = lazy(() => import('../pages/AdminDashboard/ContentPage'));
 const ClientPage        = lazy(() => import('../pages/AdminDashboard/ClientPage'));
-// NUEVO COMPONENTE DE BASES DE DATOS
-const DatabasesPage     = lazy(() => import('../pages/AdminDashboard/DatabasesPage')); 
+const SettingsPage      = lazy(() => import('../pages/AdminDashboard/SettingsPage'));
+const AdminReportsPage  = lazy(() => import('../pages/AdminDashboard/ReportsPage'));
+const DatabasesPage     = lazy(() => import('../pages/AdminDashboard/DatabasesPage'));
+const ProfilePage       = lazy(() => import('../pages/AdminDashboard/ProfilePage'));
 
 function PageLoader() {
   return (
@@ -96,6 +100,8 @@ function AppRoutes() {
             <Route path={ROUTES.AGENDA}     element={<AgendaPage />} />
             <Route path={ROUTES.REPORTS}    element={<ReportsPage />} />
             <Route path={ROUTES.RESOURCES}  element={<ResourcesPage />} />
+            <Route path={ROUTES.PLANS}      element={<PlansPage />} />
+            <Route path={ROUTES.MESSAGES}   element={<MessagesPage />} />
           </Route>
         </Route>
 
@@ -105,8 +111,10 @@ function AppRoutes() {
           <Route path={ROUTES.ADMIN_NUTRITIONISTS} element={<NutritionistsPage />} />
           <Route path={ROUTES.ADMIN_CONTENT}       element={<ContentPage />} />
           <Route path={ROUTES.ADMIN_CLIENTS}       element={<ClientPage />} />
-          {/* NUEVA RUTA DE BASES DE DATOS */}
+          <Route path={ROUTES.ADMIN_SETTINGS}      element={<SettingsPage />} />
+          <Route path={ROUTES.ADMIN_REPORTS}       element={<AdminReportsPage />} />
           <Route path={ROUTES.ADMIN_DATABASES}     element={<DatabasesPage />} />
+          <Route path={ROUTES.ADMIN_PROFILE}       element={<ProfilePage />} />
         </Route>
 
         {/* ── Fallback ── */}

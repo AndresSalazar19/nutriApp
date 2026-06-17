@@ -16,6 +16,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useLogin } from '@/features/auth/hooks/useAuth';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { PasswordField } from '@/components/ui/PasswordField';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -23,7 +25,6 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async () => {
@@ -52,11 +53,19 @@ export default function LoginScreen() {
           {/* Panel verde superior */}
           <View style={styles.topPanel}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Text style={styles.backArrow}>←</Text>
+              <MaterialCommunityIcons
+                name="arrow-left"
+                size={22}
+                color="#fff"
+              />
             </TouchableOpacity>
 
             <View style={styles.logoCircle}>
-              <Text style={styles.logoEmoji}>🌿</Text>
+              <MaterialCommunityIcons
+                name="leaf"
+                size={32}
+                color={COLORS.primary}
+              />
             </View>
             <Text style={styles.title}>Iniciar Sesión</Text>
             <Text style={styles.subtitle}>Ingresa tus credenciales</Text>
@@ -68,7 +77,14 @@ export default function LoginScreen() {
             {/* Error del servidor */}
             {error ? (
               <View style={styles.errorBox}>
-                <Text style={styles.errorText}>⚠️ {error}</Text>
+                <View style={styles.errorRow}>
+                  <MaterialCommunityIcons
+                    name="alert-circle-outline"
+                    size={18}
+                    color="#cc0000"
+                  />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
               </View>
             ) : null}
 
@@ -85,25 +101,20 @@ export default function LoginScreen() {
                 onChangeText={setEmail}
                 editable={!loading}
               />
-              <Text style={styles.inputIcon}>✉️</Text>
+              <MaterialCommunityIcons
+                name="email-outline"
+                size={20}
+                color="#999"
+              />
             </View>
 
             {/* Contraseña */}
             <Text style={styles.label}>Contraseña</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#bbb"
-                secureTextEntry={!showPassword}
+              <PasswordField
                 value={password}
                 onChangeText={setPassword}
-                editable={!loading}
+                placeholder="••••••••"
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Text style={styles.inputIcon}>{showPassword ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
-            </View>
 
             {/* Recordarme + Olvidaste */}
             <View style={styles.row}>
@@ -112,7 +123,13 @@ export default function LoginScreen() {
                 onPress={() => setRememberMe(!rememberMe)}
               >
                 <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
-                  {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+                  {rememberMe && (
+                    <MaterialCommunityIcons
+                      name="check"
+                      size={14}
+                      color="#fff"
+                    />
+                  )}
                 </View>
                 <Text style={styles.checkLabel}>Recordarme</Text>
               </TouchableOpacity>
@@ -143,7 +160,16 @@ export default function LoginScreen() {
 
             {/* Biometría */}
             <TouchableOpacity style={styles.btnSecondary}>
-              <Text style={styles.btnSecondaryText}>🔒  Usar Biometría</Text>
+              <View style={styles.biometricContent}>
+                <MaterialCommunityIcons
+                  name="fingerprint"
+                  size={20}
+                  color="#555"
+                />
+                <Text style={styles.btnSecondaryText}>
+                  Usar biometría
+                </Text>
+              </View>
             </TouchableOpacity>
 
             {/* Registro */}
@@ -183,11 +209,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 20,
   },
-  backArrow: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   logoCircle: {
     width: 72,
     height: 72,
@@ -202,7 +223,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  logoEmoji: { fontSize: 32 },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
@@ -234,6 +254,11 @@ const styles = StyleSheet.create({
     color: '#cc0000',
     fontSize: 13,
   },
+  errorRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+},
   label: {
     fontSize: 13,
     fontWeight: '600',
@@ -352,5 +377,10 @@ const styles = StyleSheet.create({
   registerLink: {
     color: COLORS.primary,
     fontWeight: 'bold',
+  },
+  biometricContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });

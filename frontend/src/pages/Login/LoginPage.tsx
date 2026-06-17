@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { RegistrerServices } from '../../services/Login/LoginServices';
+import { FaLeaf, FaArrowLeft } from 'react-icons/fa';
+import { PasswordVisibilityToggle } from '../../components/PasswordVisibilityToggle';
 
 interface LoginPageProps {
   onLogin: (userData: { userId: string; email: string; role: string; token: string }) => void;
@@ -70,7 +72,7 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
         <div className="z-10 flex flex-col items-center">
           {/* Logo */}
           <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
-            <span className="text-3xl">🥗</span>
+            <FaLeaf size={32} className="text-green-600" />
           </div>
           <h1 className="text-4xl font-bold mb-1">NutrIA</h1>
           <p className="text-green-200 text-sm mb-6">Plataforma Profesional</p>
@@ -97,8 +99,9 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
 
       {/* Panel derecho */}
       <div className="w-7/12 bg-green-50 flex flex-col items-center justify-center px-12 relative">
-        <a href="/" className="absolute top-6 left-8 text-green-600 text-sm hover:underline">
-          ← Volver al inicio
+        <a href="/" className="absolute top-6 left-8 text-green-600 text-sm hover:underline flex items-center gap-2">
+          <FaArrowLeft size={14} />
+          <span>Volver al inicio</span>
         </a>
 
         <div className="bg-white rounded-2xl shadow-md p-10 w-full max-w-md">
@@ -148,7 +151,10 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                   disabled={isLoading}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  <PasswordVisibilityToggle
+                    visible={showPassword}
+                    onClick={() => setShowPassword(!showPassword)}
+                  />
                 </button>
               </div>
             </div>

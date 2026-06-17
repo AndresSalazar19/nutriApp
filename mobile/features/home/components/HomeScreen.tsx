@@ -14,25 +14,29 @@ import { COLORS } from '@/constants/colors';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { AIFloatingButton } from './AIFloatingButton';
 import { useContent } from '@/features/content/hooks/useContent';
-import { CATEGORY_EMOJI, CATEGORY_LABEL } from '@/features/content/services/contentService';
+import { CATEGORY_ICON, CATEGORY_LABEL } from '@/features/content/services/contentService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
 function StatCard({
-  emoji,
+  icon,
   value,
   unit,
   color,
 }: {
-  emoji: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   value: string;
   unit: string;
   color: string;
 }) {
   return (
     <View style={styles.statCard}>
-      <Text style={styles.statEmoji}>{emoji}</Text>
+      <MaterialCommunityIcons
+        name={icon}
+        size={22}
+        color={color}
+      />
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={styles.statUnit}>{unit}</Text>
     </View>
@@ -40,14 +44,14 @@ function StatCard({
 }
 
 function ActionCard({
-  emoji,
+  icon,
   title,
   subtitle,
   accentColor,
   badge,
   dot,
 }: {
-  emoji: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
   subtitle: string;
   accentColor: string;
@@ -58,7 +62,11 @@ function ActionCard({
     <TouchableOpacity style={styles.actionCard} activeOpacity={0.8}>
       <View style={[styles.actionAccent, { backgroundColor: accentColor }]} />
       <View style={styles.actionIconWrap}>
-        <Text style={styles.actionEmoji}>{emoji}</Text>
+        <MaterialCommunityIcons
+          name={icon}
+          size={24}
+          color={accentColor}
+        />
       </View>
       <Text style={styles.actionTitle}>{title}</Text>
       <Text style={styles.actionSubtitle}>{subtitle}</Text>
@@ -76,7 +84,11 @@ function ActionCard({
 function ReminderCard() {
   return (
     <View style={styles.reminderCard}>
-      <Text style={styles.reminderBulb}>💡</Text>
+      <MaterialCommunityIcons
+        name="lightbulb-on-outline"
+        size={22}
+        color="#f57f17"
+      />
       <View style={styles.reminderBody}>
         <Text style={styles.reminderTitle}>Recordatorio del día</Text>
         <Text style={styles.reminderText}>
@@ -113,25 +125,25 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerGreeting}>
-            Hola, Juan <Text>👋</Text>
+            Hola, Juan
           </Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
-          <Text style={styles.bellIcon}>🔔</Text>
+          <MaterialCommunityIcons name="bell-outline" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
 
       {/* ── Stats Card ── */}
       <View style={styles.statsCardWrapper}>
         <View style={styles.statsCard}>
-          <StatCard emoji="⚖️" value="72.5" unit="kg" color="#555" />
+          <StatCard icon="scale-bathroom" value="72.5" unit="kg" color="#555" />
           <View style={styles.statDivider} />
-          <StatCard emoji="❤️" value="120/80" unit="mmHg" color="#e53935" />
+          <StatCard icon="heart-pulse" value="120/80" unit="mmHg" color="#e53935" />
           <View style={styles.statDivider} />
-          <StatCard emoji="💧" value="1.5" unit="L hoy" color="#1e88e5" />
+          <StatCard icon="water" value="1.5" unit="L hoy" color="#1e88e5" />
           <View style={styles.statDivider} />
-          <StatCard emoji="🔥" value="1,450" unit="kcal" color="#fb8c00" />
+          <StatCard icon="fire" value="1,450" unit="kcal" color="#fb8c00" />
         </View>
       </View>
 
@@ -146,13 +158,13 @@ export default function HomeScreen() {
 
         <View style={styles.actionsGrid}>
           <ActionCard
-            emoji="🩺"
-            title="Registrar la presión"
-            subtitle="Ver menú de hoy"
+            icon="heart-pulse"
+            title="Registrar Presión"
+            subtitle="Registrar medición"
             accentColor={COLORS.primary}
           />
           <ActionCard
-            emoji="📅"
+            icon="calendar-month"
             title="Mis Citas"
             subtitle="Próxima: 15 Nov"
             accentColor="#fb8c00"
@@ -185,7 +197,14 @@ export default function HomeScreen() {
               onPress={() => router.push(`/(tabs)/content/${item.id}` as any)}
             >
               <View style={styles.resourceIconWrap}>
-                <Text style={styles.resourceIcon}>{CATEGORY_EMOJI[item.category] ?? '📖'}</Text>
+                <MaterialCommunityIcons
+                  name={
+                    (CATEGORY_ICON[item.category] as keyof typeof MaterialCommunityIcons.glyphMap)
+                    ?? 'book-open-page-variant'
+                  }
+                  size={24}
+                  color={COLORS.primary}
+                />
               </View>
               <View style={styles.resourceBody}>
                 <Text style={styles.resourceTitle} numberOfLines={1}>{item.title}</Text>
@@ -279,7 +298,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  statEmoji: { fontSize: 20, marginBottom: 4 },
   statValue: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -389,7 +407,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 6,
   },
-  actionEmoji: { fontSize: 22 },
   actionTitle: {
     fontSize: 13,
     fontWeight: '700',
