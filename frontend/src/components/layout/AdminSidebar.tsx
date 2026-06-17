@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserMenuPopover } from '../ui/UserMenuPopover';
 import { ROUTES } from '../../routes/routes'; // Asegúrate de que la ruta de importación sea la correcta
 
 const icons: Record<string, React.ReactNode> = {
@@ -124,15 +125,21 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
       </div>
 
       {/* Usuario admin */}
-      <div className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-red-700 transition cursor-pointer">
-        <div className="w-9 h-9 bg-red-800 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-          AD
-        </div>
-        <div>
-          <p className="text-white text-xs font-semibold leading-tight">Administrador</p>
-          <p className="text-red-300 text-xs">Sistema NutrIA</p>
-        </div>
-      </div>
+      <UserMenuPopover
+        direction="up"
+        align="left"
+        trigger={
+          <button className="w-full text-left flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-red-700 transition">
+            <div className="w-9 h-9 bg-red-800 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+              AD
+            </div>
+            <div>
+              <p className="text-white text-xs font-semibold leading-tight">Administrador</p>
+              <p className="text-red-300 text-xs">Sistema NutrIA</p>
+            </div>
+          </button>
+        }
+      />
     </aside>
   );
 }

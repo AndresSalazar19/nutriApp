@@ -68,7 +68,7 @@ export function UserMenuPopover({
   }, [open]);
 
   const positionClass = [
-    direction === 'up'   ? 'bottom-full left-full mb-2' : 'top-full mt-2',
+    direction === 'up'   ? 'bottom-full mb-2' : 'top-full mt-2',
     align     === 'right' ? 'right-0'          : 'left-0',
   ].join(' ');
 
