@@ -39,7 +39,7 @@ class Person(Base):
     last_name = Column(String(100), nullable=False)
     cedula = Column(String(20), nullable=True, unique=True)
     date_of_birth = Column(Date, nullable=True)
-    gender = Column(SQLEnum(GenderEnum), nullable=True)
+    gender = Column(String(20), nullable=True)
     phone = Column(String(20), nullable=True)
     avatar_url = Column(Text, nullable=True)
 
