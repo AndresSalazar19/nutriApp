@@ -19,9 +19,10 @@ export const ROUTES = {
   ADMIN_NUTRITIONISTS:  '/admin/nutritionists',
   ADMIN_CLIENTS:        '/admin/clients',
   ADMIN_CONTENT:        '/admin/content',
-  ADMIN_DATABASES:      '/admin/databases', // Nuevo módulo
+  ADMIN_DATABASES:      '/admin/databases',
   ADMIN_REPORTS:        '/admin/reports',
   ADMIN_SETTINGS:       '/admin/settings',
+  ADMIN_PROFILE:        '/admin/profile',
 } as const;
 
 export function buildRoute(
