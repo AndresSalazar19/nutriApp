@@ -19,6 +19,7 @@ import {
   validatePhoneInput,
   validateHeightInput,
 } from '../utils/validations';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 // ─── Field config ─────────────────────────────────────────────────────────────
 
@@ -138,11 +139,19 @@ export default function ProfileScreen() {
       {/* ── Header verde ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8} onPress={() => router.back()}>
-          <Text style={styles.headerBtnIcon}>←</Text>
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={22}
+            color="#fff"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mi Perfil</Text>
         <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8}>
-          <Text style={styles.headerBtnIcon}>📍</Text>
+          <MaterialCommunityIcons
+            name="map-marker-outline"
+            size={22}
+            color="#fff"
+          />
         </TouchableOpacity>
       </View>
 
@@ -152,7 +161,16 @@ export default function ProfileScreen() {
         <Text style={styles.userName}>{profile.name}</Text>
         <Text style={styles.userEmail}>{profile.email}</Text>
         <View style={styles.planBadge}>
-          <Text style={styles.planBadgeText}>✦ Plan {profile.plan}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <MaterialCommunityIcons
+              name="star-four-points-outline"
+              size={14}
+              color="#fff"
+            />
+            <Text style={styles.planBadgeText}>
+              {' '}Plan {profile.plan}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -166,22 +184,22 @@ export default function ProfileScreen() {
         <SectionTitle title="Información Personal" />
         <View style={styles.card}>
           <InfoRow
-            emoji="📱" label="Teléfono" value={pi.phone}
+            icon="phone-outline" label="Teléfono" value={pi.phone}
             onPress={() => openModal('phone', 'personal')}
           />
           <Separator />
           <InfoRow
-            emoji="🎂" label="Fecha de Nacimiento" value={pi.birthDate}
+            icon="cake-variant-outline" label="Fecha de Nacimiento" value={pi.birthDate}
             onPress={() => openModal('birthDate', 'personal')}
           />
           <Separator />
           <InfoRow
-            emoji="📏" label="Altura" value={pi.height}
+            icon="human-male-height" label="Altura" value={pi.height}
             onPress={() => openModal('height', 'personal')}
           />
           <Separator />
           <InfoRow
-            emoji="⚧️" label="Género" value={pi.gender}
+            icon="account-outline" label="Género" value={pi.gender}
             onPress={() => openModal('gender', 'personal')}
           />
         </View>
@@ -190,12 +208,12 @@ export default function ProfileScreen() {
         <SectionTitle title="Información de Salud" />
         <View style={styles.card}>
           <InfoRow
-            emoji="❤️" label="Condición Médica" value={hi.medicalCondition}
+            icon="heart-pulse" label="Condición Médica" value={hi.medicalCondition}
             onPress={() => openModal('medicalCondition', 'health')}
           />
           <Separator />
           <InfoRow
-            emoji="⚠️" label="Alergias" value={hi.allergies}
+            icon="alert-circle-outline" label="Alergias" value={hi.allergies}
             onPress={() => openModal('allergies', 'health')}
           />
         </View>
@@ -204,7 +222,11 @@ export default function ProfileScreen() {
         <SectionTitle title="Mi Nutricionista" />
         <View style={[styles.card, styles.doctorCard]}>
           <View style={styles.doctorIconWrap}>
-            <Text style={styles.doctorEmoji}>🩺</Text>
+            <MaterialCommunityIcons
+              name="stethoscope"
+              size={28}
+              color={COLORS.primary}
+            />
           </View>
           <View style={styles.doctorInfo}>
             <Text style={styles.doctorName}>{profile.nutritionist.name}</Text>
@@ -326,7 +348,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  doctorEmoji: { fontSize: 26 },
   doctorInfo: { flex: 1 },
   doctorName: { fontSize: 14, fontWeight: '700', color: '#222', marginBottom: 2 },
   doctorSpecialty: { fontSize: 12, color: '#888' },

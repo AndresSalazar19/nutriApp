@@ -1,18 +1,21 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 interface InfoRowProps {
-  emoji: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
   value: string;
   onPress?: () => void;
 }
 
-export function InfoRow({ emoji, label, value, onPress }: InfoRowProps) {
+export function InfoRow({ icon, label, value, onPress }: InfoRowProps) {
   return (
     <TouchableOpacity style={styles.infoRow} activeOpacity={0.7} onPress={onPress}>
       <View style={styles.infoIconWrap}>
-        <Text style={styles.infoEmoji}>{emoji}</Text>
+        <MaterialCommunityIcons
+          name={icon}
+          size={22}
+        />
       </View>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text style={styles.infoValue}>{value}</Text>

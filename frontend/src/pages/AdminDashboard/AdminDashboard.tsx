@@ -5,12 +5,22 @@ import { StatCard } from '../../components/ui/StatCard';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { DataTable, Column } from '../../components/ui/DataTable';
+import {
+  MdEmojiEvents,
+  MdPeople,
+  MdDescription,
+  MdLocalFlorist,
+  MdPersonAdd,
+  MdGroup,
+  MdLibraryBooks,
+  MdBarChart,
+} from 'react-icons/md';
 
 const statsCards = [
-  { icon: '🏅', iconBg: 'bg-yellow-100', label: 'Nutricionistas',       value: '15',  change: '↑ 2 este mes',      changeType: 'positive' as const, accentColor: 'text-red-500' },
-  { icon: '👥', iconBg: 'bg-blue-100',   label: 'Clientes Totales',     value: '347', change: '↑ 23 este mes',     changeType: 'positive' as const, accentColor: 'text-red-500' },
-  { icon: '📋', iconBg: 'bg-purple-100', label: 'Suscripciones Activas',value: '289', change: '83% tasa',          changeType: 'neutral'  as const, accentColor: 'text-red-500' },
-  { icon: '🌸', iconBg: 'bg-pink-100',   label: 'Artículos Publicados', value: '128', change: '↑ 8 esta semana',   changeType: 'positive' as const, accentColor: 'text-red-500' },
+  { icon: MdEmojiEvents, iconBg: 'bg-yellow-100', label: 'Nutricionistas', value: '15', change: '↑ 2 este mes', changeType: 'positive' as const, accentColor: 'text-red-500' },
+  { icon: MdPeople, iconBg: 'bg-blue-100', label: 'Clientes Totales', value: '347', change: '↑ 23 este mes', changeType: 'positive' as const, accentColor: 'text-red-500' },
+  { icon: MdDescription, iconBg: 'bg-purple-100', label: 'Suscripciones Activas', value: '289', change: '83% tasa', changeType: 'neutral' as const, accentColor: 'text-red-500' },
+  { icon: MdLocalFlorist, iconBg: 'bg-pink-100', label: 'Artículos Publicados', value: '128', change: '↑ 8 esta semana', changeType: 'positive' as const, accentColor: 'text-red-500' },
 ];
 
 interface Nutritionist {
@@ -34,10 +44,10 @@ const nutritionists: Nutritionist[] = [
 ];
 
 const quickActions = [
-  { icon: '🏅', title: 'Agregar Nutricionista', desc: 'Registrar nuevo profesional', iconBg: 'bg-yellow-100' },
-  { icon: '👥', title: 'Gestionar Clientes',    desc: 'Ver todos los usuarios',       iconBg: 'bg-blue-100'   },
-  { icon: '📗', title: 'Publicar Contenido',    desc: 'Artículos y recursos',         iconBg: 'bg-green-100'  },
-  { icon: '📊', title: 'Ver Reportes',          desc: 'Estadísticas del sistema',     iconBg: 'bg-blue-100'   },
+  { icon: MdPersonAdd, title: 'Agregar Nutricionista', desc: 'Registrar nuevo profesional', iconBg: 'bg-yellow-100' },
+  { icon: MdGroup, title: 'Gestionar Clientes', desc: 'Ver todos los usuarios', iconBg: 'bg-blue-100' },
+  { icon: MdLibraryBooks, title: 'Publicar Contenido', desc: 'Artículos y recursos', iconBg: 'bg-green-100' },
+  { icon: MdBarChart, title: 'Ver Reportes', desc: 'Estadísticas del sistema', iconBg: 'bg-blue-100' },
 ];
 
 const systemActivity = [
@@ -83,13 +93,17 @@ function AdminDashboard() {
 
       <div className="px-8 pb-8 pt-2">
         {/* Bienvenida */}
-        <p className="text-gray-700 font-medium mb-0.5">Bienvenido al panel administrativo 👋</p>
+        <p className="text-gray-700 font-medium mb-0.5">Bienvenido al panel administrativo</p>
         <p className="text-gray-400 text-sm mb-6">Gestiona nutricionistas, clientes y contenido de la plataforma</p>
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-7">
           {statsCards.map((card) => (
-            <StatCard key={card.label} {...card} />
+            <StatCard
+              key={card.label}
+              {...card}
+              icon={<card.icon className="text-xl text-gray-600" />}
+            />
           ))}
         </div>
 
@@ -123,8 +137,8 @@ function AdminDashboard() {
                     key={action.title}
                     className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition text-left"
                   >
-                    <div className={`w-9 h-9 ${action.iconBg} rounded-full flex items-center justify-center text-lg flex-shrink-0`}>
-                      {action.icon}
+                    <div className={`w-9 h-9 ${action.iconBg} rounded-full flex items-center justify-center flex-shrink-0`}>
+                      <action.icon className="text-xl text-gray-600" />
                     </div>
                     <div>
                       <p className="font-semibold text-gray-700 text-xs leading-tight">{action.title}</p>

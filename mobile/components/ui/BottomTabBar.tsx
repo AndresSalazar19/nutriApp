@@ -2,15 +2,46 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { COLORS } from '@/constants/colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export type TabKey = 'inicio' | 'comidas' | 'progreso' | 'recursos' | 'perfil';
 
-const TABS: { key: TabKey; emoji: string; label: string; href: string }[] = [
-  { key: 'inicio',   emoji: '🏠',  label: 'Inicio',    href: '/(tabs)/'         },
-  { key: 'comidas',  emoji: '🍽️', label: 'Comidas',   href: '/(tabs)/'         },
-  { key: 'progreso', emoji: '📈',  label: 'Progreso',  href: '/(tabs)/progress' },
-  { key: 'recursos', emoji: '📚',  label: 'Recursos',  href: '/(tabs)/content'  },
-  { key: 'perfil',   emoji: '👤',  label: 'Perfil',    href: '/(tabs)/profile'  },
+const TABS: {
+  key: TabKey;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  label: string;
+  href: string;
+  }[] = [
+  {
+    key: 'inicio',
+    icon: 'home-outline',
+    label: 'Inicio',
+    href: '/(tabs)/',
+  },
+  {
+    key: 'comidas',
+    icon: 'silverware-fork-knife',
+    label: 'Comidas',
+    href: '/(tabs)/',
+  },
+  {
+    key: 'progreso',
+    icon: 'chart-line',
+    label: 'Progreso',
+    href: '/(tabs)/progress',
+  },
+  {
+    key: 'recursos',
+    icon: 'book-open-page-variant-outline',
+    label: 'Recursos',
+    href: '/(tabs)/content',
+  },
+  {
+    key: 'perfil',
+    icon: 'account-outline',
+    label: 'Perfil',
+    href: '/(tabs)/profile',
+  },
 ];
 
 interface BottomTabBarProps {
@@ -27,9 +58,15 @@ export function BottomTabBar({ activeTab }: BottomTabBarProps) {
           activeOpacity={0.7}
           onPress={() => router.navigate(tab.href as any)}
         >
-          <Text style={[styles.tabEmoji, activeTab === tab.key && styles.tabEmojiActive]}>
-            {tab.emoji}
-          </Text>
+          <MaterialCommunityIcons
+            name={tab.icon}
+            size={22}
+            color={
+              activeTab === tab.key
+                ? COLORS.primary
+                : '#4caf50'
+            }
+          />
           <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
             {tab.label}
           </Text>
@@ -59,11 +96,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 3,
   },
-  tabEmoji:       { fontSize: 20, opacity: 0.4 },
-  tabEmojiActive: { opacity: 1 },
   tabLabel: {
     fontSize: 10,
-    color: '#aaa',
+    color: '#4caf50',
     fontWeight: '500',
   },
   tabLabelActive: {

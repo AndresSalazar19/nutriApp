@@ -11,7 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 import { useContentDetail } from '../hooks/useContent';
-import { CATEGORY_EMOJI, CATEGORY_LABEL } from '../services/contentService';
+import { CATEGORY_ICON, CATEGORY_LABEL } from '../services/contentService';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CATEGORY_ACCENT: Record<string, string> = {
   nutrition:    '#1E88E5',
@@ -51,7 +52,7 @@ export default function ContentDetailScreen() {
   }
 
   const accent = CATEGORY_ACCENT[content.category] ?? COLORS.primary;
-  const emoji  = CATEGORY_EMOJI[content.category]  ?? '📄';
+  const icon = CATEGORY_ICON[content.category] ?? 'file-document-outline';
   const label  = CATEGORY_LABEL[content.category]  ?? content.category;
 
   return (
@@ -59,10 +60,18 @@ export default function ContentDetailScreen() {
       {/* Header */}
       <View style={[styles.header, { backgroundColor: accent }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon} activeOpacity={0.8}>
-          <Text style={styles.backArrow}>‹</Text>
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={24}
+            color="#fff"
+          />
         </TouchableOpacity>
         <View style={styles.headerMeta}>
-          <Text style={styles.headerEmoji}>{emoji}</Text>
+          <MaterialCommunityIcons
+            name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
+            size={22}
+            color="#fff"
+          />
           <Text style={styles.headerCategory}>{label}</Text>
         </View>
       </View>
@@ -74,10 +83,34 @@ export default function ContentDetailScreen() {
 
         {/* Meta: vistas + premium */}
         <View style={styles.metaRow}>
-          <Text style={styles.metaViews}>👁 {content.view_count} lecturas</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <MaterialCommunityIcons
+              name="eye-outline"
+              size={16}
+              color="#aaa"
+            />
+            <Text style={styles.metaViews}>
+              {content.view_count} lecturas
+            </Text>
+          </View>
           {content.is_premium && (
             <View style={styles.premiumBadge}>
-              <Text style={styles.premiumText}>⭐ Premium</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="star-outline"
+                  size={14}
+                  color="#F57F17"
+                />
+                <Text style={styles.premiumText}>
+                  Premium
+                </Text>
+              </View>
             </View>
           )}
         </View>
@@ -122,9 +155,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  backArrow:      { fontSize: 24, color: '#fff', fontWeight: 'bold', marginTop: -2 },
   headerMeta:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  headerEmoji:    { fontSize: 22 },
   headerCategory: { fontSize: 14, fontWeight: '700', color: 'rgba(255,255,255,0.9)' },
 
   scroll:        { flex: 1 },

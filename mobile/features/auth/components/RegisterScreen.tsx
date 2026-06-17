@@ -19,6 +19,8 @@ import { COLORS } from '@/constants/colors';
 import { useRegister } from '@/features/auth/hooks/useAuth';
 import { DatePickerField } from '@/components/ui/DatePickerField';
 import { Picker } from '@react-native-picker/picker';
+import { PasswordField } from '@/components/ui/PasswordField';
+import { Checkbox } from '@/components/ui/Checkbox';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -118,8 +120,6 @@ export default function RegisterScreen() {
     confirmPassword: '',
     gender: '',
   });
-  const [showPassword, setShowPassword]     = useState(false);
-  const [showConfirm, setShowConfirm]       = useState(false);
   const [acceptTerms, setAcceptTerms]       = useState(false);
   const [acceptPrivacy, setAcceptPrivacy]   = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -284,59 +284,44 @@ export default function RegisterScreen() {
 
             {/* Contraseña */}
             <Text style={styles.label}>Contraseña</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.inputFlex}
-                placeholder="••••••••"
-                placeholderTextColor="#bbb"
-                secureTextEntry={!showPassword}
-                value={form.password}
-                onChangeText={(v) => updateField('password', v)}
-                editable={!loading}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Text style={styles.inputIcon}>{showPassword ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
-            </View>
+            <PasswordField
+              value={form.password}
+              onChangeText={(v) => updateField('password', v)}
+              placeholder="••••••••"
+            />
 
             {/* Confirmar contraseña */}
             <Text style={styles.label}>Confirmar Contraseña</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.inputFlex}
-                placeholder="••••••••"
-                placeholderTextColor="#bbb"
-                secureTextEntry={!showConfirm}
-                value={form.confirmPassword}
-                onChangeText={(v) => updateField('confirmPassword', v)}
-                editable={!loading}
-              />
-              <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
-                <Text style={styles.inputIcon}>{showConfirm ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
-            </View>
+            <PasswordField
+              value={form.confirmPassword}
+              onChangeText={(v) => updateField('confirmPassword', v)}
+              placeholder="••••••••"
+            />
 
             {/* Términos */}
-            <TouchableOpacity style={styles.checkRow} onPress={() => setAcceptTerms(!acceptTerms)}>
-              <View style={[styles.checkbox, acceptTerms && styles.checkboxActive]}>
-                {acceptTerms && <Text style={styles.checkmark}>✓</Text>}
-              </View>
+            <Checkbox
+              checked={acceptTerms}
+              onPress={() => setAcceptTerms(!acceptTerms)}
+            >
               <Text style={styles.checkLabel}>
-                Acepto los <Text style={styles.checkLink}>Términos y Condiciones</Text>
+                Acepto los{' '}
+                <Text style={styles.checkLink}>
+                  Términos y Condiciones
+                </Text>
               </Text>
-            </TouchableOpacity>
+            </Checkbox>
 
-            <TouchableOpacity
-              style={[styles.checkRow, { marginBottom: 28 }]}
+            <Checkbox
+              checked={acceptPrivacy}
               onPress={() => setAcceptPrivacy(!acceptPrivacy)}
             >
-              <View style={[styles.checkbox, acceptPrivacy && styles.checkboxActive]}>
-                {acceptPrivacy && <Text style={styles.checkmark}>✓</Text>}
-              </View>
               <Text style={styles.checkLabel}>
-                Acepto la <Text style={styles.checkLink}>Política de Privacidad</Text>
+                Acepto la{' '}
+                <Text style={styles.checkLink}>
+                  Política de Privacidad
+                </Text>
               </Text>
-            </TouchableOpacity>
+            </Checkbox>
 
             {/* Botón */}
             <TouchableOpacity
