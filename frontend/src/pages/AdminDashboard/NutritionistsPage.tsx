@@ -37,8 +37,7 @@ interface NutritionistRow {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const AVATAR_COLORS = [
-  'bg-green-500', 'bg-pink-500', 'bg-orange-500', 'bg-teal-500',
-  'bg-indigo-500', 'bg-purple-500', 'bg-blue-700', 'bg-red-500', 'bg-yellow-500',
+  'bg-admin-light'
 ];
 
 function getAvatarColor(seed: string): string {
@@ -85,14 +84,14 @@ const PAGE_SIZE = 10;
 function CredentialCell({ status, text }: { status: 'verified' | 'pending'; text: string }) {
   return (
     <div className="flex items-start gap-1">
-      <span className={status === 'verified' ? 'text-green-500' : 'text-orange-400'}>
+      <span className={status === 'verified' ? 'text-nutri-medium' : 'text-gray-400'}>
         {status === 'verified' ? '✓' : '⏳'}
       </span>
       <div>
-        <p className={`text-xs font-medium ${status === 'verified' ? 'text-green-600' : 'text-orange-500'}`}>
+        <p className={`text-xs font-medium ${status === 'verified' ? 'text-nutri-dark' : 'text-gray-600'}`}>
           {status === 'verified' ? 'Verificado' : 'Pendiente'}
         </p>
-        <p className="text-xs text-gray-400 truncate max-w-[120px]">{text}</p>
+        <p className="text-xs text-gray-500 truncate max-w-[120px]">{text}</p>
       </div>
     </div>
   );
@@ -141,7 +140,7 @@ function ActionButtons({
           <button
             disabled={busy}
             onClick={() => onQuickAction(row.id, 'rejected')}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 disabled:opacity-40 transition"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-admin-light hover:bg-admin-medium/20 text-admin-accent disabled:opacity-40 transition"
             title="Rechazar"
           >
             {busy ? <span className="text-[10px]">…</span> : (
@@ -153,7 +152,7 @@ function ActionButtons({
           <button
             disabled={busy}
             onClick={() => onQuickAction(row.id, 'verified')}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-green-100 hover:bg-green-200 text-green-600 disabled:opacity-40 transition"
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-nutri-light hover:bg-nutri-medium/20 text-nutri-dark disabled:opacity-40 transition"
             title="Aprobar"
           >
             {busy ? <span className="text-[10px]">…</span> : (
@@ -255,14 +254,14 @@ function ReviewModal({ row, onClose, onAction }: ReviewModalProps) {
             <button
               disabled={loading}
               onClick={() => handleAction('rejected')}
-              className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-semibold text-sm transition flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-admin-dark hover:bg-admin-medium disabled:opacity-50 text-white font-semibold text-sm transition flex items-center justify-center gap-2"
             >
               {loading ? 'Procesando...' : <><span>✕</span> Rechazar</>}
             </button>
             <button
               disabled={loading}
               onClick={() => handleAction('verified')}
-              className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-semibold text-sm transition flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-nutri-medium hover:bg-nutri-dark disabled:opacity-50 text-white font-semibold text-sm transition flex items-center justify-center gap-2"
             >
               {loading ? 'Procesando...' : <><span>✓</span> Aprobar</>}
             </button>
@@ -404,8 +403,8 @@ function NutritionistsPage() {
         <div className="flex items-center gap-2.5">
           <Avatar initials={r.initials} color={r.color} size="md" />
           <div>
-            <p className="font-semibold text-gray-700 text-xs leading-tight">{r.name}</p>
-            <p className="text-gray-400 text-xs">{r.email}</p>
+            <p className="font-semibold text-gray-900 text-xs leading-tight">{r.name}</p>
+            <p className="text-gray-500 text-xs">{r.email}</p>
           </div>
         </div>
       ),
@@ -413,7 +412,7 @@ function NutritionistsPage() {
     {
       key: 'especialidad',
       header: 'Especialidad',
-      render: (r) => <span className="text-xs font-medium text-gray-700">{r.specialty}</span>,
+      render: (r) => <span className="text-xs font-medium text-gray-900">{r.specialty}</span>,
     },
     {
       key: 'credenciales',
@@ -445,7 +444,7 @@ function NutritionistsPage() {
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
       <AdminTopBar title="Gestión de Nutricionistas" />
 
-      <div className="px-8 pb-8 pt-4">
+      <div className="px-8 pb-8 pt-4 bg-admin-bg">
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center justify-between">
@@ -468,12 +467,12 @@ function NutritionistsPage() {
               onChange={(v) => { setSearch(v); setCurrentPage(1); }}
               className="w-72"
             />
-            <span className="text-sm text-gray-400 font-medium">Filtrar por:</span>
+            <span className="text-sm text-gray-500 font-medium">Filtrar por:</span>
             <FilterTabs
               tabs={TABS}
               active={activeTab}
               onChange={(tab) => { setActiveTab(tab); setCurrentPage(1); }}
-              accentColor="red"
+              accentColor="admin"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -500,7 +499,7 @@ function NutritionistsPage() {
           />
 
           <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-50">
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               Mostrando {from}–{to} de {filtered.length} nutricionistas
             </p>
             <Pagination current={currentPage} total={totalPages} onChange={setCurrentPage} />

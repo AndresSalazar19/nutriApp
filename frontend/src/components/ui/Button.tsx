@@ -13,12 +13,12 @@ interface ButtonProps {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary:       'bg-green-500 hover:bg-green-600 text-white shadow-sm',
-  danger:        'bg-red-500 hover:bg-red-600 text-white shadow-sm',
-  outline:       'border border-gray-300 hover:bg-gray-50 text-gray-700',
-  'outline-danger': 'border border-red-400 hover:bg-red-50 text-red-500',
-  ghost:         'hover:bg-gray-100 text-gray-600',
-  success:       'bg-green-600 hover:bg-green-700 text-white shadow-sm',
+  primary:          'bg-nutri-medium hover:bg-nutri-dark text-white shadow-sm',
+  danger:           'bg-admin-dark hover:bg-admin-medium text-white shadow-sm',
+  outline:          'border border-gray-300 hover:bg-gray-50 text-gray-800',
+  'outline-danger': 'border border-admin-medium hover:bg-admin-light text-admin-dark',
+  ghost:            'hover:bg-gray-100 text-gray-700',
+  success:          'bg-nutri-dark hover:bg-nutri-medium text-white shadow-sm',
 };
 
 export function Button({
