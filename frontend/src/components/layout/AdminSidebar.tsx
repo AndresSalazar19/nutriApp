@@ -52,7 +52,7 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
   };
 
   return (
-    <aside className="w-52 bg-red-600 flex flex-col justify-between py-5 px-3 flex-shrink-0">
+    <aside className="w-52 bg-admin-dark flex flex-col justify-between py-5 px-3 flex-shrink-0">
       <div>
         {/* Logo */}
         <div
@@ -62,13 +62,13 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
           }}
           className="flex items-center gap-2 px-2 mb-7 cursor-pointer select-none hover:opacity-90 transition-opacity"
         >
-          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 bg-admin-medium rounded-full flex items-center justify-center flex-shrink-0">
             {/* Reemplazar por imagen/logo */}
             <FaLeaf className="text-white text-sm" />
           </div>
           <div>
             <span className="text-white font-bold text-base leading-none">NutrIA</span>
-            <p className="text-red-200 text-xs leading-none">Admin</p>
+            <p className="text-admin-light text-xs leading-none">Admin</p>
           </div>
         </div>
 
@@ -82,11 +82,11 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
                 onClick={() => handleNavClick(label)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left
                   ${isActive
-                    ? 'bg-red-800 text-white font-semibold'
-                    : 'text-red-100 hover:bg-red-700'
+                    ? 'bg-admin-medium text-white font-semibold'
+                    : 'text-admin-light hover:bg-admin-medium'
                   }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-red-100'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-admin-light'}`} />
                 <span>{label}</span>
               </button>
             );
@@ -95,21 +95,23 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
       </div>
 
       {/* Usuario admin */}
-      <UserMenuPopover
-        direction="up"
-        align="left"
-        trigger={
-          <button className="w-full text-left flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-red-700 transition">
-            <div className="w-9 h-9 bg-red-800 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-              AD
-            </div>
-            <div>
-              <p className="text-white text-xs font-semibold leading-tight">Administrador</p>
-              <p className="text-red-300 text-xs">Sistema NutrIA</p>
-            </div>
-          </button>
-        }
-      />
+      <div className="mt-6 pt-4 border-t border-admin-light/30">
+        <UserMenuPopover
+          direction="up"
+          align="left"
+          trigger={
+            <button className="w-full text-left flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-admin-medium transition">
+              <div className="w-9 h-9 bg-admin-accent rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                AD
+              </div>
+              <div>
+                <p className="text-white text-xs font-semibold leading-tight">Administrador</p>
+                <p className="text-admin-light text-xs">Sistema NutrIA</p>
+              </div>
+            </button>
+          }
+        />
+      </div>
     </aside>
   );
 }

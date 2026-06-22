@@ -14,13 +14,13 @@ interface BadgeProps {
 }
 
 const variantMap: Record<BadgeVariant, { classes: string; defaultLabel: string }> = {
-  active:   { classes: 'text-green-600 bg-green-50',    defaultLabel: 'Activo' },
-  pending:  { classes: 'text-orange-500 bg-orange-50',  defaultLabel: 'Pendiente' },
+  active:   { classes: 'text-nutri-dark bg-nutri-light',    defaultLabel: 'Activo' },
+  pending:  { classes: 'text-gray-600 bg-transparent border border-gray-400',  defaultLabel: 'Pendiente' },
   inactive: { classes: 'text-gray-500 bg-gray-100',     defaultLabel: 'Inactivo' },
-  premium:  { classes: 'text-green-700 bg-green-100',   defaultLabel: 'Premium' },
+  premium:  { classes: 'text-white bg-nutri-medium',   defaultLabel: 'Premium' },
   basic:    { classes: 'text-gray-500 bg-gray-100',     defaultLabel: 'Basic' },
   revision: { classes: 'text-amber-600 bg-amber-50 border border-amber-400', defaultLabel: 'En Revisión' },
-  verified: { classes: 'text-green-600 bg-green-50',    defaultLabel: 'Verificado' },
+  verified: { classes: 'text-nutri-dark bg-nutri-light',    defaultLabel: 'Verificado' },
   rejected: { classes: 'text-red-600 bg-red-50',        defaultLabel: 'Rechazado' },
 };
 

@@ -11,8 +11,8 @@ interface StatCardProps {
 }
 
 const changeColors = {
-  positive: 'text-green-500',
-  negative: 'text-red-400',
+  positive: 'text-nutri-medium',
+  negative: 'text-admin-accent',
   neutral:  'text-orange-400',
 };
 
