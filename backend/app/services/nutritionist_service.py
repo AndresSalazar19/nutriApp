@@ -68,6 +68,7 @@ class NutritionistService:
 
         user_data = UserCreate(
             email=data.email,
+            cedula=data.cedula,
             password=data.password,
             first_name=data.first_name,
             last_name=data.last_name,
