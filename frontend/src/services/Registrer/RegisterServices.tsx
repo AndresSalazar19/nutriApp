@@ -74,7 +74,7 @@ export const RegistrerServices = {
    * Endpoint: POST /api/v1/nutritionists
    */
   async crearNutricionista(data: NutritionistRegisterData): Promise<ApiResponse<RegisteredNutritionist>> {
-    console.log('📤 Enviando registro de nutricionista al backend');
+    console.log('Enviando registro de nutricionista al backend');
 
     const response = await fetch(`${API_URL}/nutritionists`, {
       method: 'POST',
@@ -111,7 +111,7 @@ export const RegistrerServices = {
 
     const data: ApiResponse<RegisteredUser> = await response.json();
 
-    console.log('📥 Respuesta del backend:', data);
+    console.log('Respuesta del backend:', data);
 
     if (!response.ok || !data.status.isSuccessfully) {
       const messages = data.status?.messages ?? [];

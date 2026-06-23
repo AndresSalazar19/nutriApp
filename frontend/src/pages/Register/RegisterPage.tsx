@@ -91,7 +91,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
       const response = await RegistrerServices.crearNutricionista(payload);
 
-      console.log('✅ Nutricionista registrado:', response.data);
+      console.log('Nutricionista registrado:', response.data);
 
       const profileData = response.data;
 
