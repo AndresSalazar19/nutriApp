@@ -3,7 +3,7 @@ from app.db.models.user import User, Person
 from app.schemas.user import UserResponse, UserCreate
 from app.services.user_service import UserService
 from app.db.models.user import UserRole
-from app.db.models.nutritionist import NutritionistProfile, NutritionistStatus, Specialty
+from app.db.models.nutritionist import NutritionistProfile, NutritionistStatus, Specialty, NutritionistDocument, DocumentType
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from app.schemas.nutritionist import NutritionistProfileResponse
@@ -97,4 +97,25 @@ class NutritionistService:
         db.refresh(profile)
         return profile
 
-    
+    @staticmethod
+    def add_document(
+        db: Session,
+        nutritionist_id: uuid.UUID,
+        document_type: DocumentType,
+        file_path: str,
+        file_name: str,
+        file_size: int,
+        mime_type: str = "application/pdf",
+    ) -> NutritionistDocument:
+        document = NutritionistDocument(
+            nutritionist_id=nutritionist_id,
+            document_type=document_type,
+            file_path=file_path,
+            file_name=file_name,
+            file_size=file_size,
+            mime_type=mime_type,
+        )
+        db.add(document)
+        db.commit()
+        db.refresh(document)
+        return document
