@@ -121,7 +121,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
       <div className="w-full max-w-xl mb-4">
         <button
           onClick={onGoToLogin}
-          className="text-green-700 text-sm hover:underline flex items-center gap-1 disabled:opacity-50"
+          className="text-nutri-medium text-sm hover:text-nutri-dark hover:underline flex items-center gap-1 disabled:opacity-50"
           disabled={isSubmitting}
         >
           ← Volver al inicio
@@ -133,11 +133,11 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
         {/* Encabezado */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-3 shadow">
+          <div className="w-12 h-12 bg-nutri-medium rounded-full flex items-center justify-center mb-3 shadow">
             <span className="text-xl">🥗</span>
           </div>
-          <h1 className="text-2xl font-bold text-green-700">Crear Cuenta</h1>
-          <p className="text-gray-400 text-sm mt-1">Paso {step} de 3</p>
+          <h1 className="text-2xl font-bold text-nutri-dark">Crear Cuenta</h1>
+          <p className="text-gray-500 text-sm mt-1">Paso {step} de 3</p>
         </div>
 
         {/* Barra de Progreso */}
@@ -146,7 +146,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
             <div
               key={i}
               className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
-                step >= i ? 'bg-green-500' : 'bg-gray-100'
+                step >= i ? 'bg-nutri-medium' : 'bg-gray-100'
               }`}
             />
           ))}
@@ -196,7 +196,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
             <button
               type="submit"
               disabled={isSubmitting || !isStepValid}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-xl transition text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+              className="flex-1 bg-nutri-medium hover:bg-nutri-dark text-white font-bold py-3 px-8 rounded-xl transition text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
             >
               {isSubmitting
                 ? 'Procesando...'
@@ -208,13 +208,13 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
         {/* Enlace al Login */}
         <div className="text-center mt-6 border-t border-gray-100 pt-6">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-600">
             ¿Ya tienes una cuenta?{' '}
             <button
               type="button"
               onClick={onGoToLogin}
               disabled={isSubmitting}
-              className="text-green-600 font-bold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:hover:no-underline"
+              className="text-nutri-medium font-bold hover:text-nutri-dark hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:hover:no-underline"
             >
               Iniciar sesión
             </button>
