@@ -26,10 +26,10 @@ interface RecentPatient {
 // ─── Datos mock (se reemplazarán por llamadas al backend) ─────────────────────
 
 const statsCards = [
-  { icon: '👥', iconBg: 'bg-blue-100',   label: 'Pacientes Activos', value: '24', change: '↑ 3 este mes',       changeType: 'positive' as const },
-  { icon: '📅', iconBg: 'bg-orange-100', label: 'Citas de Hoy',      value: '5',  change: '2 pendientes',       changeType: 'neutral'  as const },
-  { icon: '💬', iconBg: 'bg-green-100',  label: 'Mensajes Nuevos',   value: '8',  change: '3 sin leer',         changeType: 'neutral'  as const },
-  { icon: '📊', iconBg: 'bg-purple-100', label: 'Adherencia Media',  value: '87%',change: '↑ 5% vs mes anterior', changeType: 'positive' as const },
+  { icon: <span className="text-nutri-dark">👥</span>, iconBg: 'bg-nutri-light text-nutri-dark',   label: 'Pacientes Activos', value: '24', change: '↑ 3 este mes',       changeType: 'positive' as const },
+  { icon: <span className="text-nutri-dark">📅</span>, iconBg: 'bg-nutri-light text-nutri-dark', label: 'Citas de Hoy',      value: '5',  change: '2 pendientes',       changeType: 'neutral'  as const },
+  { icon: <span className="text-nutri-dark">💬</span>, iconBg: 'bg-nutri-light text-nutri-dark',  label: 'Mensajes Nuevos',   value: '8',  change: '3 sin leer',         changeType: 'neutral'  as const },
+  { icon: <span className="text-nutri-dark">📊</span>, iconBg: 'bg-nutri-light text-nutri-dark', label: 'Adherencia Media',  value: '87%',change: '↑ 5% vs mes anterior', changeType: 'positive' as const },
 ];
 
 const weeklyData = [
@@ -43,16 +43,16 @@ const weeklyData = [
 ];
 
 const weeklyBars = [
-  { dataKey: 'adherencia', label: 'Adherencia', color: '#22c55e' },
-  { dataKey: 'peso',       label: 'Peso',       color: '#3b82f6' },
-  { dataKey: 'presion',    label: 'Presión',    color: '#f59e0b' },
+  { dataKey: 'adherencia', label: 'Adherencia', color: '#2D6A4F' }, // nutri-dark
+  { dataKey: 'peso',       label: 'Peso',       color: '#52B788' }, // nutri-accent
+  { dataKey: 'presion',    label: 'Presión',    color: '#9CA3AF' }, // gray-400
 ];
 
 const recentPatients: RecentPatient[] = [
-  { id: '1', initials: 'MR', color: 'bg-green-500',  name: 'María Rodríguez', lastConsult: 'Hoy, 10:00 AM',      status: 'Excelente'          },
-  { id: '2', initials: 'JG', color: 'bg-blue-500',   name: 'Jorge Gutiérrez', lastConsult: 'Ayer, 3:30 PM',      status: 'Regular'            },
-  { id: '3', initials: 'LC', color: 'bg-orange-400', name: 'Lucía Castro',    lastConsult: 'Hace 2 días',        status: 'Bueno'              },
-  { id: '4', initials: 'AP', color: 'bg-purple-500', name: 'Ana Pérez',       lastConsult: 'Hace 5 días',        status: 'Necesita seguimiento' },
+  { id: '1', initials: 'MR', color: 'bg-nutri-light text-nutri-dark font-bold',  name: 'María Rodríguez', lastConsult: 'Hoy, 10:00 AM',      status: 'Excelente'          },
+  { id: '2', initials: 'JG', color: 'bg-nutri-light text-nutri-dark font-bold',   name: 'Jorge Gutiérrez', lastConsult: 'Ayer, 3:30 PM',      status: 'Regular'            },
+  { id: '3', initials: 'LC', color: 'bg-nutri-light text-nutri-dark font-bold', name: 'Lucía Castro',    lastConsult: 'Hace 2 días',        status: 'Bueno'              },
+  { id: '4', initials: 'AP', color: 'bg-nutri-light text-nutri-dark font-bold', name: 'Ana Pérez',       lastConsult: 'Hace 5 días',        status: 'Necesita seguimiento' },
 ];
 
 const statusBadgeVariant: Record<PatientStatus, 'active' | 'pending' | 'inactive' | 'revision'> = {
@@ -123,7 +123,7 @@ export default function HomePage() {
               <h3 className="font-bold text-gray-800 text-sm">Pacientes Recientes</h3>
               <button
                 onClick={() => navigate(ROUTES.PATIENTS)}
-                className="text-green-600 text-xs hover:underline"
+                className="text-gray-900 font-medium text-xs hover:underline"
               >
                 Ver todos →
               </button>
@@ -134,8 +134,8 @@ export default function HomePage() {
                   <div className="flex items-center gap-2.5">
                     <Avatar initials={patient.initials} color={patient.color} size="md" />
                     <div>
-                      <p className="text-xs font-semibold text-gray-700 leading-tight">{patient.name}</p>
-                      <p className="text-xs text-gray-400">{patient.lastConsult}</p>
+                      <p className="text-xs font-semibold text-gray-900 leading-tight">{patient.name}</p>
+                      <p className="text-xs text-gray-500">{patient.lastConsult}</p>
                     </div>
                   </div>
                   <Badge variant={statusBadgeVariant[patient.status]} label={patient.status} />

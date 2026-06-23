@@ -46,10 +46,13 @@ export function NutritionistTopBar({ title, searchValue, onSearchChange }: Nutri
         <div className="relative" ref={notificationsRef}>
           <button 
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className="relative w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+            className="relative w-8 h-8 flex items-center justify-center rounded-full hover:bg-nutri-light transition"
+            aria-label="Notificaciones"
           >
-            <span className="text-lg">🔔</span>
-            <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />
+            <svg className="w-5 h-5 text-nutri-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0h6z" />
+            </svg>
+            <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-nutri-accent border-2 border-white rounded-full" />
           </button>
 
           {/* Menú desplegable */}

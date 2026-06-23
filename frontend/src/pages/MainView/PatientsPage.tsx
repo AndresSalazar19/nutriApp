@@ -41,8 +41,8 @@ function PatientRow({
     patient.status === 'inactive' ? 'inactive'  : 'pending';
 
   const adherenceColor =
-    patient.adherence >= 80 ? 'text-green-600' :
-    patient.adherence >= 60 ? 'text-orange-500' : 'text-red-500';
+    patient.adherence >= 80 ? 'text-nutri-dark' :
+    patient.adherence >= 60 ? 'text-nutri-medium' : 'text-admin-accent';
 
   return (
     <tr className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition group">
@@ -50,19 +50,19 @@ function PatientRow({
       {/* Paciente */}
       <td className="py-3.5 px-4">
         <div className="flex items-center gap-3">
-          <Avatar initials={patient.initials} color={patient.color} size="md" />
+          <Avatar initials={patient.initials} color="bg-nutri-light text-nutri-dark font-bold" size="md" />
           <div>
-            <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700 transition">
+            <p className="text-sm font-semibold text-gray-800 group-hover:text-nutri-medium transition">
               {patient.firstName} {patient.lastName}
             </p>
-            <p className="text-xs text-gray-400">{patient.email}</p>
+            <p className="text-xs text-gray-500">{patient.email}</p>
           </div>
         </div>
       </td>
 
       {/* ID */}
       <td className="py-3.5 px-4">
-        <span className="text-xs text-gray-400 font-mono">#{patient.id}</span>
+        <span className="text-xs text-gray-500 font-mono">#{patient.id}</span>
       </td>
 
       {/* Estado */}
@@ -88,8 +88,8 @@ function PatientRow({
           <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full ${
-                patient.adherence >= 80 ? 'bg-green-500' :
-                patient.adherence >= 60 ? 'bg-orange-400' : 'bg-red-400'
+                patient.adherence >= 80 ? 'bg-nutri-dark' :
+                patient.adherence >= 60 ? 'bg-nutri-medium' : 'bg-admin-accent'
               }`}
               style={{ width: `${patient.adherence}%` }}
             />
@@ -113,8 +113,8 @@ function PatientRow({
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
           <button
             onClick={() => onView(patient)}
-            className="px-3 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-lg
-              hover:bg-green-100 transition"
+            className="px-3 py-1.5 bg-nutri-light text-nutri-dark text-xs font-semibold rounded-lg
+              hover:bg-nutri-medium/20 transition"
           >
             Ver perfil
           </button>
@@ -205,19 +205,19 @@ export default function PatientsPage() {
         {/* Summary cards */}
         <div className="grid grid-cols-4 gap-4 mb-6">
           {[
-            { label: 'Total Pacientes', value: MOCK_PATIENTS.length, icon: '👥', color: 'bg-blue-50 text-blue-700' },
-            { label: 'Activos',         value: MOCK_PATIENTS.filter(p => p.status === 'active').length,   icon: '✅', color: 'bg-green-50 text-green-700' },
-            { label: 'Pendientes',      value: MOCK_PATIENTS.filter(p => p.status === 'pending').length,  icon: '⏳', color: 'bg-orange-50 text-orange-700' },
+            { label: 'Total Pacientes', value: MOCK_PATIENTS.length, icon: '👥', color: 'bg-nutri-light text-nutri-dark' },
+            { label: 'Activos',         value: MOCK_PATIENTS.filter(p => p.status === 'active').length,   icon: '✅', color: 'bg-nutri-light text-nutri-dark' },
+            { label: 'Pendientes',      value: MOCK_PATIENTS.filter(p => p.status === 'pending').length,  icon: '⏳', color: 'bg-nutri-light text-nutri-dark' },
             { label: 'Adherencia Media',
               value: `${Math.round(MOCK_PATIENTS.reduce((s, p) => s + p.adherence, 0) / MOCK_PATIENTS.length)}%`,
-              icon: '📊', color: 'bg-purple-50 text-purple-700' },
+              icon: '📊', color: 'bg-nutri-light text-nutri-dark' },
           ].map(card => (
             <div key={card.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${card.color}`}>
                 {card.icon}
               </div>
               <div>
-                <p className="text-xs text-gray-400">{card.label}</p>
+                <p className="text-xs text-gray-500">{card.label}</p>
                 <p className="text-2xl font-bold text-gray-800">{card.value}</p>
               </div>
             </div>
@@ -230,14 +230,14 @@ export default function PatientsPage() {
           {/* Table header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <FilterTabs tabs={tabs} active={activeFilter} onChange={handleFilter} />
-            <span className="text-xs text-gray-400">{filtered.length} paciente{filtered.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-500">{filtered.length} paciente{filtered.length !== 1 ? 's' : ''}</span>
           </div>
 
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-400 text-xs uppercase border-b border-gray-50">
+                <tr className="text-gray-500 text-xs uppercase border-b border-gray-50">
                   {['Paciente', 'ID', 'Estado', 'Plan', 'Adherencia', 'Última Consulta', 'Próxima Cita', ''].map(h => (
                     <th key={h} className="text-left pb-3 pt-3 px-4 font-semibold">{h}</th>
                   ))}
@@ -266,7 +266,7 @@ export default function PatientsPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-between items-center px-5 py-4 border-t border-gray-100">
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500">
                 Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} de {filtered.length}
               </p>
               <Pagination current={currentPage} total={totalPages} onChange={setCurrentPage} />

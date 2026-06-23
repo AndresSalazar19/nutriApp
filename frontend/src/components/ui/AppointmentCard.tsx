@@ -19,11 +19,11 @@ export function AppointmentCard({ appt, onClick }: AppointmentCardProps) {
 
   const isVirtual = appt.type === 'Virtual';
 
-  const bg     = isVirtual ? 'bg-blue-50  border-blue-200'  : 'bg-green-50  border-green-200';
-  const text   = isVirtual ? 'text-blue-800'                : 'text-green-800';
-  const badge  = isVirtual ? 'bg-blue-100 text-blue-700'    : 'bg-green-100 text-green-700';
-  const dot    = isVirtual ? 'bg-blue-500'                  : 'bg-green-500';
-  const avatar = isVirtual ? 'bg-blue-500' : appt.patientColor;
+  const bg     = isVirtual ? 'bg-admin-light border-admin-medium/30' : 'bg-nutri-light border-nutri-medium/30';
+  const text   = isVirtual ? 'text-admin-dark'                : 'text-nutri-dark';
+  const badge  = isVirtual ? 'bg-admin-bg text-admin-dark'    : 'bg-white/60 text-nutri-dark';
+  const dot    = isVirtual ? 'bg-admin-medium'               : 'bg-nutri-medium';
+  const avatar = isVirtual ? 'bg-admin-medium' : appt.patientColor;
 
   return (
     <div
@@ -56,7 +56,7 @@ export function AppointmentCard({ appt, onClick }: AppointmentCardProps) {
 
       {/* Notes */}
       {height > 52 && appt.notes && (
-        <p className="text-xs text-gray-400 truncate mt-0.5">{appt.notes}</p>
+        <p className="text-xs text-gray-500 truncate mt-0.5">{appt.notes}</p>
       )}
     </div>
   );

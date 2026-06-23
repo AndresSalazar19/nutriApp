@@ -73,11 +73,11 @@ export function UserMenuPopover({
   ].join(' ');
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative w-full block" ref={ref}>
       {/* Trigger */}
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center justify-center rounded-full transition focus:outline-none"
+        className="w-full block items-center justify-center rounded-full transition focus:outline-none"
         aria-haspopup="true"
         aria-expanded={open}
       >
