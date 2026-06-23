@@ -6,6 +6,7 @@ import uuid
 
 class UserCreate(BaseModel):
     email: EmailStr
+    cedula: str | None = None
     password: str
     first_name: str
     last_name: str
