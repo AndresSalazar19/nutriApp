@@ -14,23 +14,23 @@ function getStatus(item: ContentItem): SubmissionStatus {
 const STATUS_CONFIG: Record<SubmissionStatus, { text: string; dot: string; badge: string }> = {
   approved: {
     text:  'Aprobado',
-    dot:   'bg-green-400',
-    badge: 'bg-green-100 text-green-700',
+    dot:   'bg-nutri-medium',
+    badge: 'bg-nutri-light text-nutri-dark border border-nutri-medium/30',
   },
   waiting: {
     text:  'En espera',
-    dot:   'bg-yellow-400',
-    badge: 'bg-yellow-100 text-yellow-700',
+    dot:   'bg-gray-400',
+    badge: 'bg-transparent text-gray-600 border border-gray-400',
   },
 };
 
 const CATEGORY_ACCENT: Record<string, string> = {
-  nutrition:    'border-l-blue-400',
-  hypertension: 'border-l-green-400',
-  recipes:      'border-l-teal-400',
-  exercise:     'border-l-orange-400',
-  lifestyle:    'border-l-purple-400',
-  tips:         'border-l-red-400',
+  nutrition:    'border-l-nutri-medium',
+  hypertension: 'border-l-nutri-medium',
+  recipes:      'border-l-nutri-medium',
+  exercise:     'border-l-nutri-medium',
+  lifestyle:    'border-l-nutri-medium',
+  tips:         'border-l-nutri-medium',
 };
 
 const CONTENT_TYPE_ICON: Record<string, string> = {
@@ -116,8 +116,8 @@ export default function ResourcesPage() {
   return (
     <NutritionistLayout>
       <div className="px-8 py-6 max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Recursos Educativos</h1>
-        <p className="text-gray-400 text-sm mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Recursos Educativos</h1>
+        <p className="text-gray-500 text-sm mb-8">
           Crea contenido educativo para los pacientes. Cada envío quedará en espera de revisión por un administrador.
         </p>
 
@@ -130,7 +130,7 @@ export default function ResourcesPage() {
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1">Tipo</label>
                 <select name="content_type" value={form.content_type} onChange={handleChange}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400">
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-nutri-medium focus:border-nutri-medium">
                   <option value="">Seleccionar…</option>
                   {CONTENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
@@ -138,7 +138,7 @@ export default function ResourcesPage() {
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1">Categoría</label>
                 <select name="category" value={form.category} onChange={handleChange}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400">
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-nutri-medium focus:border-nutri-medium">
                   <option value="">Seleccionar…</option>
                   {CONTENT_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
@@ -149,44 +149,44 @@ export default function ResourcesPage() {
               <label className="block text-xs font-semibold text-gray-500 mb-1">Título</label>
               <input name="title" value={form.title} onChange={handleChange}
                 placeholder="Ej: Alimentación para hipertensión"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400" />
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-nutri-medium focus:border-nutri-medium" />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-gray-500 mb-1">Contenido</label>
               <textarea name="body" value={form.body} onChange={handleChange} rows={5}
                 placeholder="Escribe el contenido educativo aquí…"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400 resize-none" />
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-nutri-medium focus:border-nutri-medium resize-none" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1">
-                  Tags <span className="font-normal text-gray-400">(separados por coma)</span>
+                  Tags <span className="font-normal text-gray-500">(separados por coma)</span>
                 </label>
                 <input name="tags" value={form.tags} onChange={handleChange}
                   placeholder="nutrición, hipertensión, tips"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400" />
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-nutri-medium focus:border-nutri-medium" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1">URL de media</label>
                 <input name="media_url" value={form.media_url} onChange={handleChange}
                   placeholder="https://…"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400" />
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-nutri-medium focus:border-nutri-medium" />
               </div>
             </div>
 
             <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
               <input type="checkbox" name="is_premium" checked={form.is_premium}
-                onChange={handleChange} className="w-4 h-4 accent-green-500" />
+                onChange={handleChange} className="w-4 h-4 accent-nutri-medium" />
               Contenido Premium
             </label>
 
             {error   && <p className="text-red-500 text-xs">{error}</p>}
-            {success && <p className="text-green-600 text-xs">{success}</p>}
+            {success && <p className="text-nutri-dark font-medium text-xs">{success}</p>}
 
             <button type="submit" disabled={submitting}
-              className="w-full sm:w-auto px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition disabled:opacity-60">
+              className="w-full sm:w-auto px-6 py-2.5 bg-nutri-medium hover:bg-nutri-dark text-white text-sm font-semibold rounded-lg transition disabled:opacity-60">
               {submitting ? 'Enviando…' : 'Enviar para revisión'}
             </button>
           </form>
@@ -196,16 +196,16 @@ export default function ResourcesPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-gray-700">Mis envíos</h2>
           {items.length > 0 && (
-            <span className="text-xs text-gray-400">{items.length} recurso{items.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-500">{items.length} recurso{items.length !== 1 ? 's' : ''}</span>
           )}
         </div>
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <span className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+            <span className="w-8 h-8 border-4 border-nutri-medium border-t-transparent rounded-full animate-spin" />
           </div>
         ) : items.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">
+          <div className="text-center py-12 text-gray-500 text-sm">
             Aún no has enviado contenido.
           </div>
         ) : (
@@ -227,8 +227,8 @@ export default function ResourcesPage() {
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="text-2xl shrink-0">{icon}</span>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-gray-800 leading-snug line-clamp-2">{item.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{typeL} · {catLabel}</p>
+                        <p className="text-sm font-bold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{typeL} · {catLabel}</p>
                       </div>
                     </div>
                     {/* Badge de estado */}
@@ -251,13 +251,13 @@ export default function ResourcesPage() {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-1 border-t border-gray-50">
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-500">
                       {item.created_at
                         ? `Enviado el ${new Date(item.created_at).toLocaleDateString('es-EC')}`
                         : '—'}
                     </span>
                     {item.is_premium && (
-                      <span className="text-xs bg-yellow-100 text-yellow-700 font-semibold px-2 py-0.5 rounded-full">⭐ Premium</span>
+                      <span className="text-xs bg-nutri-light text-nutri-dark font-semibold border border-nutri-medium/30 px-2 py-0.5 rounded-full">⭐ Premium</span>
                     )}
                   </div>
                 </div>

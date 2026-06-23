@@ -28,7 +28,7 @@ export default function MainView() {
       <NutritionistSidebar locked={true} />
  
       <main className="flex-1 overflow-y-auto p-10">
-        <h1 className="text-2xl font-bold text-green-800 mb-8">Panel Principal</h1>
+        <h1 className="text-2xl font-bold text-nutri-dark mb-8">Panel Principal</h1>
  
         {/* Reloj decorativo */}
         <div className="flex justify-center mb-6">
@@ -54,7 +54,7 @@ export default function MainView() {
         {/* Mensaje principal */}
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Cuenta en Proceso de Verificación</h2>
-          <p className="text-gray-500 text-sm max-w-lg mx-auto leading-relaxed">
+          <p className="text-gray-600 text-sm max-w-lg mx-auto leading-relaxed">
             Tu registro ha sido recibido exitosamente. Un administrador está revisando
             tu información y documentación profesional para aprobar tu cuenta.
           </p>
@@ -91,7 +91,7 @@ export default function MainView() {
         {/* Soporte */}
         <div className="text-center text-xs text-gray-400">
           ¿Tienes dudas? Contacta a soporte en{' '}
-          <a href="mailto:soporte@nutria.com" className="text-green-600 font-semibold hover:underline">
+          <a href="mailto:soporte@nutria.com" className="text-nutri-medium font-semibold hover:underline">
             soporte@nutria.com
           </a>
         </div>

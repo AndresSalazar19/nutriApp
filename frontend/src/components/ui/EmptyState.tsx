@@ -8,7 +8,7 @@ interface EmptyStateProps {
     label: string;
     onClick: () => void;
   };
-  accentColor?: 'green' | 'red';
+  accentColor?: 'green' | 'red' | 'admin';
 }
 
 export function EmptyState({
@@ -21,7 +21,9 @@ export function EmptyState({
   const btnColor =
     accentColor === 'red'
       ? 'bg-red-500 hover:bg-red-600'
-      : 'bg-green-500 hover:bg-green-600';
+      : accentColor === 'admin'
+        ? 'bg-admin-dark hover:bg-admin-medium'
+        : 'bg-green-500 hover:bg-green-600';
 
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">

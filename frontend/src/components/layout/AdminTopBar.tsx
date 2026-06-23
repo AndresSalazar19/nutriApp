@@ -42,8 +42,8 @@ export function AdminTopBar({ title, subtitle }: AdminTopBarProps) {
     <div className="flex items-center justify-between px-8 pt-8 pb-2">
       {/* Título */}
       <div>
-        <h1 className="text-2xl font-bold text-red-600">{title}</h1>
-        {subtitle && <p className="text-gray-400 text-sm mt-0.5">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+        {subtitle && <p className="text-admin-medium text-sm mt-0.5">{subtitle}</p>}
       </div>
 
       {/* Acciones */}
@@ -52,10 +52,10 @@ export function AdminTopBar({ title, subtitle }: AdminTopBarProps) {
         <div className="relative" ref={notificationsRef}>
           <button 
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition relative"
+            className="p-2 rounded-full hover:bg-admin-light text-admin-dark transition relative"
           >
             <IconBell />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-admin-accent rounded-full" />
           </button>
 
           {/* Menú desplegable de notificaciones */}
@@ -73,7 +73,7 @@ export function AdminTopBar({ title, subtitle }: AdminTopBarProps) {
           direction="down"
           align="right"
           trigger={
-            <span className="p-2 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-500 transition cursor-pointer">
+            <span className="p-2 rounded-full flex items-center justify-center hover:bg-admin-light text-admin-dark transition cursor-pointer">
               <IconSettings />
             </span>
           }
