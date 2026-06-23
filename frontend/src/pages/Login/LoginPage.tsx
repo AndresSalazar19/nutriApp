@@ -6,9 +6,10 @@ import { PasswordVisibilityToggle } from '../../components/PasswordVisibilityTog
 interface LoginPageProps {
   onLogin: (userData: { userId: string; email: string; role: string; token: string }) => void;
   onGoToRegister: () => void;
+  onGoToChangePassword: () => void;
 }
 
-function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
+function LoginPage({ onLogin, onGoToRegister, onGoToChangePassword }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -162,9 +163,14 @@ function LoginPage({ onLogin, onGoToRegister }: LoginPageProps) {
                 <input type="checkbox" className="accent-nutri-medium" disabled={isLoading} />
                 Recordarme
               </label>
-              <a href="/forgot-password" className="text-nutri-medium text-sm hover:underline">
+              <button
+                type="button"
+                onClick={onGoToChangePassword}
+                className="text-nutri-medium text-sm hover:underline bg-transparent border-none p-0"
+                disabled={isLoading}
+              >
                 ¿Olvidaste tu contraseña?
-              </a>
+              </button>
             </div>
 
             {/* Botón submit */}
