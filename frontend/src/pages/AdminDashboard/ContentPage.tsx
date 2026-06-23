@@ -10,12 +10,12 @@ import { ContentService, ContentItem, CONTENT_CATEGORIES, CONTENT_TYPES } from '
 const SORT_OPTIONS = ['Más reciente', 'Más antiguo', 'A-Z', 'Z-A'];
 
 const CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
-  nutrition:    { color: 'bg-blue-500',   bg: 'bg-blue-50'   },
-  hypertension: { color: 'bg-green-500',  bg: 'bg-green-50'  },
-  recipes:      { color: 'bg-teal-500',   bg: 'bg-teal-50'   },
-  exercise:     { color: 'bg-orange-500', bg: 'bg-orange-50' },
-  lifestyle:    { color: 'bg-purple-500', bg: 'bg-purple-50' },
-  tips:         { color: 'bg-red-500',    bg: 'bg-red-50'    },
+  nutrition:    { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  hypertension: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  recipes:      { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  exercise:     { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  lifestyle:    { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  tips:         { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
 };
 
 function categoryLabel(value: string) {
@@ -39,15 +39,15 @@ function ViewModal({ item, onClose }: { item: ContentItem; onClose: () => void }
         <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-gray-100">
           <div className="min-w-0 pr-4">
             <div className="flex items-center gap-2 mb-1">
-              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full text-white ${CATEGORY_STYLES[item.category]?.color ?? 'bg-gray-400'}`}>
+              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${CATEGORY_STYLES[item.category]?.color ?? 'bg-admin-light text-admin-dark'}`}>
                 {categoryLabel(item.category)}
               </span>
               <span className="text-xs text-gray-400">{typeLabel(item.content_type)}</span>
               {item.is_premium && (
-                <span className="text-xs font-bold bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">⭐ Premium</span>
+                <span className="text-xs font-bold bg-nutri-light text-nutri-dark px-2 py-0.5 rounded-full">⭐ Premium</span>
               )}
             </div>
-            <h2 className="text-lg font-bold text-gray-800 leading-snug">{item.title}</h2>
+            <h2 className="text-lg font-bold text-gray-900 leading-snug">{item.title}</h2>
           </div>
           <button onClick={onClose}
             className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition text-lg font-bold">
@@ -66,7 +66,7 @@ function ViewModal({ item, onClose }: { item: ContentItem; onClose: () => void }
 
         {/* Cuerpo */}
         <div className="overflow-y-auto px-6 py-5 flex-1">
-          <p className="text-sm text-gray-700 leading-7 whitespace-pre-wrap">{item.body}</p>
+          <p className="text-sm text-gray-800 leading-7 whitespace-pre-wrap">{item.body}</p>
         </div>
       </div>
     </div>
@@ -132,7 +132,7 @@ function ContentPage() {
   });
 
   const articles: Article[] = filtered.map((item) => {
-    const style = CATEGORY_STYLES[item.category] ?? { color: 'bg-gray-500', bg: 'bg-gray-50' };
+    const style = CATEGORY_STYLES[item.category] ?? { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' };
     return {
       id:            item.id,
       title:         item.title,
@@ -163,11 +163,11 @@ function ContentPage() {
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
       <AdminTopBar title="Biblioteca de Contenido" />
 
-      <div className="px-8 pb-8 pt-4">
+      <div className="px-8 pb-8 pt-4 bg-admin-bg">
 
         {/* Alerta pendientes */}
         {pendingCount > 0 && (
-          <div className="mb-5 flex items-center gap-3 bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm rounded-xl px-4 py-3">
+          <div className="mb-5 flex items-center gap-3 bg-admin-light border border-admin-medium text-admin-dark text-sm rounded-xl px-4 py-3">
             <span className="text-lg">⏳</span>
             <span>
               Hay <strong>{pendingCount}</strong> contenido{pendingCount !== 1 ? 's' : ''} pendiente{pendingCount !== 1 ? 's' : ''} de aprobación.
@@ -188,7 +188,7 @@ function ContentPage() {
               tabs={statusTabs}
               active={activeStatus}
               onChange={setActiveStatus}
-              accentColor="red"
+              accentColor="admin"
             />
           </div>
 
@@ -209,7 +209,7 @@ function ContentPage() {
                     key={opt}
                     onClick={() => { setSortBy(opt); setSortOpen(false); }}
                     className={`w-full text-left px-4 py-2 text-xs transition ${
-                      sortBy === opt ? 'text-red-500 font-semibold bg-red-50' : 'text-gray-600 hover:bg-gray-50'
+                      sortBy === opt ? 'text-admin-dark font-semibold bg-admin-light' : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     {opt}
@@ -223,14 +223,14 @@ function ContentPage() {
         {/* Grid */}
         {loading ? (
           <div className="flex justify-center py-16">
-            <span className="w-10 h-10 border-4 border-red-400 border-t-transparent rounded-full animate-spin" />
+            <span className="w-10 h-10 border-4 border-admin-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : articles.length === 0 ? (
           <EmptyState
             icon="📝"
             title="No hay contenido"
             description="No se encontraron resultados para los filtros seleccionados."
-            accentColor="red"
+            accentColor="admin"
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

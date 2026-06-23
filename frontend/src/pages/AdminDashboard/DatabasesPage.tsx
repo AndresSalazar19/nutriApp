@@ -36,7 +36,7 @@ const InputGroup = ({ label, value, onChange, type = "text", placeholder = "", r
     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">{label}</label>
     <input 
       type={type} step="0.01" value={value} onChange={onChange} placeholder={placeholder} required={required && type === 'text'}
-      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition"
+      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:border-admin-medium focus:ring-1 focus:ring-admin-medium outline-none transition"
     />
   </div>
 );
@@ -89,7 +89,7 @@ function FoodFormModal({
             value={f.category} 
             onChange={(e:any)=>setF({...f, category: e.target.value})} 
             disabled={isSaving}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-red-500 disabled:bg-gray-50"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-admin-medium disabled:bg-gray-50"
           >
             {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -209,8 +209,8 @@ export default function DatabasesPage() {
       header: 'Alimento', 
       render: (row) => (
         <div>
-          <p className="font-bold text-xs text-gray-700">{row.name}</p>
-          <p className="text-[10px] text-gray-400">{row.category}</p>
+          <p className="font-bold text-xs text-gray-900">{row.name}</p>
+          <p className="text-[10px] text-gray-500">{row.category}</p>
         </div>
       ) 
     },
@@ -223,10 +223,10 @@ export default function DatabasesPage() {
       header: 'Acciones', 
       render: (r) => (
         <div className="flex gap-1">
-          <button onClick={() => setFoodToEdit(r)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition" title="Editar">
+          <button onClick={() => setFoodToEdit(r)} className="p-1.5 text-gray-500 hover:text-admin-dark hover:bg-admin-light rounded transition" title="Editar">
             ✎
           </button>
-          <button onClick={() => handleDelete(r.id, r.name)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition" title="Eliminar">
+          <button onClick={() => handleDelete(r.id, r.name)} className="p-1.5 text-admin-accent hover:text-admin-dark hover:bg-admin-light rounded transition" title="Eliminar">
             🗑
           </button>
         </div>
@@ -238,11 +238,11 @@ export default function DatabasesPage() {
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
       <AdminTopBar title="Base de Datos Nutricional" />
       
-      <div className="px-8 pb-8 pt-6 space-y-6">
+      <div className="px-8 pb-8 pt-6 space-y-6 bg-admin-bg">
         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
           <div>
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">Composición de Alimentos (100g)</h3>
-            <p className="text-xs text-gray-400 mt-1">Datos nutricionales base consumidos desde tu API.</p>
+            <p className="text-xs text-gray-500 mt-1">Datos nutricionales base consumidos desde tu API.</p>
           </div>
           <Button variant="danger" onClick={() => setFoodToEdit(undefined)}>
             + Nuevo Alimento
@@ -267,7 +267,7 @@ export default function DatabasesPage() {
               <select 
                 value={activeTab} 
                 onChange={(e) => handleTabChange(e.target.value)}
-                className="w-full md:w-auto border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-red-500 bg-white shadow-sm cursor-pointer"
+                className="w-full md:w-auto border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-admin-medium bg-white shadow-sm cursor-pointer"
               >
                 {TABS.map(tab => (
                   <option key={tab.label} value={tab.label}>
@@ -282,7 +282,7 @@ export default function DatabasesPage() {
           <div className="mt-2">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                <div className="w-8 h-8 border-4 border-admin-accent border-t-transparent rounded-full animate-spin mb-3"></div>
                 <p className="text-sm">Cargando alimentos desde el servidor...</p>
               </div>
             ) : (
@@ -299,7 +299,7 @@ export default function DatabasesPage() {
                 {/* Controles de Paginación con SELECT */}
                 {filteredFoods.length > 0 && (
                   <div className="flex flex-col sm:flex-row items-center justify-between mt-5 pt-4 border-t border-gray-50 gap-4">
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredFoods.length)} de {filteredFoods.length} alimentos
                     </p>
                     
@@ -308,7 +308,7 @@ export default function DatabasesPage() {
                       <select
                         value={currentPage}
                         onChange={(e) => setCurrentPage(Number(e.target.value))}
-                        className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-red-500 bg-white shadow-sm cursor-pointer"
+                        className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 outline-none focus:border-admin-medium bg-white shadow-sm cursor-pointer"
                       >
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                           <option key={page} value={page}>

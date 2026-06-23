@@ -33,7 +33,7 @@ const ICONS: Record<string, React.ReactNode> = {
   chart:     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" /></svg>,
   message:   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg>,
   book:      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>,
-  lock:      <svg className="w-4 h-4 text-green-600 opacity-50" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>,
+  lock:      <svg className="w-4 h-4 text-nutri-medium opacity-50" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>,
   settings:  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>,
 };
  
@@ -58,7 +58,7 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
   const isItemLocked = (index: number) => locked && index !== 0;
  
   return (
-    <aside className="w-72 bg-green-800 flex flex-col justify-between py-5 px-3 flex-shrink-0">
+  <aside className="w-72 bg-nutri-dark flex flex-col justify-between py-5 px-3 flex-shrink-0">
  
       {/* ── Logo ── */}
       <div>
@@ -86,10 +86,10 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
                 title={itemLocked ? 'Disponible una vez verificada tu cuenta' : undefined}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition text-left
                   ${isActive
-                    ? 'bg-green-600 text-white font-semibold'
-                    : itemLocked
-                      ? 'text-green-300 opacity-50 cursor-not-allowed'
-                      : 'text-green-100 hover:bg-green-700 cursor-pointer'
+                      ? 'bg-nutri-medium text-white font-semibold'
+                      : itemLocked
+                        ? 'text-nutri-light opacity-50 cursor-not-allowed'
+                        : 'text-nutri-light hover:bg-nutri-medium cursor-pointer'
                   }`}
               >
                 <div className="flex items-center gap-3">
@@ -101,7 +101,7 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
                 {itemLocked ? (
                   ICONS.lock
                 ) : badge && badge > 0 ? (
-                  <span className="w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  <span className="w-5 h-5 bg-admin-accent text-white text-xs font-bold rounded-full flex items-center justify-center">
                     {badge}
                   </span>
                 ) : null}
@@ -112,26 +112,22 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
       </div>
  
       {/* ── Usuario + menú de configuración ── */}
-      <div className="flex items-center justify-between px-2 py-2 rounded-lg hover:bg-green-700 transition">
-        {/* Avatar + info */}
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-            {initials}
-          </div>
-          <div className="min-w-0">
-            <p className="text-white text-xs font-semibold leading-tight truncate ">{display}</p>
-            <p className="text-green-300 text-xs">Nutricionista</p>
-          </div>
-        </div>
- 
-        {/* Tuerca → abre UserMenuPopover */}
+      {/* Añadimos w-full y [&>div]:w-full para obligar al Popover a estirarse */}
+      <div className="border-t border-nutri-light/70 mt-6 pt-4 w-full [&>div]:w-full">
         <UserMenuPopover
           direction="up"
-          align="right"
+          align="left"
           trigger={
-            <span className="text-green-300 hover:text-white transition p-1 rounded-full hover:bg-green-600">
-              {ICONS.settings}
-            </span>
+            <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-nutri-medium transition select-none text-left">
+              <div className="w-8 h-8 bg-nutri-medium rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                {initials}
+              </div>
+              {/* Añadimos flex-1 para que el texto empuje el botón hasta el borde derecho */}
+              <div className="min-w-0 flex-1">
+                <p className="text-white text-xs font-semibold leading-tight truncate">{display}</p>
+                <p className="text-nutri-light text-xs">Nutricionista</p>
+              </div>
+            </button>
           }
         />
       </div>

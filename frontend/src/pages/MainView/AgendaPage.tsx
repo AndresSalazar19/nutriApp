@@ -56,7 +56,7 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
               className="flex items-start justify-end pr-3 border-b border-gray-50"
             >
               {slot.label && (
-                <span className="text-xs text-gray-400 -translate-y-2">{slot.label}</span>
+                <span className="text-xs text-gray-500 -translate-y-2">{slot.label}</span>
               )}
             </div>
           ))}
@@ -107,8 +107,8 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
                     style={{ position: 'absolute', top: topPx, left: 0, right: 0 }}
                     className="flex items-center pointer-events-none"
                   >
-                    <div className="w-2 h-2 bg-red-500 rounded-full -ml-1 flex-shrink-0" />
-                    <div className="flex-1 border-t-2 border-red-400" />
+                    <div className="w-2 h-2 bg-admin-accent rounded-full -ml-1 flex-shrink-0" />
+                    <div className="flex-1 border-t-2 border-admin-accent" />
                   </div>
                 );
               })()}
@@ -132,12 +132,12 @@ function DayHeaders({ weekDays, today }: { weekDays: Date[]; today: Date }) {
         return (
           <div key={i} className="flex-1 text-center py-3 border-l border-gray-100">
             <p className={`text-xs font-semibold uppercase tracking-wide mb-1
-              ${isToday ? 'text-green-600' : 'text-gray-400'}`}>
+              ${isToday ? 'text-nutri-dark' : 'text-gray-500'}`}>
               {DAYS_SHORT[i]}
             </p>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto
               text-sm font-bold transition
-              ${isToday ? 'bg-green-600 text-white' : 'text-gray-700'}`}>
+              ${isToday ? 'bg-nutri-dark text-white' : 'text-gray-700'}`}>
               {day.getDate()}
             </div>
           </div>
@@ -198,9 +198,9 @@ export default function AgendaPage() {
         {/* ── Top bar ── */}
         <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Mi Agenda</h1>
+            <h1 className="text-xl font-bold text-gray-900">Mi Agenda</h1>
             {todayCount > 0 && (
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-500 mt-0.5">
                 {todayCount} cita{todayCount !== 1 ? 's' : ''} hoy
               </p>
             )}
@@ -213,7 +213,7 @@ export default function AgendaPage() {
                   key={v}
                   onClick={() => setView(v)}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-                    view === v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    view === v ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   {v}
@@ -236,7 +236,7 @@ export default function AgendaPage() {
             >
               ‹
             </button>
-            <h2 className="text-base font-semibold text-gray-800 capitalize min-w-[200px] text-center">
+            <h2 className="text-base font-semibold text-gray-900 capitalize min-w-[200px] text-center">
               {monthLabel}
             </h2>
             <button
@@ -254,16 +254,16 @@ export default function AgendaPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200
                 text-sm text-gray-600 hover:bg-gray-50 transition"
             >
-              <span className="w-2 h-2 bg-red-500 rounded-full" />
+              <span className="w-2 h-2 bg-admin-accent rounded-full" />
               Hoy
             </button>
             {/* Legend */}
             <div className="flex items-center gap-4 text-xs text-gray-500">
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500" /> Presencial
+                <span className="w-2.5 h-2.5 rounded-full bg-nutri-medium" /> Presencial
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Virtual
+                <span className="w-2.5 h-2.5 rounded-full bg-admin-medium" /> Virtual
               </span>
             </div>
           </div>

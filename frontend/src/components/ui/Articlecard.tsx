@@ -37,7 +37,7 @@ export function ArticleCard({ article, onView, onApprove, onDelete }: ArticleCar
 
       {/* Cabecera de color */}
       <div className={`${article.cardBg} h-32 flex flex-col justify-between p-3`}>
-        <span className={`self-start ${article.categoryColor} text-white text-xs font-semibold px-2.5 py-1 rounded-full`}>
+        <span className={`self-start ${article.categoryColor} text-xs font-semibold px-2.5 py-1 rounded-full`}>
           {article.category}
         </span>
         <div className="flex items-center justify-center flex-1">
@@ -47,9 +47,9 @@ export function ArticleCard({ article, onView, onApprove, onDelete }: ArticleCar
 
       <div className="p-4 flex flex-col flex-1">
         <h3 className="font-bold text-gray-800 text-sm leading-snug mb-1 line-clamp-2">{article.title}</h3>
-        <p className="text-gray-400 text-xs leading-relaxed mb-3 flex-1 line-clamp-2">{article.description}</p>
+        <p className="text-gray-500 text-xs leading-relaxed mb-3 flex-1 line-clamp-2">{article.description}</p>
 
-        <span className="text-gray-400 text-xs mb-3">{article.date}</span>
+        <span className="text-gray-500 text-xs mb-3">{article.date}</span>
 
         {/* Acciones */}
         <div className="flex items-center gap-2 pt-2 border-t border-gray-50">
@@ -71,7 +71,7 @@ export function ArticleCard({ article, onView, onApprove, onDelete }: ArticleCar
           {!article.is_approved && onApprove && (
             <button
               onClick={() => onApprove(article)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-green-600 hover:bg-green-50 border border-green-300 rounded-lg transition"
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-nutri-dark hover:bg-nutri-light border border-nutri-medium rounded-lg transition"
             >
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
@@ -84,7 +84,7 @@ export function ArticleCard({ article, onView, onApprove, onDelete }: ArticleCar
           {article.is_approved && onDelete && (
             <button
               onClick={() => onDelete(article)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 border border-red-200 rounded-lg transition"
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-admin-accent hover:bg-admin-light border border-admin-medium rounded-lg transition"
             >
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>

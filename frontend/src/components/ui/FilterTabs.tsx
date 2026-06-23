@@ -9,13 +9,15 @@ interface FilterTabsProps {
   tabs: Tab[];
   active: string;
   onChange: (label: string) => void;
-  accentColor?: 'green' | 'red';
+  accentColor?: 'green' | 'red' | 'admin';
 }
 
 export function FilterTabs({ tabs, active, onChange, accentColor = 'green' }: FilterTabsProps) {
   const activeClasses = accentColor === 'red'
     ? 'bg-red-500 text-white'
-    : 'bg-green-500 text-white';
+    : accentColor === 'admin'
+      ? 'bg-admin-medium text-white'
+      : 'bg-green-500 text-white';
 
   return (
     <div className="flex gap-2">

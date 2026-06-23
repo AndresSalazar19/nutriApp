@@ -12,17 +12,17 @@ import {
 // ─── Stat card ────────────────────────────────────────────────────────────────
 
 function StatCard({
-  icon, label, value, sub, subColor = 'text-gray-400',
+  icon, label, value, sub, subColor = 'text-gray-500',
 }: {
   icon: string; label: string; value: string; sub?: string; subColor?: string;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-2xl">{icon}</span>
-        <p className="text-xs text-gray-400 font-medium">{label}</p>
+        <p className="text-xs text-gray-500 font-medium">{label}</p>
       </div>
-      <p className="text-3xl font-bold text-gray-800 leading-none mb-1">{value}</p>
+      <p className="text-3xl font-bold text-gray-900 leading-none mb-1">{value}</p>
       {sub && <p className={`text-xs font-medium ${subColor}`}>{sub}</p>}
     </div>
   );
@@ -32,18 +32,18 @@ function StatCard({
 
 function CorrelCard({ card }: { card: CorrelationCard }) {
   const isPositive = card.positive;
-  const bg   = isPositive ? 'bg-green-50 border-green-200'  : 'bg-red-50 border-red-200';
-  const text = isPositive ? 'text-green-800'                : 'text-red-800';
-  const val  = isPositive ? 'text-green-600'                : 'text-red-500';
+  const bg   = isPositive ? 'bg-nutri-bg border-nutri-light'  : 'bg-admin-bg border-admin-light';
+  const text = isPositive ? 'text-nutri-dark'               : 'text-admin-dark';
+  const val  = isPositive ? 'text-nutri-medium'             : 'text-admin-accent';
 
   return (
-    <div className={`rounded-xl border p-4 ${bg}`}>
+    <div className={`rounded-xl border p-3.5 ${bg}`}>
       <p className={`text-xs font-semibold mb-2 ${text}`}>{card.label}</p>
       <p className={`text-3xl font-bold mb-1 ${val}`}>
         {card.value > 0 ? '+' : ''}{card.value.toFixed(2)}
       </p>
       {card.description.split('\n').map((line, i) => (
-        <p key={i} className={`text-xs leading-tight ${isPositive ? 'text-green-700' : 'text-red-600'}`}>
+        <p key={i} className="text-xs leading-tight text-gray-600">
           {line}
         </p>
       ))}
@@ -55,10 +55,10 @@ function CorrelCard({ card }: { card: CorrelationCard }) {
 
 function ActivityRow({ week, days, goal }: WeeklyActivity) {
   const pct = Math.min((days / goal) * 100, 100);
-  const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-orange-400' : 'bg-red-400';
+  const color = pct >= 80 ? 'bg-nutri-dark' : pct >= 50 ? 'bg-nutri-medium' : 'bg-admin-accent';
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-gray-400 w-10 flex-shrink-0">{week}</span>
+      <span className="text-xs text-gray-500 w-10 flex-shrink-0">{week}</span>
       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
         <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />
       </div>
@@ -73,11 +73,11 @@ function Section({ title, subtitle, children, action }: {
   title: string; subtitle?: string; children: React.ReactNode; action?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-      <div className="flex items-start justify-between mb-4">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5">
+      <div className="flex items-start justify-between mb-2">
         <div>
-          <h3 className="font-bold text-gray-800 text-sm">{title}</h3>
-          {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+          <h3 className="font-bold text-gray-900 text-sm">{title}</h3>
+          {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
         </div>
         {action}
       </div>
@@ -98,10 +98,10 @@ export default function ReportsPage() {
   const data    = getReportData(selectedId);
 
   const adherenceColor =
-    data.adherence >= 80 ? 'text-green-600' :
-    data.adherence >= 60 ? 'text-orange-500' : 'text-red-500';
+    data.adherence >= 80 ? 'text-nutri-dark' :
+    data.adherence >= 60 ? 'text-gray-500' : 'text-admin-accent';
 
-  const adherenceChangeColor = data.adherenceChange >= 0 ? 'text-green-500' : 'text-red-500';
+  const adherenceChangeColor = data.adherenceChange >= 0 ? 'text-nutri-dark' : 'text-admin-accent';
 
   return (
     <NutritionistLayout>
@@ -109,8 +109,8 @@ export default function ReportsPage() {
       {/* ── Top bar ── */}
       <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Análisis de Progreso - Pacientes</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Visualización de métricas y tendencias de salud</p>
+          <h1 className="text-xl font-bold text-gray-900">Análisis de Progreso - Pacientes</h1>
+          <p className="text-xs text-gray-500 mt-0.5">Visualización de métricas y tendencias de salud</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -123,7 +123,7 @@ export default function ReportsPage() {
             >
               <Avatar initials={patient.initials} color={patient.color} size="sm" />
               {patient.name}
-              <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </button>
@@ -153,7 +153,7 @@ export default function ReportsPage() {
                 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
             >
               📅 {range}
-              <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </button>
@@ -175,8 +175,7 @@ export default function ReportsPage() {
           </div>
 
           {/* Export */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700
-            text-white text-sm font-semibold rounded-lg transition shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-nutri-medium hover:bg-nutri-dark text-white text-sm font-semibold rounded-lg transition shadow-sm">
             ↗ Exportar
           </button>
         </div>
@@ -190,7 +189,7 @@ export default function ReportsPage() {
         />
       )}
 
-      <div className="px-8 py-6 space-y-5">
+      <div className="px-6 py-4 space-y-3">
 
         {/* ── Stat cards ── */}
         <div className="grid grid-cols-4 gap-4">
@@ -216,7 +215,7 @@ export default function ReportsPage() {
             icon="🏃" label="Actividad Física"
             value={`${data.activityDays} días/semana`}
             sub={`→ ${data.activityNote} · Meta: ${data.activityGoal} días/sem`}
-            subColor="text-gray-400"
+            subColor="text-gray-500"
           />
         </div>
 
@@ -228,7 +227,7 @@ export default function ReportsPage() {
             subtitle="Octubre 2025 – Enero 2026"
           >
             <LineChart
-              height={160}
+              height={120}
               series={[{
                 data:        data.weightHistory,
                 color:       '#16a34a',
@@ -252,7 +251,7 @@ export default function ReportsPage() {
             subtitle="Sistólica y Diastólica (mmHg)"
           >
             <LineChart
-              height={160}
+              height={120}
               series={[
                 { data: data.systolicHistory,  color: '#ef4444', label: 'Sistólica'  },
                 { data: data.diastolicHistory, color: '#f97316', label: 'Diastólica', dashed: false },
@@ -277,7 +276,7 @@ export default function ReportsPage() {
             title="Distribución de Macronutrientes"
             subtitle="Promedio consumido vs. recomendado (últimos 30 días)"
           >
-            <MacroBarChart data={data.macros} height={180} />
+            <MacroBarChart data={data.macros} height={130} />
           </Section>
 
           <Section title="Análisis de Correlación" subtitle="Relación entre variables clave">
@@ -294,7 +293,7 @@ export default function ReportsPage() {
           title="Frecuencia de Actividad Física"
           subtitle="Últimas 4 semanas"
           action={
-            <div className="flex items-center gap-3 text-xs text-gray-400">
+            <div className="flex items-center gap-3 text-xs text-gray-500">
               <span>Meta: {data.activityGoal} días/sem</span>
             </div>
           }

@@ -12,10 +12,12 @@ const sizeMap = {
   lg: 'w-12 h-12 text-base',
 };
 
-export function Avatar({ initials, color = 'bg-gray-400', size = 'md' }: AvatarProps) {
+// 1. Movemos el text-white aquí al default
+export function Avatar({ initials, color = 'bg-gray-400 text-white', size = 'md' }: AvatarProps) {
   return (
     <div
-      className={`${sizeMap[size]} ${color} rounded-full flex items-center justify-center text-white font-bold flex-shrink-0`}
+      // 2. Eliminamos text-white de esta línea
+      className={`${sizeMap[size]} ${color} rounded-full flex items-center justify-center font-bold flex-shrink-0`}
     >
       {initials}
     </div>
