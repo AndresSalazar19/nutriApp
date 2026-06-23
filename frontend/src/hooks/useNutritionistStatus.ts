@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { NutritionistService, NutritionistStatusValue } from '../services/NutritionistService';
 import { useAuth } from './useAuth';
 
@@ -9,6 +9,7 @@ interface NutritionistStatusState {
 }
 
 export function useNutritionistStatus(): NutritionistStatusState {
+  const hasFetched = useRef(false);
   const { user } = useAuth();
   const [state, setState] = useState<NutritionistStatusState>({
     status: null,
@@ -21,6 +22,9 @@ export function useNutritionistStatus(): NutritionistStatusState {
       setState({ status: null, loading: false, error: 'Sin usuario' });
       return;
     }
+
+    if (hasFetched.current) return;
+    hasFetched.current = true;
 
     NutritionistService.getStatus(user.userId)
       .then(res => {
