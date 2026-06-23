@@ -61,14 +61,14 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ form, update
 
       <div className="flex flex-col md:flex-row gap-3 mb-3">
         <div className="flex-1 mb-3">
-          <label className="block text-xs font-semibold text-gray-600 mb-1">
+          <label className="block text-xs font-semibold text-gray-700 mb-1">
             Género
           </label>
           <div className="relative">
             <select
               value={form.gender || ''}
               onChange={(e) => update('gender', e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-green-500 transition bg-white appearance-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-nutri-medium focus:border-nutri-medium transition bg-white appearance-none"
             >
               <option value="" disabled>Selecciona tu género</option>
               <option value="femenino">Femenino</option>

@@ -84,12 +84,12 @@ export const ProfessionalInfoStep: React.FC<ProfessionalStepProps> = ({
 
       {/* Especialidades desde backend */}
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-gray-600 mb-1">
-          Especialidades <span className="text-red-500">*</span>
+        <label className="block text-xs font-semibold text-gray-700 mb-1">
+          Especialidades <span className="text-admin-accent">*</span>
         </label>
  
         <select
-          className={`w-full border rounded-lg px-3 py-2.5 text-sm ${errors.specialties ? 'border-red-400' : 'border-gray-200'}`}
+          className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-nutri-medium focus:border-nutri-medium ${errors.specialties ? 'border-admin-accent' : 'border-gray-200'}`}
           value={form.specialties || ""}
           onChange={e => update("specialties", e.target.value)}
         >
@@ -102,7 +102,7 @@ export const ProfessionalInfoStep: React.FC<ProfessionalStepProps> = ({
         </select>
  
         {errors.specialties && (
-          <p className="text-xs text-red-500 mt-1">{errors.specialties}</p>
+          <p className="text-xs text-admin-accent mt-1">{errors.specialties}</p>
         )}
       </div>
 
@@ -121,15 +121,15 @@ export const ProfessionalInfoStep: React.FC<ProfessionalStepProps> = ({
 
       {/* Curriculum Vitae */}
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-gray-600 mb-1">
-          Curriculum Vitae (PDF) <span className="text-red-500">*</span>
+        <label className="block text-xs font-semibold text-gray-700 mb-1">
+          Curriculum Vitae (PDF) <span className="text-admin-accent">*</span>
         </label>
 
-        <label className={`flex items-center justify-between border rounded-lg px-3 py-2.5 text-sm text-gray-400 bg-white cursor-pointer hover:border-green-400 transition ${cvFileError ? 'border-red-400' : 'border-gray-200'}`}>
+        <label className={`flex items-center justify-between border rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white cursor-pointer hover:border-nutri-medium transition ${cvFileError ? 'border-admin-accent' : 'border-gray-200'}`}>
           <span className="truncate pr-2">
             {cvFile ? cvFile.name : 'Seleccionar archivo'}
           </span>
-          <span className="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center text-white text-base flex-shrink-0">
+          <span className="w-7 h-7 bg-nutri-medium rounded-full flex items-center justify-center text-white text-base flex-shrink-0">
             ＋
           </span>
           <input
@@ -142,21 +142,21 @@ export const ProfessionalInfoStep: React.FC<ProfessionalStepProps> = ({
         </label>
 
         {cvFileError && (
-          <p className="text-xs text-red-500 mt-1">{cvFileError}</p>
+          <p className="text-xs text-admin-accent mt-1">{cvFileError}</p>
         )}
       </div>
 
       {/* Registro Senescyt */}
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-gray-600 mb-1">
-          Registro Senescyt (PDF o Imagen) <span className="text-red-500">*</span>
+        <label className="block text-xs font-semibold text-gray-700 mb-1">
+          Registro Senescyt (PDF o Imagen) <span className="text-admin-accent">*</span>
         </label>
 
-        <label className={`flex items-center justify-between border rounded-lg px-3 py-2.5 text-sm text-gray-400 bg-white cursor-pointer hover:border-green-400 transition ${senescytFileError ? 'border-red-400' : 'border-gray-200'}`}>
+        <label className={`flex items-center justify-between border rounded-lg px-3 py-2.5 text-sm text-gray-700 bg-white cursor-pointer hover:border-nutri-medium transition ${senescytFileError ? 'border-admin-accent' : 'border-gray-200'}`}>
           <span className="truncate pr-2">
             {senescytFile ? senescytFile.name : 'Seleccionar archivo'}
           </span>
-          <span className="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center text-white text-base flex-shrink-0">
+          <span className="w-7 h-7 bg-nutri-medium rounded-full flex items-center justify-center text-white text-base flex-shrink-0">
             ＋
           </span>
           <input
@@ -169,10 +169,10 @@ export const ProfessionalInfoStep: React.FC<ProfessionalStepProps> = ({
         </label>
 
         {senescytFileError && (
-          <p className="text-xs text-red-500 mt-1">{senescytFileError}</p>
+          <p className="text-xs text-admin-accent mt-1">{senescytFileError}</p>
         )}
 
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-gray-600 mt-1">
           PDF, JPG o PNG. Máx. 5MB por archivo.
         </p>
       </div>
