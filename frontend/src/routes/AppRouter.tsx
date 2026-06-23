@@ -8,6 +8,7 @@ import { AuthProvider, useAuth, AuthUser } from '../hooks/useAuth';
 
 const LoginPage         = lazy(() => import('../pages/Login/LoginPage'));
 const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('../components/auth/ForgotPasswordPage'));
 
 //NUTRIONIST
 const MainView          = lazy(() => import('../pages/MainView/MainView'));
@@ -59,6 +60,17 @@ function LoginWrapper() {
     <LoginPage
       onLogin={handleLogin}
       onGoToRegister={() => navigate(ROUTES.REGISTER)}
+      onGoToChangePassword={() => navigate(ROUTES.FORGOT_PASSWORD)}
+    />
+  );
+}
+
+function ForgotPasswordWrapper() {
+  const navigate = useNavigate();
+
+  return (
+    <ForgotPasswordPage
+      onGoToLogin={() => navigate(ROUTES.LOGIN)}
     />
   );
 }
@@ -86,8 +98,9 @@ function AppRoutes() {
       <Routes>
 
         {/* ── Públicas ── */}
-        <Route path={ROUTES.LOGIN}    element={<PublicRoute><LoginWrapper /></PublicRoute>} />
-        <Route path={ROUTES.REGISTER} element={<PublicRoute><RegisterWrapper /></PublicRoute>} />
+        <Route path={ROUTES.LOGIN}           element={<PublicRoute><LoginWrapper /></PublicRoute>} />
+        <Route path={ROUTES.REGISTER}        element={<PublicRoute><RegisterWrapper /></PublicRoute>} />
+        <Route path={ROUTES.FORGOT_PASSWORD} element={<PublicRoute><ForgotPasswordWrapper /></PublicRoute>} />
 
         {/* ── Nutricionista (requiere rol + guard de estado) ── */}
         <Route element={<PrivateRoute allowedRoles={['nutritionist']} />}>
