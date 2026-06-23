@@ -69,29 +69,30 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
       const first_name = nameParts[0] ?? '';
       const last_name = nameParts.slice(1).join(' ') || first_name;
 
-      // Payload JSON con todos los campos que NutritionistCreateRequest espera
-      // Los archivos (CV, Senescyt) se subirán en un paso posterior desde el perfil
-      const payload = {
-        // ── Tabla users + persons ──────────────────────────────
-        email:            form.email,
-        password:         form.password,
-        first_name,
-        last_name,
-        date_of_birth:    form.birthDate,
-        phone:            form.phone,
-        gender:           form.gender,   // enum: 'masculino' | 'femenino'
+      // Construir FormData para enviar archivos como multipart/form-data
+      const formData = new FormData();
 
-        // ── Tabla nutritionist_profile ─────────────────────────
-        cedula:           form.cedula,
-        specialty_id:     Number(form.specialties),    // el select guarda el id como string
-        years_experience: Number(form.yearsExperience),
-      };
+      // Campos de texto
+      formData.append('email', form.email);
+      formData.append('password', form.password);
+      formData.append('first_name', first_name);
+      formData.append('last_name', last_name);
+      formData.append('date_of_birth', form.birthDate);
+      formData.append('phone', form.phone);
+      formData.append('gender', form.gender);
+      formData.append('cedula', form.cedula);
+      formData.append('specialty_id', String(Number(form.specialties)));
+      formData.append('years_experience', String(Number(form.yearsExperience)));
 
-      console.log('📤 Enviando registro de nutricionista:', payload);
+      // Archivos (si existen)
+      if (cvFile) formData.append('cv_file', cvFile);
+      if (senescytFile) formData.append('senescyt_file', senescytFile);
 
-      const response = await RegistrerServices.crearNutricionista(payload);
+      console.log('📤 Enviando registro de nutricionista (FormData)');
 
-      console.log('✅ Nutricionista registrado:', response.data);
+      const response = await RegistrerServices.crearNutricionista(formData);
+
+      console.log('Nutricionista registrado:', response.data);
 
       const profileData = response.data;
 

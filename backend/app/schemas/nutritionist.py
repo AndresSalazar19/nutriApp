@@ -38,3 +38,10 @@ class NutritionistCreateRequest(BaseModel):
     specialty_id: int
     years_experience: int | None = None
     license_number: str | None = None
+
+class NutritionistDocumentCreate(BaseModel):
+    document_type: str  # "cv" o "senescyt"
+    file_path: str
+    file_name: str
+    file_size: int
+    mime_type: str = "application/pdf"

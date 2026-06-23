@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { API_URL } from '../../config/api';
+import { RegistrerServices } from '../../services/Login/LoginServices';
 
 import { FaCheckCircle, FaLeaf, FaArrowLeft } from 'react-icons/fa';
 import { FiCircle } from 'react-icons/fi';
@@ -41,32 +41,11 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onGoToLo
     setErrorMsg('');
 
     try {
-      const response = await fetch(`${API_URL}/users/change-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          new_password: password,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-
-        // Error de validación (422) - estructura tipo FastAPI
-        if (errorData?.detail && Array.isArray(errorData.detail)) {
-          const firstError = errorData.detail[0];
-          setErrorMsg(firstError?.msg || 'Datos inválidos.');
-        } else {
-          setErrorMsg('No se pudo cambiar la contraseña. Verifica el correo.');
-        }
-        return;
-      }
-
+      await RegistrerServices.cambiarContrasena(email, password);
       setSuccess(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al cambiar contraseña:', error);
-      setErrorMsg('Error de conexión. Verifica tu internet o inténtalo de nuevo más tarde.');
+      setErrorMsg(error?.message || 'Error de conexión. Verifica tu internet o inténtalo de nuevo más tarde.');
     } finally {
       setIsLoading(false);
     }

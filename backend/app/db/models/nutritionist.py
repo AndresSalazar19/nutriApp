@@ -54,7 +54,7 @@ class NutritionistDocument(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     nutritionist_id = Column(UUID(as_uuid=True), ForeignKey("nutritionist_profiles.id", ondelete="CASCADE"), nullable=False)
     document_type = Column(SQLEnum(DocumentType), nullable=False)
-    file_content = Column(Text, nullable=False)
+    file_path = Column(String(500), nullable=False)
     file_name = Column(String(255), nullable=True)
     file_size = Column(Integer, nullable=True)
     mime_type = Column(String(100), default="application/pdf", nullable=True)
