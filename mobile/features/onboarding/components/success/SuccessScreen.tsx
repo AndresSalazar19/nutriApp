@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 
@@ -16,8 +23,8 @@ export default function SuccessScreen() {
 
         <Text style={styles.title}>¡Todo listo!</Text>
         <Text style={styles.subtitle}>
-          Tu cuenta ha sido creada y tu plan activado. Estás listo para comenzar tu camino hacia una
-          alimentación más saludable.
+          Tu cuenta ha sido creada y tu plan activado. Estás listo para comenzar tu camino hacia
+          una alimentación más saludable.
         </Text>
 
         <View style={styles.card}>

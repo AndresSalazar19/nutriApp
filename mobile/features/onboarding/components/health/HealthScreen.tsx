@@ -125,7 +125,9 @@ export default function HealthScreen() {
             onPress={() => form.setHasHypertension(false)}
             activeOpacity={0.7}
           >
-            <View style={[styles.radioCircle, !form.hasHypertension && styles.radioCircleFilled]} />
+            <View
+              style={[styles.radioCircle, !form.hasHypertension && styles.radioCircleFilled]}
+            />
             <Text style={[styles.radioText, !form.hasHypertension && styles.radioTextSelected]}>
               No
             </Text>

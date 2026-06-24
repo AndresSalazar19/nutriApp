@@ -1,4 +1,5 @@
 export interface PersonalInfo {
+  cedula: string;
   phone: string;
   birthDate: string;
   height: string;
