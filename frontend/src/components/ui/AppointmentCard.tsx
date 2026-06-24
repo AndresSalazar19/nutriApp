@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarAppointment, pad } from '../../components/mock/agendaMock';
+import { CalendarAppointment, pad } from '../../pages/Appoinment/agendaUtils';
 
 const SLOT_HEIGHT = 56; // px per 30-min slot (must match WeekGrid)
 
