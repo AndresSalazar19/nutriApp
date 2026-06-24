@@ -35,8 +35,14 @@ jobs:
             git checkout develop
             git pull origin develop
             echo "[3/6] Actualizando dependencias Python..."
-            source $VENV_PATH/bin/activate
-            pip install -r $BACKEND_DIR/requirements.txt --quiet
+            if [ ! -x "$VENV_PATH/bin/python" ]; then
+              echo "Creating server virtual environment..."
+              python3 -m venv "$VENV_PATH"
+            fi
+
+            source "$VENV_PATH/bin/activate"
+            python -m pip install --upgrade pip --quiet
+            python -m pip install -r "$BACKEND_DIR/requirements.txt" --quiet
             echo "[4/6] Reiniciando backend..."
             sudo systemctl daemon-reload
             sudo systemctl restart $SERVICE_NAME
