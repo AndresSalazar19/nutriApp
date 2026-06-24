@@ -21,6 +21,7 @@ import { DatePickerField } from '@/components/ui/DatePickerField';
 import { Picker } from '@react-native-picker/picker';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 function parseDateToISO(input: string): string | null {
   const parts = input.split('/');
@@ -179,10 +180,10 @@ export default function RegisterScreen() {
 
           <View style={styles.topPanel}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Text style={styles.backArrow}>←</Text>
+              <MaterialCommunityIcons name="arrow-left" size={18} color={COLORS.textOnPrimary} />
             </TouchableOpacity>
             <View style={styles.logoCircle}>
-              <Text style={styles.logoEmoji}>🌿</Text>
+              <MaterialCommunityIcons name="leaf" size={32} color={COLORS.primary} />
             </View>
             <Text style={styles.title}>Crear Cuenta</Text>
             <Text style={styles.subtitle}>Completa tus datos para comenzar</Text>
@@ -192,7 +193,10 @@ export default function RegisterScreen() {
 
             {error ? (
               <View style={styles.errorBox}>
-                <Text style={styles.errorText}>⚠️ {error}</Text>
+                <View style={styles.errorRow}>
+                  <MaterialCommunityIcons name="alert-circle-outline" size={18} color={COLORS.error} />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
               </View>
             ) : null}
 
@@ -257,14 +261,16 @@ export default function RegisterScreen() {
 
             <Text style={styles.label}>Fecha de Nacimiento</Text>
             <TouchableOpacity
-              style={[styles.input, styles.dateRow]}
+              style={styles.dateButton}
               onPress={() => setShowDatePicker(true)}
               disabled={loading}
               activeOpacity={0.7}
             >
+              <MaterialCommunityIcons name="calendar-month-outline" size={20} color={form.birthDate ? COLORS.primary : COLORS.textSecondary} />
               <Text style={[styles.dateText, !form.birthDate && styles.datePlaceholder]}>
                 {form.birthDate || 'Seleccionar fecha DD/MM/AAAA'}
               </Text>
+              <MaterialCommunityIcons name="chevron-down" size={20} color={COLORS.textSecondary} />
             </TouchableOpacity>
 
             <Text style={styles.label}>Contraseña</Text>
@@ -367,7 +373,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32,
   },
   errorBox:    { backgroundColor: COLORS.errorLight, borderWidth: 1, borderColor: COLORS.errorBorder, borderRadius: 10, padding: 12, marginBottom: 16 },
-  errorText:   { color: COLORS.error, fontSize: 13 },
+  errorRow:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  errorText:   { color: COLORS.error, fontSize: 13, flex: 1 },
   label:       { fontSize: 13, fontWeight: '600', color: COLORS.textPrimary, marginBottom: 6 },
   input: {
     borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
@@ -391,9 +398,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     backgroundColor: COLORS.surface,
   },
-  dateRow:         { justifyContent: 'center' },
-  dateText:        { fontSize: 14, color: COLORS.textPrimary },
-  datePlaceholder: { color: COLORS.placeholder },
+  dateButton: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
+    paddingHorizontal: 14, height: 50,
+    backgroundColor: COLORS.inputBg, marginBottom: 16,
+  },
+  dateText:        { flex: 1, fontSize: 14, color: COLORS.textPrimary },
+  datePlaceholder: { color: COLORS.textSecondary },
   inputWrapper: {
     flexDirection: 'row', alignItems: 'center',
     borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
