@@ -32,6 +32,18 @@ class User(Base):
         "NutritionistProfile", back_populates="user", foreign_keys="NutritionistProfile.user_id"
     )
 
+    patient_relations_as_patient = relationship(
+        "PatientNutritionist",
+        foreign_keys="PatientNutritionist.patient_id",
+        back_populates="patient",
+    )
+
+    patient_relations_as_nutritionist = relationship(
+        "PatientNutritionist",
+        foreign_keys="PatientNutritionist.nutritionist_id",
+        back_populates="nutritionist",
+    )
+
 
 class GenderEnum(str, enum.Enum):
     masculino = "masculino"

@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     educational_content,
     food_item,
     nutritionist,
+    patient_nutritionist,
     patients,
     users,
     weight_log,
@@ -24,3 +25,4 @@ router.include_router(weight_log.router)
 router.include_router(educational_content.router)
 router.include_router(food_item.router)
 router.include_router(alimentos_intercambio.router)
+router.include_router(patient_nutritionist.router)
