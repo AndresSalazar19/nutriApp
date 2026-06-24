@@ -1,7 +1,11 @@
 import { COLORS } from '@/constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import {
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from 'react-native';
 
 interface CheckboxProps {
   checked: boolean;
@@ -9,11 +13,30 @@ interface CheckboxProps {
   children: React.ReactNode;
 }
 
-export function Checkbox({ checked, onPress, children }: CheckboxProps) {
+export function Checkbox({
+  checked,
+  onPress,
+  children,
+}: CheckboxProps) {
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.8}>
-      <View style={[styles.box, checked && styles.boxActive]}>
-        {checked && <MaterialCommunityIcons name="check" size={14} color="#fff" />}
+    <TouchableOpacity
+      style={styles.row}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <View
+        style={[
+          styles.box,
+          checked && styles.boxActive,
+        ]}
+      >
+        {checked && (
+          <MaterialCommunityIcons
+            name="check"
+            size={14}
+            color="#fff"
+          />
+        )}
       </View>
 
       {children}

@@ -1,17 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// ── La BASE_URL debe ser solo el origen, sin trailing slash
-// ── Ejemplo en .env:  EXPO_PUBLIC_API_URL=http://192.168.1.10:8000
-// ── El prefijo /api/v1 se añade aquí una sola vez
-//const BASE_URL = (
-//  process.env.EXPO_PUBLIC_API_URL ?? process.env.REACT_APP_API_URL ?? ''
-//).replace(/\/$/, ''); // elimina slash final si existe
+import { tokenStorage } from '@/utils/tokenStorage';
 
 const BASE_URL = 'http://147.93.176.210:8083';
-
 const API = `${BASE_URL}/api/v1`;
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface RegisterPayload {
   first_name: string;
@@ -38,15 +29,17 @@ export interface AuthUser {
   last_name: string;
 }
 
-// ─── Storage keys ─────────────────────────────────────────────────────────────
+interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
+}
 
 const USER_KEY = 'auth_user';
 
-// ─── Helper fetch ─────────────────────────────────────────────────────────────
-
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API}${endpoint}`;
-  console.log('[AuthService] →', options.method ?? 'GET', url); // útil para debug
+  console.log('[AuthService] →', options.method ?? 'GET', url);
 
   let response: Response;
   try {
@@ -55,11 +48,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       ...options,
     });
   } catch {
-    throw new Error('No se pudo conectar al servidor. Verifica tu conexión o la URL en .env');
+    throw new Error('No se pudo conectar al servidor. Verifica tu conexión.');
   }
 
   const text = await response.text();
-  console.log('[AuthService] ← status:', response.status, '| body:', text.slice(0, 200));
+  console.log('[AuthService] ← status:', response.status, '| body:', text.slice(0, 300));
 
   let data: any;
   try {
@@ -69,22 +62,18 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 
   if (!response.ok) {
-    // Tu backend: { success: false, errors: ["mensaje"] }
     if (Array.isArray(data?.errors) && data.errors.length > 0) throw new Error(data.errors[0]);
-    // FastAPI estándar: { detail: "..." }
     const detail = data?.detail;
     if (typeof detail === 'string') throw new Error(detail);
     if (Array.isArray(detail)) throw new Error(detail[0]?.msg ?? 'Error desconocido');
     throw new Error(`Error ${response.status}`);
   }
 
-  // Tu backend: { success: true, data: { ... } }
   return (data?.data ?? data) as T;
 }
 
-// ─── Auth Service ─────────────────────────────────────────────────────────────
-
 export const AuthService = {
+
   async register(payload: RegisterPayload): Promise<AuthUser> {
     return request<AuthUser>('/users/', {
       method: 'POST',
@@ -93,11 +82,18 @@ export const AuthService = {
   },
 
   async login(payload: LoginPayload): Promise<{ user: AuthUser }> {
-    const user = await request<AuthUser>('/users/login', {
+    const body = await request<LoginResponse>('/users/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+
+    if (body.access_token) {
+      tokenStorage.set(body.access_token);
+    }
+  
+    const user: AuthUser = body.user ?? (body as any);
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+
     return { user };
   },
 
@@ -108,6 +104,7 @@ export const AuthService = {
 
   async logout(): Promise<void> {
     await AsyncStorage.removeItem(USER_KEY);
+    tokenStorage.clear();
   },
 
   async isAuthenticated(): Promise<boolean> {
