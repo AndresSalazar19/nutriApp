@@ -6,14 +6,15 @@ import { AppointmentViewModal, NewAppointmentModal } from '../../components/ui/A
 import {
   CalendarAppointment,
   CalendarView,
-  MOCK_APPOINTMENTS,
   DAYS_SHORT,
   getWeekStart,
   getWeekDays,
   formatMonthYear,
   isSameDay,
   pad,
-} from '../../components/mock/agendaMock';
+} from './agendaUtils';
+import { useAppointments } from '../../hooks/useAppointments';
+import { ToCalendarAppointment } from '../../services/Appointments/appointment.transform';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,16 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
         {/* Day columns */}
         {weekDays.map((day, dayIdx) => {
           const isToday = isSameDay(day, today);
-          const dayAppts = appointments.filter((a) => a.dayIndex === dayIdx);
+          const dayAppts = appointments.filter((a) => {
+            if (a.startDate) {
+              try {
+                return isSameDay(new Date(a.startDate), day);
+              } catch {
+                return a.dayIndex === dayIdx;
+              }
+            }
+            return a.dayIndex === dayIdx;
+          });
 
           return (
             <div key={dayIdx} className="flex-1 relative border-l border-gray-100">
@@ -170,13 +180,26 @@ export default function AgendaPage() {
   const today = useMemo(() => new Date(), []);
   const [weekStart, setWeekStart] = useState(() => getWeekStart(today));
   const [view, setView] = useState<CalendarView>('Semana');
-  const [appointments, setAppointments] = useState<CalendarAppointment[]>(MOCK_APPOINTMENTS);
+  const { appointments, setAppointments } = useAppointments();
   const [selectedAppt, setSelectedAppt] = useState<{ appt: CalendarAppointment; day: Date } | null>(
     null,
   );
   const [showNewModal, setShowNewModal] = useState(false);
 
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
+
+  const calendarAppointments = useMemo(() => {
+    return appointments
+      .map((a) => {
+        try {
+          return ToCalendarAppointment(a);
+        } catch (err) {
+          console.error('Error transforming appointment', err);
+          return null;
+        }
+      })
+      .filter(Boolean);
+  }, [appointments]);
 
   const monthLabel = useMemo(() => {
     const start = weekDays[0];
@@ -204,13 +227,20 @@ export default function AgendaPage() {
   }
 
   function handleNewAppt(appt: Omit<CalendarAppointment, 'id'>) {
-    setAppointments((prev) => [...prev, { ...appt, id: `a${Date.now()}` }]);
+    setAppointments((prev) => [...prev, { ...appt, id: `temp-${Date.now()}` } as any]);
   }
 
   // Today's appointment count
-  const todayCount = appointments.filter(
-    (a) => a.dayIndex === (today.getDay() === 0 ? 6 : today.getDay() - 1),
-  ).length;
+  const todayCount = calendarAppointments.filter((a) => {
+    if (a.startDate) {
+      try {
+        return isSameDay(new Date(a.startDate), today);
+      } catch {
+        return a.dayIndex === (today.getDay() === 0 ? 6 : today.getDay() - 1);
+      }
+    }
+    return a.dayIndex === (today.getDay() === 0 ? 6 : today.getDay() - 1);
+  }).length;
 
   return (
     <NutritionistLayout>
@@ -300,7 +330,7 @@ export default function AgendaPage() {
             <DayHeaders weekDays={weekDays} today={today} />
             <WeekGrid
               weekDays={weekDays}
-              appointments={appointments}
+              appointments={calendarAppointments}
               today={today}
               onApptClick={(appt, day) => setSelectedAppt({ appt, day })}
             />
@@ -317,7 +347,11 @@ export default function AgendaPage() {
         />
       )}
       {showNewModal && (
-        <NewAppointmentModal onClose={() => setShowNewModal(false)} onSave={handleNewAppt} />
+        <NewAppointmentModal
+          onClose={() => setShowNewModal(false)}
+          onSave={handleNewAppt}
+          prefillWeekStart={weekStart}
+        />
       )}
     </NutritionistLayout>
   );
