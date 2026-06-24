@@ -23,21 +23,17 @@ function StatCard({
   icon,
   value,
   unit,
-  color,
+  iconColor,
 }: {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   value: string;
   unit: string;
-  color: string;
+  iconColor: string;
 }) {
   return (
     <View style={styles.statCard}>
-      <MaterialCommunityIcons
-        name={icon}
-        size={22}
-        color={color}
-      />
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
+      <MaterialCommunityIcons name={icon} size={22} color={iconColor} />
+      <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statUnit}>{unit}</Text>
     </View>
   );
@@ -62,11 +58,7 @@ function ActionCard({
     <TouchableOpacity style={styles.actionCard} activeOpacity={0.8}>
       <View style={[styles.actionAccent, { backgroundColor: accentColor }]} />
       <View style={styles.actionIconWrap}>
-        <MaterialCommunityIcons
-          name={icon}
-          size={24}
-          color={accentColor}
-        />
+        <MaterialCommunityIcons name={icon} size={24} color={accentColor} />
       </View>
       <Text style={styles.actionTitle}>{title}</Text>
       <Text style={styles.actionSubtitle}>{subtitle}</Text>
@@ -87,7 +79,7 @@ function ReminderCard() {
       <MaterialCommunityIcons
         name="lightbulb-on-outline"
         size={22}
-        color="#f57f17"
+        color={COLORS.warning}
       />
       <View style={styles.reminderBody}>
         <Text style={styles.reminderTitle}>Recordatorio del día</Text>
@@ -99,7 +91,6 @@ function ReminderCard() {
   );
 }
 
-// ── FAB de Nutricionista ──────────────────────────────────────────────────────
 function NutritionistFloatingButton({ onPress }: { onPress: () => void }) {
   return (
     <TouchableOpacity
@@ -108,7 +99,7 @@ function NutritionistFloatingButton({ onPress }: { onPress: () => void }) {
       onPress={onPress}
     >
       <View style={styles.fabInner}>
-        <MaterialCommunityIcons name="chat" size={28} color="#fff" />
+        <MaterialCommunityIcons name="chat" size={28} color={COLORS.textOnPrimary} />
       </View>
     </TouchableOpacity>
   );
@@ -121,29 +112,25 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      {/* ── Green Header ── */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerGreeting}>
-            Hola, Juan
-          </Text>
+          <Text style={styles.headerGreeting}>Hola, Juan</Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
-          <MaterialCommunityIcons name="bell-outline" size={22} color="#fff" />
+          <MaterialCommunityIcons name="bell-outline" size={22} color={COLORS.textOnPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* ── Stats Card ── */}
       <View style={styles.statsCardWrapper}>
         <View style={styles.statsCard}>
-          <StatCard icon="scale-bathroom" value="72.5" unit="kg" color="#555" />
+          <StatCard icon="scale-bathroom" value="72.5" unit="kg" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard icon="heart-pulse" value="120/80" unit="mmHg" color="#e53935" />
+          <StatCard icon="heart-pulse" value="120/80" unit="mmHg" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard icon="water" value="1.5" unit="L hoy" color="#1e88e5" />
+          <StatCard icon="water" value="1.5" unit="L hoy" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard icon="fire" value="1,450" unit="kcal" color="#fb8c00" />
+          <StatCard icon="fire" value="1,450" unit="kcal" iconColor={COLORS.primaryMedium} />
         </View>
       </View>
 
@@ -153,7 +140,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ReminderCard />
-        
+
         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
 
         <View style={styles.actionsGrid}>
@@ -167,12 +154,11 @@ export default function HomeScreen() {
             icon="calendar-month"
             title="Mis Citas"
             subtitle="Próxima: 15 Nov"
-            accentColor="#fb8c00"
+            accentColor={COLORS.primaryMedium}
             badge={2}
           />
         </View>
 
-        {/* ── Recursos Educativos ── */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Recursos Educativos</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/content' as any)}>
@@ -218,7 +204,6 @@ export default function HomeScreen() {
           ))
         )}
 
-        {/* Bottom spacing for tab bar + FABs */}
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -228,23 +213,20 @@ export default function HomeScreen() {
         style={{ bottom: 100, right: 90 }}
       />
 
-      {/* ── Bottom Tab Bar ── */}
       <BottomTabBar activeTab="inicio" />
     </SafeAreaView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const CARD_GAP = 12;
 const CARD_WIDTH = (width - 48 - CARD_GAP) / 2;
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#f5f6fa',
+    backgroundColor: COLORS.background,
   },
 
-  // ── Header ──
   header: {
     backgroundColor: COLORS.primary,
     flexDirection: 'row',
@@ -257,36 +239,34 @@ const styles = StyleSheet.create({
   headerGreeting: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.textOnPrimary,
   },
   headerSub: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.85)',
+    color: COLORS.overlayMedium,
     marginTop: 2,
   },
   bellBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: COLORS.overlay,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bellIcon: { fontSize: 18 },
 
-  // ── Stats Card (overlapping header) ──
   statsCardWrapper: {
     paddingHorizontal: 16,
     marginTop: -36,
     marginBottom: 4,
   },
   statsCard: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderRadius: 18,
     flexDirection: 'row',
     paddingVertical: 16,
     paddingHorizontal: 8,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -301,75 +281,61 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.textPrimary,
   },
   statUnit: {
     fontSize: 11,
-    color: '#aaa',
+    color: COLORS.textMuted,
     marginTop: 2,
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: COLORS.divider,
   },
 
-  // ── Scroll ──
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 18,
     paddingTop: 18,
   },
 
-  // ── Reminder Card ──
   reminderCard: {
-    backgroundColor: '#fffde7',
+    backgroundColor: COLORS.warningLight,
     borderRadius: 14,
     borderLeftWidth: 4,
-    borderLeftColor: '#fdd835',
+    borderLeftColor: COLORS.warningBorder,
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 14,
     marginBottom: 20,
-    shadowColor: '#f9a825',
+    shadowColor: COLORS.warning,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 2,
   },
-  reminderIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: 'rgba(253,216,53,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  reminderBulb: { fontSize: 20 },
-  reminderBody: { flex: 1 },
+  reminderBody: { flex: 1, marginLeft: 12 },
   reminderTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#f57f17',
+    color: COLORS.warning,
     marginBottom: 3,
   },
   reminderText: {
     fontSize: 12,
-    color: '#795548',
+    color: COLORS.textSecondary,
     lineHeight: 17,
   },
 
-  // ── Section Title ──
   sectionTitle: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#1a1a2e',
+    color: COLORS.textPrimary,
     marginBottom: 14,
   },
 
-  // ── Action Cards Grid ──
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -378,10 +344,10 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: CARD_WIDTH,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 8,
@@ -401,7 +367,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#f5f6fa',
+    backgroundColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
@@ -410,13 +376,13 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#222',
+    color: COLORS.textPrimary,
     marginBottom: 3,
     lineHeight: 18,
   },
   actionSubtitle: {
     fontSize: 11,
-    color: '#999',
+    color: COLORS.textMuted,
   },
   badge: {
     position: 'absolute',
@@ -430,7 +396,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeText: {
-    color: '#fff',
+    color: COLORS.textOnPrimary,
     fontSize: 11,
     fontWeight: 'bold',
   },
@@ -444,7 +410,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
 
-  // ── Section header row ──
   sectionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -466,18 +431,17 @@ const styles = StyleSheet.create({
   },
   resourceEmptyText: {
     fontSize: 13,
-    color: '#aaa',
+    color: COLORS.textMuted,
   },
 
-  // ── Resource Row ──
   resourceRow: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 14,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -493,22 +457,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
-  resourceIcon: { fontSize: 24 },
   resourceBody: { flex: 1 },
   resourceTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#222',
+    color: COLORS.textPrimary,
     marginBottom: 3,
   },
   resourceSubtitle: {
     fontSize: 11,
-    color: '#999',
+    color: COLORS.textMuted,
     lineHeight: 16,
   },
   resourceArrow: {
     fontSize: 20,
-    color: '#ccc',
+    color: COLORS.border,
     marginLeft: 8,
   },
 

@@ -36,10 +36,8 @@ export default function LoginScreen() {
     const result = await login({ email: email.trim(), password });
 
     if (result) {
-      // Autenticación exitosa → navegar al home
       router.replace('/(tabs)');
     }
-    // Si result es null, el error ya está en `error` y se muestra abajo
   };
 
   return (
@@ -50,13 +48,12 @@ export default function LoginScreen() {
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
 
-          {/* Panel verde superior */}
           <View style={styles.topPanel}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
               <MaterialCommunityIcons
                 name="arrow-left"
                 size={22}
-                color="#fff"
+                color={COLORS.textOnPrimary}
               />
             </TouchableOpacity>
 
@@ -71,30 +68,27 @@ export default function LoginScreen() {
             <Text style={styles.subtitle}>Ingresa tus credenciales</Text>
           </View>
 
-          {/* Panel blanco inferior */}
           <View style={styles.bottomPanel}>
 
-            {/* Error del servidor */}
             {error ? (
               <View style={styles.errorBox}>
                 <View style={styles.errorRow}>
                   <MaterialCommunityIcons
                     name="alert-circle-outline"
                     size={18}
-                    color="#cc0000"
+                    color={COLORS.error}
                   />
                   <Text style={styles.errorText}>{error}</Text>
                 </View>
               </View>
             ) : null}
 
-            {/* Correo */}
             <Text style={styles.label}>Correo Electrónico</Text>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
                 placeholder="ejemplo@correo.com"
-                placeholderTextColor="#bbb"
+                placeholderTextColor={COLORS.placeholder}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
@@ -104,11 +98,10 @@ export default function LoginScreen() {
               <MaterialCommunityIcons
                 name="email-outline"
                 size={20}
-                color="#999"
+                color={COLORS.textMuted}
               />
             </View>
 
-            {/* Contraseña */}
             <Text style={styles.label}>Contraseña</Text>
               <PasswordField
                 value={password}
@@ -116,7 +109,6 @@ export default function LoginScreen() {
                 placeholder="••••••••"
               />
 
-            {/* Recordarme + Olvidaste */}
             <View style={styles.row}>
               <TouchableOpacity
                 style={styles.checkRow}
@@ -127,7 +119,7 @@ export default function LoginScreen() {
                     <MaterialCommunityIcons
                       name="check"
                       size={14}
-                      color="#fff"
+                      color={COLORS.textOnPrimary}
                     />
                   )}
                 </View>
@@ -138,33 +130,30 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Botón principal */}
             <TouchableOpacity
               style={[styles.btnPrimary, loading && styles.btnDisabled]}
               onPress={handleLogin}
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={COLORS.textOnPrimary} />
               ) : (
                 <Text style={styles.btnPrimaryText}>Iniciar Sesión</Text>
               )}
             </TouchableOpacity>
 
-            {/* Divisor */}
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>o</Text>
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Biometría */}
             <TouchableOpacity style={styles.btnSecondary}>
               <View style={styles.biometricContent}>
                 <MaterialCommunityIcons
                   name="fingerprint"
                   size={20}
-                  color="#555"
+                  color={COLORS.textSecondary}
                 />
                 <Text style={styles.btnSecondaryText}>
                   Usar biometría
@@ -172,7 +161,6 @@ export default function LoginScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* Registro */}
             <TouchableOpacity onPress={() => router.push('/register')}>
               <Text style={styles.registerText}>
                 ¿No tienes cuenta?{' '}
@@ -201,7 +189,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: COLORS.overlay,
     borderRadius: 20,
     width: 36,
     height: 36,
@@ -213,11 +201,11 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -226,16 +214,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.textOnPrimary,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.85)',
+    color: COLORS.overlayMedium,
   },
   bottomPanel: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 24,
@@ -243,43 +231,43 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   errorBox: {
-    backgroundColor: '#fff0f0',
+    backgroundColor: COLORS.errorLight,
     borderWidth: 1,
-    borderColor: '#ffcccc',
+    borderColor: COLORS.errorBorder,
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
-    color: '#cc0000',
+    color: COLORS.error,
     fontSize: 13,
   },
   errorRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 8,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.textPrimary,
     marginBottom: 6,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     marginBottom: 18,
-    backgroundColor: '#fafafa',
+    backgroundColor: COLORS.inputBg,
   },
   input: {
     flex: 1,
     paddingVertical: 14,
     fontSize: 14,
-    color: '#333',
+    color: COLORS.textPrimary,
   },
   inputIcon: {
     fontSize: 16,
@@ -308,14 +296,9 @@ const styles = StyleSheet.create({
   checkboxActive: {
     backgroundColor: COLORS.primary,
   },
-  checkmark: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   checkLabel: {
     fontSize: 13,
-    color: '#555',
+    color: COLORS.textSecondary,
   },
   forgotText: {
     fontSize: 13,
@@ -337,7 +320,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   btnPrimaryText: {
-    color: '#fff',
+    color: COLORS.textOnPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -350,29 +333,29 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: COLORS.border,
   },
   dividerText: {
-    color: '#aaa',
+    color: COLORS.textMuted,
     fontSize: 13,
   },
   btnSecondary: {
     borderWidth: 1.5,
-    borderColor: '#e0e0e0',
+    borderColor: COLORS.border,
     paddingVertical: 14,
     borderRadius: 50,
     alignItems: 'center',
     marginBottom: 24,
   },
   btnSecondaryText: {
-    color: '#555',
+    color: COLORS.textSecondary,
     fontSize: 15,
     fontWeight: '500',
   },
   registerText: {
     textAlign: 'center',
     fontSize: 13,
-    color: '#888',
+    color: COLORS.textMuted,
   },
   registerLink: {
     color: COLORS.primary,

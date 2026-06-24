@@ -3,17 +3,17 @@ import * as SecureStore from 'expo-secure-store';
 const TOKEN_KEY = 'auth_token';
 
 export const tokenStorage = {
-  get(): string | null {
+  async get(): Promise<string | null> {
     try {
-      return SecureStore.getItem(TOKEN_KEY);
+      return await SecureStore.getItemAsync(TOKEN_KEY);
     } catch {
       return null;
     }
   },
-  set(token: string): void {
-    SecureStore.setItem(TOKEN_KEY, token);
+  async set(token: string): Promise<void> {
+    await SecureStore.setItemAsync(TOKEN_KEY, token);
   },
-  clear(): void {
-    SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
+  async clear(): Promise<void> {
+    await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
   },
 };
