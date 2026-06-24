@@ -11,6 +11,7 @@ from app.api.v1.endpoints import (
     patients,
     users,
     weight_log,
+    patient_nutritionist
 )
 
 router = APIRouter()
@@ -24,3 +25,4 @@ router.include_router(weight_log.router)
 router.include_router(educational_content.router)
 router.include_router(food_item.router)
 router.include_router(alimentos_intercambio.router)
+router.include_router(patient_nutritionist.router)
