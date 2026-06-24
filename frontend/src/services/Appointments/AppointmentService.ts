@@ -6,7 +6,7 @@ export interface AppointmentRequest {
   nutritionist_id: string;
   scheduled_at: string;
   duration_min?: number;
-  modality?: 'virtual' | 'presencial';
+  modality?: 'virtual' | 'in_person';
   notes?: string | null;
 }
 
@@ -17,7 +17,7 @@ export interface AppointmentResponse {
   scheduled_at: string;
   duration_min: number;
   status: string;
-  modality: string;
+  modality: 'virtual' | 'in_person' | string;
   meeting_url?: string | null;
   notes?: string | null;
   cancelled_by?: string | null;
