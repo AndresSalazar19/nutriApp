@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 import { Spacing, Radius, Typography, Shadows } from '@/constants/theme';
 
-type IconName = React.ComponentProps<typeof Ionicons>['name'];
+type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 interface StatTileProps {
   icon: IconName;
@@ -28,7 +28,7 @@ export default function StatTile({
   return (
     <View style={styles.tile}>
       <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={20} color={iconColor} />
+        <MaterialCommunityIcons name={icon} size={20} color={iconColor} />
       </View>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.valueRow}>

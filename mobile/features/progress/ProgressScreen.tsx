@@ -24,9 +24,9 @@ const MOCK_DATA = {
     bpDiastolic: [80, 81, 79, 84, 80, 78, 79],
     // Micronutrientes correspondientes al periodo semanal
     nutrients: [
-      { label: 'Hierro', current: 15, target: 18, unit: 'mg', color: '#C84B31' },
-      { label: 'Calcio', current: 850, target: 1000, unit: 'mg', color: '#4D96FF' },
-      { label: 'Magnesio', current: 310, target: 400, unit: 'mg', color: '#6BCB77' },
+      { label: 'Hierro', current: 15, target: 18, unit: 'mg', color: COLORS.primary },
+      { label: 'Calcio', current: 850, target: 1000, unit: 'mg', color: COLORS.primaryMedium },
+      { label: 'Magnesio', current: 310, target: 400, unit: 'mg', color: COLORS.primaryAccent },
     ],
     stats: {
       hydration: { value: '8.5', unit: 'L', subtitle: 'Promedio: 1.2L/día' },
@@ -40,9 +40,9 @@ const MOCK_DATA = {
     bpSystolic: [118, 120, 121, 119, 122, 120, 118],
     bpDiastolic: [78, 79, 80, 77, 81, 79, 78],
     nutrients: [
-      { label: 'Hierro', current: 16, target: 18, unit: 'mg', color: '#C84B31' },
-      { label: 'Calcio', current: 910, target: 1000, unit: 'mg', color: '#4D96FF' },
-      { label: 'Magnesio', current: 340, target: 400, unit: 'mg', color: '#6BCB77' },
+      { label: 'Hierro', current: 16, target: 18, unit: 'mg', color: COLORS.primary },
+      { label: 'Calcio', current: 910, target: 1000, unit: 'mg', color: COLORS.primaryMedium },
+      { label: 'Magnesio', current: 340, target: 400, unit: 'mg', color: COLORS.primaryAccent },
     ],
     stats: {
       hydration: { value: '38', unit: 'L', subtitle: 'Promedio: 1.3L/día' },
@@ -56,9 +56,9 @@ const MOCK_DATA = {
     bpSystolic: [122, 124, 121, 123, 120, 119, 122],
     bpDiastolic: [81, 82, 80, 83, 79, 78, 81],
     nutrients: [
-      { label: 'Hierro', current: 14, target: 18, unit: 'mg', color: '#C84B31' },
-      { label: 'Calcio', current: 790, target: 1000, unit: 'mg', color: '#4D96FF' },
-      { label: 'Magnesio', current: 295, target: 400, unit: 'mg', color: '#6BCB77' },
+      { label: 'Hierro', current: 14, target: 18, unit: 'mg', color: COLORS.primary },
+      { label: 'Calcio', current: 790, target: 1000, unit: 'mg', color: COLORS.primaryMedium },
+      { label: 'Magnesio', current: 295, target: 400, unit: 'mg', color: COLORS.primaryAccent },
     ],
     stats: {
       hydration: { value: '456', unit: 'L', subtitle: 'Promedio: 1.3L/día' },
@@ -72,9 +72,9 @@ const MOCK_DATA = {
     bpSystolic: [120, 121, 119, 122, 120, 121, 120],
     bpDiastolic: [79, 80, 78, 81, 79, 80, 79],
     nutrients: [
-      { label: 'Hierro', current: 15, target: 18, unit: 'mg', color: '#C84B31' },
-      { label: 'Calcio', current: 840, target: 1000, unit: 'mg', color: '#4D96FF' },
-      { label: 'Magnesio', current: 320, target: 400, unit: 'mg', color: '#6BCB77' },
+      { label: 'Hierro', current: 15, target: 18, unit: 'mg', color: COLORS.primary },
+      { label: 'Calcio', current: 840, target: 1000, unit: 'mg', color: COLORS.primaryMedium },
+      { label: 'Magnesio', current: 320, target: 400, unit: 'mg', color: COLORS.primaryAccent },
     ],
     stats: {
       hydration: { value: '912', unit: 'L', subtitle: 'Promedio: 1.3L/día' },

@@ -64,7 +64,7 @@ export function BottomTabBar({ activeTab }: BottomTabBarProps) {
             color={
               activeTab === tab.key
                 ? COLORS.primary
-                : '#4caf50'
+                : COLORS.textMuted
             }
           />
           <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
@@ -79,12 +79,12 @@ export function BottomTabBar({ activeTab }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: COLORS.divider,
     paddingVertical: 10,
     paddingBottom: 20,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 10,
-    color: '#4caf50',
+    color: COLORS.textMuted,
     fontWeight: '500',
   },
   tabLabelActive: {

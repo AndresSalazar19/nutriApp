@@ -34,7 +34,7 @@ export function Checkbox({
           <MaterialCommunityIcons
             name="check"
             size={14}
-            color="#fff"
+            color={COLORS.textOnPrimary}
           />
         )}
       </View>

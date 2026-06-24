@@ -1,8 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokenStorage } from '@/utils/tokenStorage';
 
-const BASE_URL = 'http://147.93.176.210:8083';
-const API = `${BASE_URL}/api/v1`;
+const API = `${process.env.EXPO_PUBLIC_API_URL}/api/v1`;
 
 export interface RegisterPayload {
   first_name: string;
@@ -88,7 +87,7 @@ export const AuthService = {
     });
 
     if (body.access_token) {
-      tokenStorage.set(body.access_token);
+      await tokenStorage.set(body.access_token);
     }
   
     const user: AuthUser = body.user ?? (body as any);
@@ -104,7 +103,7 @@ export const AuthService = {
 
   async logout(): Promise<void> {
     await AsyncStorage.removeItem(USER_KEY);
-    tokenStorage.clear();
+    await tokenStorage.clear();
   },
 
   async isAuthenticated(): Promise<boolean> {

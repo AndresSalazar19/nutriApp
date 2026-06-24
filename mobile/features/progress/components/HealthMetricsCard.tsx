@@ -81,11 +81,11 @@ export default function HealthMetricsCard({
             </View>
             <View style={styles.legendContainer}>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: COLORS.danger || '#FF5252' }]} />
+                <View style={[styles.legendDot, { backgroundColor: COLORS.primary }]} />
                 <Text style={styles.legendText}>Sístole</Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#4A90D9' }]} />
+                <View style={[styles.legendDot, { backgroundColor: COLORS.primaryAccent }]} />
                 <Text style={styles.legendText}>Diástole</Text>
               </View>
             </View>

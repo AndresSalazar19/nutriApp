@@ -179,102 +179,57 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
 
-      {/* ── Header verde ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8} onPress={() => router.back()}>
-          <MaterialCommunityIcons
-            name="arrow-left"
-            size={22}
-            color="#fff"
-          />
+          <MaterialCommunityIcons name="arrow-left" size={22} color={COLORS.textOnPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mi Perfil</Text>
         <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8}>
-          <MaterialCommunityIcons
-            name="map-marker-outline"
-            size={22}
-            color="#fff"
-          />
+          <MaterialCommunityIcons name="map-marker-outline" size={22} color={COLORS.textOnPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* ── Avatar ── */}
       <View style={styles.avatarSection}>
         <AvatarPicker imageUri={imageUri} onImageSelected={setImageUri} />
         <Text style={styles.userName}>{profile.name}</Text>
         <Text style={styles.userEmail}>{profile.email}</Text>
         <View style={styles.planBadge}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <MaterialCommunityIcons
-              name="star-four-points-outline"
-              size={14}
-              color="#fff"
-            />
-            <Text style={styles.planBadgeText}>
-              {' '}Plan {profile.plan}
-            </Text>
+            <MaterialCommunityIcons name="star-four-points-outline" size={14} color={COLORS.textOnPrimary} />
+            <Text style={styles.planBadgeText}> Plan {profile.plan}</Text>
           </View>
         </View>
       </View>
 
-      {/* ── Contenido scrolleable ── */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Información Personal */}
         <SectionTitle title="Información Personal" />
         <View style={styles.card}>
-          <InfoRow
-            icon="card-account-details-outline" label="Cédula" value={pi.cedula}
-            onPress={() => openModal('cedula', 'personal')}
-          />
+          <InfoRow icon="card-account-details-outline" label="Cédula" value={pi.cedula} onPress={() => openModal('cedula', 'personal')} />
           <Separator />
-          <InfoRow
-            icon="phone-outline" label="Teléfono" value={pi.phone}
-            onPress={() => openModal('phone', 'personal')}
-          />
+          <InfoRow icon="phone-outline" label="Teléfono" value={pi.phone} onPress={() => openModal('phone', 'personal')} />
           <Separator />
-          <InfoRow
-            icon="cake-variant-outline" label="Fecha de Nacimiento" value={pi.birthDate}
-            onPress={() => openModal('birthDate', 'personal')}
-          />
+          <InfoRow icon="cake-variant-outline" label="Fecha de Nacimiento" value={pi.birthDate} onPress={() => openModal('birthDate', 'personal')} />
           <Separator />
-          <InfoRow
-            icon="human-male-height" label="Altura" value={pi.height}
-            onPress={() => openModal('height', 'personal')}
-          />
+          <InfoRow icon="human-male-height" label="Altura" value={pi.height} onPress={() => openModal('height', 'personal')} />
           <Separator />
-          <InfoRow
-            icon="account-outline" label="Género" value={pi.gender}
-            onPress={() => openModal('gender', 'personal')}
-          />
+          <InfoRow icon="account-outline" label="Género" value={pi.gender} onPress={() => openModal('gender', 'personal')} />
         </View>
 
-        {/* Información de Salud */}
         <SectionTitle title="Información de Salud" />
         <View style={styles.card}>
-          <InfoRow
-            icon="heart-pulse" label="Condición Médica" value={hi.medicalCondition}
-            onPress={() => openModal('medicalCondition', 'health')}
-          />
+          <InfoRow icon="heart-pulse" label="Condición Médica" value={hi.medicalCondition} onPress={() => openModal('medicalCondition', 'health')} />
           <Separator />
-          <InfoRow
-            icon="alert-circle-outline" label="Alergias" value={hi.allergies}
-            onPress={() => openModal('allergies', 'health')}
-          />
+          <InfoRow icon="alert-circle-outline" label="Alergias" value={hi.allergies} onPress={() => openModal('allergies', 'health')} />
         </View>
 
-        {/* Mi Nutricionista */}
         <SectionTitle title="Mi Nutricionista" />
         <View style={[styles.card, styles.doctorCard]}>
           <View style={styles.doctorIconWrap}>
-            <MaterialCommunityIcons
-              name="stethoscope"
-              size={28}
-              color={COLORS.primary}
-            />
+            <MaterialCommunityIcons name="stethoscope" size={28} color={COLORS.primary} />
           </View>
           <View style={styles.doctorInfo}>
             <Text style={styles.doctorName}>{profile.nutritionist.name || '—'}</Text>
@@ -288,7 +243,6 @@ export default function ProfileScreen() {
         <View style={{ height: 24 }} />
       </ScrollView>
 
-      {/* ── Edit Field Modal ── */}
       {modalConfig && (
         <EditFieldModal
           visible={activeModal !== null}
@@ -308,7 +262,6 @@ export default function ProfileScreen() {
         />
       )}
 
-      {/* ── Bottom Tab Bar ── */}
       <BottomTabBar activeTab="perfil" />
 
     </SafeAreaView>
@@ -316,7 +269,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#f5f6fa' },
+  root: { flex: 1, backgroundColor: COLORS.background },
 
   centered: {
     flex: 1,
@@ -326,7 +279,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: '#888',
+    color: COLORS.textMuted,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -336,7 +289,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
-  retryBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  retryBtnText: { color: COLORS.textOnPrimary, fontSize: 14, fontWeight: '700' },
 
   header: {
     backgroundColor: COLORS.primary,
@@ -351,12 +304,11 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: COLORS.overlay,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerBtnIcon: { fontSize: 16, color: '#fff', fontWeight: '700' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#fff' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: COLORS.textOnPrimary },
 
   avatarSection: {
     alignItems: 'center',
@@ -364,17 +316,17 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     backgroundColor: COLORS.primary,
   },
-  userName: { fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
-  userEmail: { fontSize: 13, color: 'rgba(255,255,255,0.85)', marginBottom: 10 },
+  userName: { fontSize: 20, fontWeight: 'bold', color: COLORS.textOnPrimary, marginBottom: 4 },
+  userEmail: { fontSize: 13, color: COLORS.overlayMedium, marginBottom: 10 },
   planBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: COLORS.overlaySubtle,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 5,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.4)',
   },
-  planBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  planBadgeText: { color: COLORS.textOnPrimary, fontSize: 12, fontWeight: '600' },
 
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 20 },
@@ -382,23 +334,23 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#1a1a2e',
+    color: COLORS.textPrimary,
     marginBottom: 10,
     marginTop: 4,
   },
 
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 8,
     elevation: 3,
     overflow: 'hidden',
   },
-  separator: { height: 1, backgroundColor: '#f5f6fa', marginHorizontal: 16 },
+  separator: { height: 1, backgroundColor: COLORS.divider, marginHorizontal: 16 },
 
   doctorCard: {
     flexDirection: 'row',
@@ -416,13 +368,13 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   doctorInfo: { flex: 1 },
-  doctorName: { fontSize: 14, fontWeight: '700', color: '#222', marginBottom: 2 },
-  doctorSpecialty: { fontSize: 12, color: '#888' },
+  doctorName: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 2 },
+  doctorSpecialty: { fontSize: 12, color: COLORS.textMuted },
   contactBtn: {
     backgroundColor: COLORS.primary,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  contactBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  contactBtnText: { color: COLORS.textOnPrimary, fontSize: 13, fontWeight: '700' },
 });

@@ -22,15 +22,15 @@ export interface UserAccount {
   person: UserPerson | null;
 }
  
-function authHeaders(): Record<string, string> {
-  const token = tokenStorage.get() ?? '';
+async function authHeaders(): Promise<Record<string, string>> {
+  const token = (await tokenStorage.get()) ?? '';
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 }
  
 export const UserService = {
   async getById(userId: string): Promise<UserAccount> {
     const response = await fetch(`${API_URL}/users/${userId}`, {
-      headers: authHeaders(),
+      headers: await authHeaders(),
     });
     const data: ApiResponse<UserAccount> = await response.json();
  

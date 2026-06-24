@@ -1,12 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { tokenStorage } from '@/utils/tokenStorage';
 
-//const BASE_URL = (
-//  process.env.EXPO_PUBLIC_API_URL ?? process.env.REACT_APP_API_URL ?? ''
-//).replace(/\/$/, '');
-const BASE_URL="http://147.93.176.210:8083"
-
-const API = `${BASE_URL}/api/v1`;
-const AUTH_KEY = 'auth_user';
+const API = `${process.env.EXPO_PUBLIC_API_URL}/api/v1`;
 
 export interface ContentItem {
   id: string;
@@ -43,19 +37,8 @@ export const CATEGORY_LABEL: Record<string, string> = {
   tips:         'Consejos',
 };
 
-async function getToken(): Promise<string> {
-  const raw = await AsyncStorage.getItem(AUTH_KEY);
-  if (!raw) return '';
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed?.access_token ?? '';
-  } catch {
-    return '';
-  }
-}
-
 async function request<T>(endpoint: string): Promise<T> {
-  const token = await getToken();
+  const token = (await tokenStorage.get()) ?? '';
   const response = await fetch(`${API}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',

@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     borderRadius: 12,
     padding: 14,
-    backgroundColor: COLORS.primaryUltraLight,
+    backgroundColor: COLORS.background,
   },
   paymentMethodIcon: { fontSize: 28 },
   paymentMethodName: { fontSize: 15, fontWeight: '700', color: '#1A1A1A' },
