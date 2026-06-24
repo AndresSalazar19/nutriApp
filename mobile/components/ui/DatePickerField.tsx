@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 
 function parseDisplayDate(display: string): Date {
@@ -56,6 +57,8 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
           maximumDate={MAX_DATE}
           minimumDate={MIN_DATE}
           locale="es-EC"
+          textColor={COLORS.textPrimary}
+          themeVariant="light"
           style={styles.iosPicker}
         />
       </View>
@@ -69,9 +72,9 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
         activeOpacity={0.7}
         onPress={() => setShowAndroid(true)}
       >
-        <Text style={styles.androidIcon}>📅</Text>
+        <MaterialCommunityIcons name="calendar-month-outline" size={20} color={COLORS.primary} />
         <Text style={styles.androidValue}>{value || 'Seleccionar fecha'}</Text>
-        <Text style={styles.androidChevron}>›</Text>
+        <MaterialCommunityIcons name="chevron-right" size={20} color={COLORS.textMuted} />
       </TouchableOpacity>
 
       {showAndroid && (
@@ -82,6 +85,7 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
           onChange={handleChange}
           maximumDate={MAX_DATE}
           minimumDate={MIN_DATE}
+          themeVariant="light"
         />
       )}
     </>
@@ -115,7 +119,7 @@ const styles = StyleSheet.create({
   androidValue: {
     flex: 1,
     fontSize: 15,
-    color: COLORS.primary,
+    color: COLORS.textPrimary,
     fontWeight: '600',
   },
   androidChevron: {

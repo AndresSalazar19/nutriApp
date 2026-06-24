@@ -10,6 +10,7 @@ import {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
@@ -33,7 +34,7 @@ export default function WelcomeScreen() {
       {/* Panel superior verde */}
       <View style={styles.topPanel}>
         <View style={styles.logoCircle}>
-          <Text style={styles.logoEmoji}>🌿</Text>
+          <MaterialCommunityIcons name="leaf" size={36} color={COLORS.primary} />
         </View>
 
         <Text style={styles.brandName}>NutrIA</Text>
