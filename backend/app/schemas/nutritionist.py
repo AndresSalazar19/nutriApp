@@ -51,3 +51,11 @@ class NutritionistDocumentCreate(BaseModel):
     file_name: str
     file_size: int
     mime_type: str = "application/pdf"
+
+
+class NutritionistDocumentsResponse(BaseModel):
+    cv_url: str | None = None
+    senescyt_url: str | None = None
+
+    class Config:
+        from_attributes = True
