@@ -13,7 +13,7 @@ const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
 const MainView          = lazy(() => import('../pages/MainView/MainView'));
 const HomePage          = lazy(() => import('../pages/MainView/HomePage'));
 const PatientsPage      = lazy(() => import('../pages/MainView/PatientsPage'));
-const AgendaPage        = lazy(() => import('../pages/MainView/AgendaPage'));
+const AgendaPage        = lazy(() => import('../pages/Appoinment/AgendaPage'));
 const ReportsPage       = lazy(() => import('../pages/MainView/ReportsPage'));
 const ResourcesPage     = lazy(() => import('../pages/MainView/ResourcesPage'));
 const PlansPage         = lazy(() => import('../pages/MainView/PlansPage'));

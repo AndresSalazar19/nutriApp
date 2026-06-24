@@ -1,68 +1,99 @@
 import React, { useState } from 'react';
-import { Modal }            from '../../components/ui/Modal';
-import { Button }           from '../../components/ui/Button';
-import { CalendarAppointment, ConsultType, DAYS_ES, pad } from '../../components/mock/agendaMock';
+import { FiCalendar, FiClock, FiFileText } from 'react-icons/fi';
+import { Modal } from '../../components/ui/Modal';
+import { Button } from '../../components/ui/Button';
+import { CalendarAppointment, ConsultType, pad } from '../../pages/Appoinment/agendaUtils';
+import { MOCK_PATIENTS } from '../../components/mock/patientsMock';
+import { AppointmentService } from '../../services/Appointments/AppointmentService';
+import { ToCalendarAppointment } from '../../services/Appointments/appointment.transform';
+import { useAuth } from '../../hooks/useAuth';
 
-// ─── View modal ───────────────────────────────────────────────────────────────
+// ─── Helpers de fecha ──────────────────────────────────────────────────────
 
-interface ViewModalProps {
-  appt: CalendarAppointment;
-  dayDate: Date;
-  onClose: () => void;
+/** Devuelve la fecha local de hoy en formato YYYY-MM-DD */
+function todayLocalISO(): string {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  return `${year}-${month}-${day}`;
 }
 
-export function AppointmentViewModal({ appt, dayDate, onClose }: ViewModalProps) {
-  const isVirtual = appt.type === 'Virtual';
-  const badge     = isVirtual ? 'bg-blue-100 text-blue-700'   : 'bg-green-100 text-green-700';
-  const dot       = isVirtual ? 'bg-blue-500'                 : 'bg-green-500';
+/** Parsea un string YYYY-MM-DD como fecha LOCAL */
+function parseLocalDate(isoDate: string): Date {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
 
-  const dateStr = dayDate.toLocaleDateString('es-EC', {
-    weekday: 'long', day: 'numeric', month: 'long',
+export function AppointmentViewModal({ appt, dayDate, onClose }) {
+  const isVirtual = appt.type === 'Virtual';
+  const badge = isVirtual ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
+  const dot = isVirtual ? 'bg-blue-500' : 'bg-green-500';
+
+  const displayDate = appt.startDate ? new Date(appt.startDate) : dayDate;
+  const dateStr = displayDate.toLocaleDateString('es-EC', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
   });
 
   return (
     <Modal isOpen onClose={onClose} title="Detalle de Cita" size="sm">
       <div className="space-y-4">
 
-        {/* Patient */}
         <div className="flex items-center gap-3">
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm"
             style={{ backgroundColor: appt.patientColor }}
           >
             {appt.patientInitials}
           </div>
+
           <div>
             <p className="font-bold text-gray-800">{appt.patientName}</p>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 w-fit mt-0.5 ${badge}`}>
+
+            <span className={`text-xs px-2 py-0.5 rounded-full ${badge}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
               {appt.type}
             </span>
           </div>
         </div>
 
-        {/* Details */}
         <div className="bg-gray-50 rounded-xl p-4 space-y-2.5 text-sm">
-          <Row icon="📅" label="Fecha" value={dateStr} />
-          <Row icon="🕐" label="Hora"
+          <Row icon={<FiCalendar className="w-4 h-4 text-gray-400" />} label="Fecha" value={dateStr} />
+          <Row
+            icon={<FiClock className="w-4 h-4 text-gray-400" />}
+            label="Hora"
             value={`${pad(appt.startHour)}:${pad(appt.startMin)} – ${pad(appt.endHour)}:${pad(appt.endMin)}`}
           />
-          {appt.notes && <Row icon="📝" label="Notas" value={appt.notes} />}
+          {appt.notes && <Row icon={<FiFileText className="w-4 h-4 text-gray-400" />} label="Notas" value={appt.notes} />}
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose} className="flex-1">Cerrar</Button>
-          <Button variant="primary" className="flex-1">Editar cita</Button>
+          <Button variant="outline" onClick={onClose} className="flex-1">
+            Cerrar
+          </Button>
+          <Button variant="primary" className="flex-1">
+            Editar cita
+          </Button>
         </div>
       </div>
     </Modal>
   );
 }
 
-function Row({ icon, label, value }: { icon: string; label: string; value: string }) {
+function Row({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex gap-2">
-      <span>{icon}</span>
+      <span className="flex-shrink-0 mt-0.5">{icon}</span>
       <span className="text-gray-400 w-12 flex-shrink-0">{label}</span>
       <span className="text-gray-700 font-medium capitalize">{value}</span>
     </div>
@@ -75,60 +106,104 @@ interface NewModalProps {
   onClose:  () => void;
   onSave:   (appt: Omit<CalendarAppointment, 'id'>) => void;
   prefillDay?: number;
+  prefillWeekStart?: Date;
 }
 
-export function NewAppointmentModal({ onClose, onSave, prefillDay }: NewModalProps) {
+export function NewAppointmentModal({ onClose, onSave, prefillWeekStart }: NewModalProps) {
   const [form, setForm] = useState({
     patientName: '',
+    patientId: '',
     startTime:   '09:00',
     endTime:     '10:00',
-    dayIndex:    prefillDay ?? 0,
+    date:    todayLocalISO(),
     type:        'Presencial' as ConsultType,
     notes:       '',
   });
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   function update<K extends keyof typeof form>(k: K, v: typeof form[K]) {
     setForm(f => ({ ...f, [k]: v }));
   }
 
-  function handleSave() {
+  async function handleSave() {
     const [sh, sm] = form.startTime.split(':').map(Number);
     const [eh, em] = form.endTime.split(':').map(Number);
-    onSave({
-      patientName:     form.patientName || 'Paciente',
-      patientInitials: (form.patientName.split(' ').map(w => w[0]).join('').slice(0, 2) || 'PA').toUpperCase(),
-      patientColor:    '#22c55e',
-      startHour: sh, startMin: sm,
-      endHour:   eh, endMin:   em,
-      dayIndex:  form.dayIndex,
-      type:      form.type,
-      notes:     form.notes,
-    });
-    onClose();
+
+    let startDateIso: string | undefined = undefined;
+    if (prefillWeekStart) {
+      const [year, month, day] = form.date.split('-').map(Number);
+      const d = new Date(year, month - 1, day, sh, sm, 0, 0);
+      startDateIso = d.toISOString();
+    }
+
+    const durationMin = (eh * 60 + em) - (sh * 60 + sm);
+    const payload = {
+      patient_id: form.patientId || undefined,
+      nutritionist_id: user?.userId ?? undefined,
+      scheduled_at: startDateIso ?? new Date().toISOString(),
+      duration_min: durationMin > 0 ? durationMin : 45,
+      modality: form.type === 'Virtual' ? 'virtual' : 'presencial',
+      notes: form.notes || null,
+    };
+
+    try {
+      setLoading(true);
+      const created = await AppointmentService.create(payload as any);
+      const cal = ToCalendarAppointment(created);
+      onSave(cal as any);
+      onClose();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error creando la cita');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <Modal isOpen onClose={onClose} title="Nueva Cita" size="sm">
       <div className="space-y-4">
 
-        <Field label="Paciente">
-          <input
-            type="text"
-            value={form.patientName}
-            onChange={e => update('patientName', e.target.value)}
-            placeholder="Nombre del paciente"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-          />
+        <Field label="Paciente (maqueta)">
+          <div>
+            <select
+              value={form.patientId}
+              onChange={e => {
+                const id = e.target.value;
+                const p = MOCK_PATIENTS.find(x => x.id === id);
+                update('patientId', id);
+                update('patientName', p ? `${p.firstName} ${p.lastName}` : '');
+              }}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            >
+              <option value="">— Seleccionar paciente —</option>
+              {MOCK_PATIENTS.map(p => (
+                <option key={p.id} value={p.id}>{`${p.initials} · ${p.firstName} ${p.lastName}`}</option>
+              ))}
+            </select>
+            <div className="text-xs text-gray-400 mt-1">Selecciona un paciente de la lista (maqueta).</div>
+          </div>
         </Field>
 
-        <Field label="Día">
-          <select
-            value={form.dayIndex}
-            onChange={e => update('dayIndex', Number(e.target.value))}
+        <Field label="Fecha">
+          <input
+            type="date"
+            value={form.date}
+            onChange={e => update('date', e.target.value)}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
-          >
-            {DAYS_ES.map((d, i) => <option key={d} value={i}>{d}</option>)}
-          </select>
+          />
+
+          {form.date && (
+            <div className="text-xs text-gray-500 mt-1 capitalize">
+              {parseLocalDate(form.date).toLocaleDateString('es-EC', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              })}
+            </div>
+          )}
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
@@ -160,7 +235,7 @@ export function NewAppointmentModal({ onClose, onSave, prefillDay }: NewModalPro
                     : 'border-gray-200 text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                {t === 'Presencial' ? '🏥' : '💻'} {t}
+                {t}
               </button>
             ))}
           </div>
@@ -178,7 +253,9 @@ export function NewAppointmentModal({ onClose, onSave, prefillDay }: NewModalPro
 
         <div className="flex gap-2 pt-1">
           <Button variant="outline" onClick={onClose} className="flex-1">Cancelar</Button>
-          <Button variant="primary" onClick={handleSave} className="flex-1">Guardar Cita</Button>
+          <Button variant="primary" onClick={handleSave} className="flex-1" disabled={loading}>
+            {loading ? 'Guardando...' : 'Guardar Cita'}
+          </Button>
         </div>
       </div>
     </Modal>

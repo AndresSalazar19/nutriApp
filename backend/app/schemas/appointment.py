@@ -25,7 +25,7 @@ class AppointmentResponse(BaseModel):
     meeting_url: str | None = None
     notes: str | None = None
     cancelled_by: uuid.UUID | None = None
-    cancelled_at: str | None = None
+    cancelled_at: Optional[datetime] = None
 
     patient: UserResponse
     nutritionist: UserResponse 
