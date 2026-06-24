@@ -1,12 +1,10 @@
-import { useState } from 'react';
-import { AuthService, LoginPayload, RegisterPayload } from '../services/authService';
+import { useEffect, useState } from 'react';
+import { AuthService, LoginPayload, RegisterPayload, AuthUser } from '../services/authService';
 
 interface AuthState {
   loading: boolean;
   error: string | null;
 }
-
-// ─── useLogin ─────────────────────────────────────────────────────────────────
 
 export function useLogin() {
   const [state, setState] = useState<AuthState>({ loading: false, error: null });
@@ -16,7 +14,7 @@ export function useLogin() {
     try {
       const result = await AuthService.login(payload);
       setState({ loading: false, error: null });
-      return result; // { tokens, user }
+      return result;
     } catch (err: any) {
       const message = err?.message ?? 'Error al iniciar sesión';
       setState({ loading: false, error: message });
@@ -26,8 +24,6 @@ export function useLogin() {
 
   return { ...state, login };
 }
-
-// ─── useRegister ──────────────────────────────────────────────────────────────
 
 export function useRegister() {
   const [state, setState] = useState<AuthState>({ loading: false, error: null });
@@ -46,4 +42,17 @@ export function useRegister() {
   };
 
   return { ...state, register };
+}
+
+export function useCurrentUser() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    AuthService.getUser()
+      .then(setUser)
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { user, loading };
 }

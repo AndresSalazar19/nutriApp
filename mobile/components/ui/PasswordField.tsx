@@ -1,4 +1,10 @@
-import { StyleSheet, TextInput, TouchableOpacity, View, TextInputProps } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+  TextInputProps,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
 
@@ -15,7 +21,10 @@ export function PasswordField(props: TextInputProps) {
         style={styles.input}
       />
 
-      <TouchableOpacity onPress={() => setVisible((v) => !v)} hitSlop={10}>
+      <TouchableOpacity
+        onPress={() => setVisible(v => !v)}
+        hitSlop={10}
+      >
         <MaterialCommunityIcons
           name={visible ? 'eye-off-outline' : 'eye-outline'}
           size={22}
