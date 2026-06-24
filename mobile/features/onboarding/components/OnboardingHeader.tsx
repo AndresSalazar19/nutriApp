@@ -9,7 +9,7 @@ interface OnboardingHeaderProps {
 
 export const OnboardingHeader: React.FC<OnboardingHeaderProps> = ({ currentStep }) => (
   <View style={styles.header}>
-    <Text style={styles.headerTitle}>¡Bienvenido a NutriA! 👋</Text>
+    <Text style={styles.headerTitle}>¡Bienvenido a NutriA!</Text>
     <Text style={styles.headerSubtitle}>Completa tu perfil para comenzar</Text>
     <StepIndicator currentStep={currentStep} />
   </View>

@@ -3,11 +3,11 @@ import {
   Alert,
   Image,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 import { isAllowedImageUri } from '../utils/validations';
 
@@ -79,11 +79,11 @@ export function AvatarPicker({ imageUri, onImageSelected }: AvatarPickerProps) {
         {imageUri ? (
           <Image source={{ uri: imageUri }} style={styles.avatarImage} />
         ) : (
-          <Text style={styles.avatarEmoji}>👤</Text>
+          <MaterialCommunityIcons name="account" size={40} color={COLORS.primaryMedium} />
         )}
       </View>
       <TouchableOpacity style={styles.cameraBtn} activeOpacity={0.8} onPress={handlePickImage}>
-        <Text style={styles.cameraEmoji}>📷</Text>
+        <MaterialCommunityIcons name="camera" size={13} color={COLORS.textOnPrimary} />
       </TouchableOpacity>
     </View>
   );

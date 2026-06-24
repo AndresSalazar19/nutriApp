@@ -22,7 +22,7 @@ const TABS: {
     key: 'comidas',
     icon: 'silverware-fork-knife',
     label: 'Comidas',
-    href: '/(tabs)/',
+    href: '/(tabs)/meals',
   },
   {
     key: 'progreso',

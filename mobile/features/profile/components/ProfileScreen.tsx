@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +18,7 @@ import { InfoRow } from './InfoRow';
 import { AvatarPicker } from './AvatarPicker';
 import { useProfileForm } from '../hooks/useProfileForm';
 import { useCurrentUser } from '../../auth/hooks/useAuth';
+import { AuthService } from '../../auth/services/authService';
 import {
   formatPhoneInput,
   validatePhoneInput,
@@ -93,6 +96,7 @@ function Separator() {
 
 export default function ProfileScreen() {
   const { user: sessionUser, loading: sessionLoading } = useCurrentUser();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const {
     profile,
@@ -132,6 +136,41 @@ export default function ProfileScreen() {
     }
     const stored = `${config?.prefix ?? ''}${value}${config?.suffix ?? ''}`;
     saveField(stored);
+  }
+
+  async function performLogout() {
+    setLoggingOut(true);
+    try {
+      await AuthService.logout();
+      router.replace('/login');
+    } catch {
+      if (Platform.OS === 'web') {
+        window.alert('No se pudo cerrar sesión. Inténtalo nuevamente.');
+      } else {
+        Alert.alert('No se pudo cerrar sesión', 'Inténtalo nuevamente.');
+      }
+      setLoggingOut(false);
+    }
+  }
+
+  function handleLogout() {
+    if (Platform.OS === 'web') {
+      if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+        void performLogout();
+      }
+      return;
+    }
+
+    Alert.alert('Cerrar sesión', '¿Estás seguro de que quieres cerrar sesión?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Cerrar sesión',
+        style: 'destructive',
+        onPress: () => {
+          void performLogout();
+        },
+      },
+    ]);
   }
 
   const modalConfig = activeModal ? FIELD_CONFIG[activeModal.field] : null;
@@ -239,6 +278,22 @@ export default function ProfileScreen() {
             <Text style={styles.contactBtnText}>Contactar</Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          style={[styles.logoutButton, loggingOut && styles.logoutButtonDisabled]}
+          activeOpacity={0.8}
+          disabled={loggingOut}
+          onPress={handleLogout}
+        >
+          {loggingOut ? (
+            <ActivityIndicator color={COLORS.error} />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="logout" size={21} color={COLORS.error} />
+              <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
+            </>
+          )}
+        </TouchableOpacity>
 
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -377,4 +432,23 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   contactBtnText: { color: COLORS.textOnPrimary, fontSize: 13, fontWeight: '700' },
+  logoutButton: {
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: COLORS.errorBorder,
+    borderRadius: 16,
+    backgroundColor: COLORS.errorLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  logoutButtonDisabled: {
+    opacity: 0.65,
+  },
+  logoutButtonText: {
+    color: COLORS.error,
+    fontSize: 15,
+    fontWeight: '700',
+  },
 });

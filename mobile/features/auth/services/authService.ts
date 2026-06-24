@@ -62,6 +62,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (!response.ok) {
     if (Array.isArray(data?.errors) && data.errors.length > 0) throw new Error(data.errors[0]);
+    const statusMsgs = data?.status?.messages;
+    if (Array.isArray(statusMsgs) && statusMsgs.length > 0) throw new Error(statusMsgs[0]);
     const detail = data?.detail;
     if (typeof detail === 'string') throw new Error(detail);
     if (Array.isArray(detail)) throw new Error(detail[0]?.msg ?? 'Error desconocido');
