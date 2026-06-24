@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { AdminTopBar } from '../../components/layout/AdminTopBar';
 import { Avatar } from '../../components/ui/Avatar';
@@ -147,6 +147,8 @@ function NutritionistsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const hasFetched = useRef(false);
+
   const handleOpenReview = (profileId: string) => {
     const profile = profiles.find((profile) => profile.id === profileId);
     if (profile) {
@@ -253,7 +255,13 @@ function NutritionistsPage() {
   }, []);
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
     fetchData();
+
+    return () => {
+      hasFetched.current = false;
+    };
   }, [fetchData]);
 
   // ── Tabs dinámicos ─────────────────────────────────────────────────────────
@@ -350,7 +358,7 @@ function NutritionistsPage() {
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center justify-between">
             <span>{error}</span>
             <button
-              onClick={fetchData}
+              onClick={() => fetchData()}
               className="text-xs font-semibold underline ml-4 hover:text-red-800"
             >
               Reintentar
