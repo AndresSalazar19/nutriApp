@@ -1,15 +1,14 @@
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, Query
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.response import error_response, success_response
 from app.db.base import get_db
 from app.schemas.patient_nutritionist import (
+    PatientNutritionistQueryParams,
     PatientNutritionistRequest,
     PatientNutritionistResponse,
-    PatientNutritionistQueryParams,
 )
-
 from app.services.patient_nutritionist_service import PatientNutritionistService
 
 router = APIRouter(prefix="/patient_nutritionists", tags=["patient_nutritionists"])

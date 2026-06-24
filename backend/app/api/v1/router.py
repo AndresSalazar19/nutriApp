@@ -8,10 +8,10 @@ from app.api.v1.endpoints import (
     educational_content,
     food_item,
     nutritionist,
+    patient_nutritionist,
     patients,
     users,
     weight_log,
-    patient_nutritionist,
 )
 
 router = APIRouter()

@@ -1,15 +1,16 @@
 import uuid
 from datetime import datetime, timezone
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.models.patient_nutritionist import PatientNutritionist
 from app.schemas.patient_nutritionist import (
+    PatientNutritionistQueryParams,
     PatientNutritionistRequest,
     PatientNutritionistResponse,
-    PatientNutritionistQueryParams,
 )
-from app.services.user_service import UserService, UserRole
+from app.services.user_service import UserRole, UserService
 
 
 class PatientNutritionistService:
