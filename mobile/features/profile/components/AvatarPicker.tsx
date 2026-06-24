@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Alert,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS } from '@/constants/colors';
 import { isAllowedImageUri } from '../utils/validations';
@@ -46,14 +39,10 @@ async function pickFromGallery(): Promise<string | null> {
 }
 
 export function AvatarPicker({ imageUri, onImageSelected }: AvatarPickerProps) {
-
   async function handleUri(uri: string | null) {
     if (!uri) return;
     if (!isAllowedImageUri(uri)) {
-      Alert.alert(
-        'Formato no permitido',
-        'Solo se permiten imágenes en formato JPG o PNG.',
-      );
+      Alert.alert('Formato no permitido', 'Solo se permiten imágenes en formato JPG o PNG.');
       return;
     }
     onImageSelected(uri);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RegistrerServices } from '../../services/Login/LoginServices';
-import { FaLeaf, FaArrowLeft } from 'react-icons/fa';
+import { FaLeaf } from 'react-icons/fa';
 import { PasswordVisibilityToggle } from '../../components/PasswordVisibilityToggle';
 
 interface LoginPageProps {
@@ -13,13 +13,13 @@ function LoginPage({ onLogin, onGoToRegister, onGoToChangePassword }: LoginPageP
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       setErrorMsg('Por favor, ingresa correo y contraseña.');
       return;
@@ -34,26 +34,27 @@ function LoginPage({ onLogin, onGoToRegister, onGoToChangePassword }: LoginPageP
 
       // Validamos la respuesta usando la estructura de tu ApiResponse
       if (result.status?.isSuccessfully && result.statusCode === 200) {
-        
         // Gracias a la interfaz, TypeScript sabe que result.data tiene la propiedad role
         if (result.data.user.role === 'patient') {
-          setErrorMsg('Esta plataforma es solo para nutricionistas y administradores. Los pacientes no tienen acceso.');
+          setErrorMsg(
+            'Esta plataforma es solo para nutricionistas y administradores. Los pacientes no tienen acceso.',
+          );
           return;
         }
 
-        if (onLogin) onLogin({
-          userId: result.data.user.id,
-          email:  result.data.user.email,
-          role:   result.data.user.role,
-          token:  result.data.access_token,
-        });
-        
+        if (onLogin)
+          onLogin({
+            userId: result.data.user.id,
+            email: result.data.user.email,
+            role: result.data.user.role,
+            token: result.data.access_token,
+          });
       } else {
         // Si la API responde con un 200 pero isSuccessfully es false, o si es un 400/500
         setErrorMsg('Credenciales inválidas o error en el servidor.');
       }
     } catch (error) {
-      console.error("Error al iniciar sesión:", error);
+      console.error('Error al iniciar sesión:', error);
       setErrorMsg('Error de conexión. Verifica tu internet o inténtalo de nuevo más tarde.');
     } finally {
       setIsLoading(false);
@@ -62,7 +63,6 @@ function LoginPage({ onLogin, onGoToRegister, onGoToChangePassword }: LoginPageP
 
   return (
     <div className="flex h-screen font-sans">
-
       {/* Panel izquierdo verde */}
       <div className="w-5/12 bg-gradient-to-br from-nutri-medium to-nutri-dark flex flex-col items-center justify-center px-10 text-white text-center relative overflow-hidden">
         {/* Círculos decorativos */}
@@ -99,9 +99,7 @@ function LoginPage({ onLogin, onGoToRegister, onGoToChangePassword }: LoginPageP
       </div>
 
       {/* Panel derecho */}
-        <div className="w-7/12 bg-slate-50 flex flex-col items-center justify-center px-12 relative">
-
-
+      <div className="w-7/12 bg-slate-50 flex flex-col items-center justify-center px-12 relative">
         <div className="bg-white rounded-2xl shadow-md p-10 w-full max-w-md">
           <h2 className="text-3xl font-bold text-nutri-dark mb-1">Iniciar Sesión</h2>
           <p className="text-gray-500 text-sm mb-7">Ingresa a tu panel profesional</p>
@@ -178,7 +176,9 @@ function LoginPage({ onLogin, onGoToRegister, onGoToChangePassword }: LoginPageP
               type="submit"
               disabled={isLoading}
               className={`w-full text-white font-bold py-3 rounded-lg transition text-sm flex justify-center items-center ${
-                isLoading ? 'bg-nutri-light cursor-not-allowed' : 'bg-nutri-medium hover:bg-nutri-dark'
+                isLoading
+                  ? 'bg-nutri-light cursor-not-allowed'
+                  : 'bg-nutri-medium hover:bg-nutri-dark'
               }`}
             >
               {isLoading ? (

@@ -1,6 +1,6 @@
-import { ApiResponse } from "../../models/ApiResponse";
-import { Especialidad } from "./Especialidad";
-import { API_URL } from "../../config/api";
+import { ApiResponse } from '../../models/ApiResponse';
+import { Especialidad } from './Especialidad';
+import { API_URL } from '../../config/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ export interface NutritionistRegisterData {
   password: string;
   first_name: string;
   last_name: string;
-  date_of_birth: string;        // YYYY-MM-DD
+  date_of_birth: string; // YYYY-MM-DD
   phone: string;
   gender: string;
   cedula: string;
@@ -36,12 +36,12 @@ export interface NutritionistRegisterData {
   years_experience: number;
 }
 export interface RegisteredNutritionist {
-  id: string;          // id del nutritionist_profile
-  user_id: string;     // id del user creado
+  id: string; // id del nutritionist_profile
+  user_id: string; // id del user creado
   license_number: string;
   specialty_id: number;
   years_experience: number;
-  status: string;      // 'pending' al crear
+  status: string; // 'pending' al crear
 }
 
 /**
@@ -64,7 +64,6 @@ export interface RegisteredUser {
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export const RegistrerServices = {
-
   /**
    * Registra un nutricionista completo enviando un `FormData`.
    * El backend crea internamente: user + person + nutritionist_profile.
@@ -127,5 +126,4 @@ export const RegistrerServices = {
     const data = await response.json();
     return data;
   },
-
 };

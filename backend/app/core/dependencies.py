@@ -1,16 +1,20 @@
 from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
+
+from app.core.security import decode_access_token
 from app.db.base import get_db
 from app.db.models.user import User
 from app.services.user_service import UserService
-from app.core.security import decode_access_token
 
 security = HTTPBearer()
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> User:
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)
+) -> User:
     token = credentials.credentials
-    
+
     payload = decode_access_token(token)
 
     if not payload:
@@ -34,6 +38,6 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 
 
 def require_nutritionist_or_admin(current_user: User = Depends(get_current_user)) -> User:
-    if not (UserService.is_admin(current_user) or current_user.role == 'nutritionist'):
+    if not (UserService.is_admin(current_user) or current_user.role == "nutritionist"):
         raise HTTPException(status_code=403, detail="Se requiere rol admin o nutricionista")
     return current_user

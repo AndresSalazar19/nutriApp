@@ -9,7 +9,7 @@ const ReportsPage: React.FC = () => {
   return (
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
       <AdminTopBar title="Reportes" />
-      
+
       <div className="px-8 pb-8 pt-8">
         <UnderConstruction />
       </div>

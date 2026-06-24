@@ -7,20 +7,32 @@ import { ROUTES } from '../../routes/routes';
 
 const IconProfile = () => (
   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const IconSettings = () => (
   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-    <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const IconLogout = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+    />
   </svg>
 );
 
@@ -68,15 +80,15 @@ export function UserMenuPopover({
   }, [open]);
 
   const positionClass = [
-    direction === 'up'   ? 'bottom-full mb-2' : 'top-full mt-2',
-    align     === 'right' ? 'right-0'          : 'left-0',
+    direction === 'up' ? 'bottom-full mb-2' : 'top-full mt-2',
+    align === 'right' ? 'right-0' : 'left-0',
   ].join(' ');
 
   return (
     <div className="relative w-full block" ref={ref}>
       {/* Trigger */}
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => setOpen((v) => !v)}
         className="w-full block items-center justify-center rounded-full transition focus:outline-none"
         aria-haspopup="true"
         aria-expanded={open}
@@ -101,14 +113,16 @@ export function UserMenuPopover({
             {/* Mi Perfil */}
             <li>
               <button
-                onClick={() => { 
-                  setOpen(false); 
-                  navigate(ROUTES.ADMIN_PROFILE); 
+                onClick={() => {
+                  setOpen(false);
+                  navigate(ROUTES.ADMIN_PROFILE);
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700
                   hover:bg-gray-50 transition text-left"
               >
-                <span className="text-gray-400"><IconProfile /></span>
+                <span className="text-gray-400">
+                  <IconProfile />
+                </span>
                 Mi Perfil
               </button>
             </li>
@@ -116,14 +130,16 @@ export function UserMenuPopover({
             {/* Configuración */}
             <li>
               <button
-                onClick={() => { 
-                  setOpen(false); 
-                  navigate(ROUTES.ADMIN_SETTINGS); 
+                onClick={() => {
+                  setOpen(false);
+                  navigate(ROUTES.ADMIN_SETTINGS);
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700
                   hover:bg-gray-50 transition text-left"
               >
-                <span className="text-gray-400"><IconSettings /></span>
+                <span className="text-gray-400">
+                  <IconSettings />
+                </span>
                 Configuración
               </button>
             </li>
@@ -134,11 +150,16 @@ export function UserMenuPopover({
             {/* Cerrar sesión */}
             <li>
               <button
-                onClick={() => { setOpen(false); logout(); }}
+                onClick={() => {
+                  setOpen(false);
+                  logout();
+                }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600
                   hover:bg-red-50 transition text-left font-medium"
               >
-                <span><IconLogout /></span>
+                <span>
+                  <IconLogout />
+                </span>
                 Cerrar sesión
               </button>
             </li>

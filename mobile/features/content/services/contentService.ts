@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //const BASE_URL = (
 //  process.env.EXPO_PUBLIC_API_URL ?? process.env.REACT_APP_API_URL ?? ''
 //).replace(/\/$/, '');
-const BASE_URL="http://147.93.176.210:8083"
+const BASE_URL = 'http://147.93.176.210:8083';
 
 const API = `${BASE_URL}/api/v1`;
 const AUTH_KEY = 'auth_user';
@@ -22,25 +22,30 @@ export interface ContentItem {
 
 export interface ContentDetail extends ContentItem {
   body: string;
-  media: { id: string; media_type: string | null; media_url: string; thumbnail_url: string | null }[];
+  media: {
+    id: string;
+    media_type: string | null;
+    media_url: string;
+    thumbnail_url: string | null;
+  }[];
 }
 
 export const CATEGORY_ICON: Record<string, string> = {
-  nutrition:    'food-apple',
+  nutrition: 'food-apple',
   hypertension: 'heart-pulse',
-  recipes:      'silverware-fork-knife',
-  exercise:     'run',
-  lifestyle:    'leaf',
-  tips:         'lightbulb-on-outline',
+  recipes: 'silverware-fork-knife',
+  exercise: 'run',
+  lifestyle: 'leaf',
+  tips: 'lightbulb-on-outline',
 };
 
 export const CATEGORY_LABEL: Record<string, string> = {
-  nutrition:    'Nutrición',
+  nutrition: 'Nutrición',
   hypertension: 'Hipertensión',
-  recipes:      'Recetas',
-  exercise:     'Ejercicio',
-  lifestyle:    'Estilo de vida',
-  tips:         'Consejos',
+  recipes: 'Recetas',
+  exercise: 'Ejercicio',
+  lifestyle: 'Estilo de vida',
+  tips: 'Consejos',
 };
 
 async function getToken(): Promise<string> {
@@ -64,19 +69,27 @@ async function request<T>(endpoint: string): Promise<T> {
   });
   const text = await response.text();
   let data: any;
-  try { data = JSON.parse(text); } catch { throw new Error(text); }
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(text);
+  }
   if (!response.ok) {
-    const msg = Array.isArray(data?.errors) ? data.errors[0] : data?.detail ?? `Error ${response.status}`;
+    const msg = Array.isArray(data?.errors)
+      ? data.errors[0]
+      : (data?.detail ?? `Error ${response.status}`);
     throw new Error(typeof msg === 'string' ? msg : 'Error desconocido');
   }
   return (data?.data ?? data) as T;
 }
 
 export const ContentService = {
-  async getApproved(params: { q?: string; skip?: number; limit?: number } = {}): Promise<ContentItem[]> {
+  async getApproved(
+    params: { q?: string; skip?: number; limit?: number } = {},
+  ): Promise<ContentItem[]> {
     const query = new URLSearchParams();
-    if (params.q)     query.append('q',     params.q);
-    if (params.skip  != null) query.append('skip',  String(params.skip));
+    if (params.q) query.append('q', params.q);
+    if (params.skip != null) query.append('skip', String(params.skip));
     if (params.limit != null) query.append('limit', String(params.limit));
     const qs = query.toString();
     return request<ContentItem[]>(`/content${qs ? `?${qs}` : ''}`);

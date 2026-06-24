@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //  process.env.EXPO_PUBLIC_API_URL ?? process.env.REACT_APP_API_URL ?? ''
 //).replace(/\/$/, ''); // elimina slash final si existe
 
-const BASE_URL = "http://147.93.176.210:8083"
+const BASE_URL = 'http://147.93.176.210:8083';
 
 const API = `${BASE_URL}/api/v1`;
 
@@ -85,7 +85,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 // ─── Auth Service ─────────────────────────────────────────────────────────────
 
 export const AuthService = {
-
   async register(payload: RegisterPayload): Promise<AuthUser> {
     return request<AuthUser>('/users/', {
       method: 'POST',

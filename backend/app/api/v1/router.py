@@ -1,5 +1,17 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import users, catalog, nutritionist, patients, content, appointment, weight_log, educational_content, food_item, alimentos_intercambio
+
+from app.api.v1.endpoints import (
+    alimentos_intercambio,
+    appointment,
+    catalog,
+    content,
+    educational_content,
+    food_item,
+    nutritionist,
+    patients,
+    users,
+    weight_log,
+)
 
 router = APIRouter()
 router.include_router(users.router)

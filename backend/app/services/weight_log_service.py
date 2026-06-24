@@ -1,19 +1,23 @@
+import uuid
+
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+
 from app.db.models.weight_log import WeightLog
 from app.schemas.weight_log import WeightLogCreate
-from datetime import date
-import uuid
 
 
 class WeightLogService:
 
     @staticmethod
     def create(db: Session, data: WeightLogCreate) -> WeightLog:
-        existing = db.query(WeightLog).filter(
-            WeightLog.user_id == data.user_id,
-            WeightLog.log_date == data.log_date,
-        ).first()
+        existing = (
+            db.query(WeightLog)
+            .filter(
+                WeightLog.user_id == data.user_id,
+                WeightLog.log_date == data.log_date,
+            )
+            .first()
+        )
 
         if existing:
             existing.weight_kg = data.weight_kg
@@ -35,15 +39,22 @@ class WeightLogService:
 
     @staticmethod
     def get_history(db: Session, user_id: uuid.UUID, limit: int = 100):
-        return db.query(WeightLog).filter(
-            WeightLog.user_id == user_id
-        ).order_by(WeightLog.log_date.desc()).limit(limit).all()
+        return (
+            db.query(WeightLog)
+            .filter(WeightLog.user_id == user_id)
+            .order_by(WeightLog.log_date.desc())
+            .limit(limit)
+            .all()
+        )
 
     @staticmethod
     def get_stats(db: Session, user_id: uuid.UUID) -> dict:
-        logs = db.query(WeightLog).filter(
-            WeightLog.user_id == user_id
-        ).order_by(WeightLog.log_date.asc()).all()
+        logs = (
+            db.query(WeightLog)
+            .filter(WeightLog.user_id == user_id)
+            .order_by(WeightLog.log_date.asc())
+            .all()
+        )
 
         if not logs:
             return {
@@ -65,10 +76,14 @@ class WeightLogService:
 
     @staticmethod
     def delete(db: Session, log_id: uuid.UUID, user_id: uuid.UUID) -> bool:
-        log = db.query(WeightLog).filter(
-            WeightLog.id == log_id,
-            WeightLog.user_id == user_id,
-        ).first()
+        log = (
+            db.query(WeightLog)
+            .filter(
+                WeightLog.id == log_id,
+                WeightLog.user_id == user_id,
+            )
+            .first()
+        )
         if not log:
             return False
         db.delete(log)

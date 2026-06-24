@@ -44,8 +44,7 @@ export default function PaymentScreen() {
         <View style={styles.planSummary}>
           <View style={styles.planSummaryTop}>
             <Text style={styles.planSummaryTitle}>
-              Plan Seleccionado:{' '}
-              <Text style={styles.planSummaryName}>{plan.name}</Text>
+              Plan Seleccionado: <Text style={styles.planSummaryName}>{plan.name}</Text>
             </Text>
             <View style={styles.planSummaryRight}>
               <Text style={styles.planSummarySmall}>Renovación automática</Text>
@@ -72,9 +71,7 @@ export default function PaymentScreen() {
         </TouchableOpacity>
 
         {/* Card Info */}
-        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-          Información de la Tarjeta
-        </Text>
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Información de la Tarjeta</Text>
 
         <LabeledInput
           label="Número de Tarjeta *"
@@ -119,9 +116,7 @@ export default function PaymentScreen() {
         </View>
 
         {/* Billing Address */}
-        <Text style={[styles.sectionTitle, { marginTop: 6 }]}>
-          Dirección de Facturación
-        </Text>
+        <Text style={[styles.sectionTitle, { marginTop: 6 }]}>Dirección de Facturación</Text>
 
         <Text style={styles.fieldLabel}>País *</Text>
         <TouchableOpacity style={styles.pickerWrapper} activeOpacity={0.8}>
@@ -150,19 +145,13 @@ export default function PaymentScreen() {
         </View>
 
         {/* Terms */}
-        <TouchableOpacity
-          style={styles.termsRow}
-          onPress={form.toggleTerms}
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity style={styles.termsRow} onPress={form.toggleTerms} activeOpacity={0.7}>
           <View style={[styles.checkbox, form.acceptedTerms && styles.checkboxChecked]}>
             {form.acceptedTerms && <Text style={styles.checkboxCheck}>✓</Text>}
           </View>
           <Text style={styles.termsText}>
-            Acepto los{' '}
-            <Text style={styles.termsLink}>Términos y Condiciones</Text>
-            {'\n'}y la{' '}
-            <Text style={styles.termsLink}>Política de Privacidad</Text>
+            Acepto los <Text style={styles.termsLink}>Términos y Condiciones</Text>
+            {'\n'}y la <Text style={styles.termsLink}>Política de Privacidad</Text>
           </Text>
         </TouchableOpacity>
 

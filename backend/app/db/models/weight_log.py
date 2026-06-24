@@ -1,9 +1,11 @@
-from sqlalchemy import Column, Numeric, Date, Text, ForeignKey, DateTime
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+
 from app.db.base import Base
-from datetime import datetime
-import uuid
 
 
 class WeightLog(Base):

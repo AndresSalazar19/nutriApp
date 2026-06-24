@@ -11,16 +11,16 @@ import {
   MdSettings,
   MdBarChart,
 } from 'react-icons/md';
-import { FaLeaf } from "react-icons/fa";
+import { FaLeaf } from 'react-icons/fa';
 
 const navItems = [
   { label: 'Panel Principal', icon: MdDashboard },
-  { label: 'Nutricionistas',  icon: MdPerson },
-  { label: 'Clientes',        icon: MdPeople },
-  { label: 'Contenido',       icon: MdArticle },
-  { label: 'Bases de Datos',  icon: MdStorage },
-  { label: 'Configuración',   icon: MdSettings },
-  { label: 'Reportes',        icon: MdBarChart },
+  { label: 'Nutricionistas', icon: MdPerson },
+  { label: 'Clientes', icon: MdPeople },
+  { label: 'Contenido', icon: MdArticle },
+  { label: 'Bases de Datos', icon: MdStorage },
+  { label: 'Configuración', icon: MdSettings },
+  { label: 'Reportes', icon: MdBarChart },
 ];
 
 interface AdminSidebarProps {
@@ -34,20 +34,20 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
   const handleNavClick = (label: string) => {
     const routeMap: Record<string, string> = {
       'Panel Principal': ROUTES.ADMIN,
-      'Nutricionistas':  ROUTES.ADMIN_NUTRITIONISTS,
-      'Clientes':        ROUTES.ADMIN_CLIENTS,
-      'Contenido':       ROUTES.ADMIN_CONTENT,
-      'Bases de Datos':  ROUTES.ADMIN_DATABASES,
-      'Configuración':   ROUTES.ADMIN_SETTINGS,
-      'Reportes':        ROUTES.ADMIN_REPORTS,
+      Nutricionistas: ROUTES.ADMIN_NUTRITIONISTS,
+      Clientes: ROUTES.ADMIN_CLIENTS,
+      Contenido: ROUTES.ADMIN_CONTENT,
+      'Bases de Datos': ROUTES.ADMIN_DATABASES,
+      Configuración: ROUTES.ADMIN_SETTINGS,
+      Reportes: ROUTES.ADMIN_REPORTS,
     };
 
     const routeToNavigate = routeMap[label];
-    
+
     if (routeToNavigate) {
       navigate(routeToNavigate);
     }
-    
+
     onNavChange(label);
   };
 
@@ -81,9 +81,10 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
                 key={label}
                 onClick={() => handleNavClick(label)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition text-left
-                  ${isActive
-                    ? 'bg-admin-medium text-white font-semibold'
-                    : 'text-admin-light hover:bg-admin-medium'
+                  ${
+                    isActive
+                      ? 'bg-admin-medium text-white font-semibold'
+                      : 'text-admin-light hover:bg-admin-medium'
                   }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-admin-light'}`} />

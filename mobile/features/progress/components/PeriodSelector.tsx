@@ -11,7 +11,7 @@ interface PeriodSelectorProps {
   onSelect: (period: Period) => void; // Ahora es obligatorio
 }
 
-export default function PeriodSelector({ selected, onSelect } : PeriodSelectorProps) {
+export default function PeriodSelector({ selected, onSelect }: PeriodSelectorProps) {
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
@@ -24,9 +24,7 @@ export default function PeriodSelector({ selected, onSelect } : PeriodSelectorPr
               onPress={() => onSelect(period)} // Dispara el cambio de estado global
               activeOpacity={0.7}
             >
-              <Text style={[styles.label, isActive && styles.labelActive]}>
-                {period}
-              </Text>
+              <Text style={[styles.label, isActive && styles.labelActive]}>{period}</Text>
             </TouchableOpacity>
           );
         })}

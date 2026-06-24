@@ -8,7 +8,6 @@ interface ForgotPasswordPageProps {
   onGoToLogin?: () => void;
 }
 
-
 export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onGoToLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,7 +22,8 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onGoToLo
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const isPasswordValid = hasMinLength && hasUppercase && hasNumber && hasSpecialChar;
   const isPasswordMatch = password === confirmPassword;
-  const canSubmit = email.trim() !== '' && isPasswordValid && isPasswordMatch && confirmPassword !== '';
+  const canSubmit =
+    email.trim() !== '' && isPasswordValid && isPasswordMatch && confirmPassword !== '';
 
   const handleBack = () => {
     if (onGoToLogin) {
@@ -45,7 +45,9 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onGoToLo
       setSuccess(true);
     } catch (error: any) {
       console.error('Error al cambiar contraseña:', error);
-      setErrorMsg(error?.message || 'Error de conexión. Verifica tu internet o inténtalo de nuevo más tarde.');
+      setErrorMsg(
+        error?.message || 'Error de conexión. Verifica tu internet o inténtalo de nuevo más tarde.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +56,6 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onGoToLo
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-4">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-md px-8 py-10">
-
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
@@ -82,9 +83,7 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onGoToLo
 
         {!success ? (
           <>
-            <p className="text-gray-500 text-sm mb-6">
-              Ingresa tu correo y tu nueva contraseña.
-            </p>
+            <p className="text-gray-500 text-sm mb-6">Ingresa tu correo y tu nueva contraseña.</p>
             <form onSubmit={handleSubmit}>
               <div className="mb-5">
                 <label className="block text-sm text-left font-semibold text-gray-700 mb-1">
@@ -129,19 +128,33 @@ export const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({ onGoToLo
               </div>
 
               <div className="mb-6 bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <p className="text-xs text-gray-600 font-semibold mb-2">La contraseña debe contener:</p>
+                <p className="text-xs text-gray-600 font-semibold mb-2">
+                  La contraseña debe contener:
+                </p>
                 <ul className="text-xs space-y-1">
-                  <li className={`flex items-center gap-2 ${hasMinLength ? 'text-nutri-medium' : 'text-gray-600'}`}>
-                    {hasMinLength ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Mínimo 8 caracteres
+                  <li
+                    className={`flex items-center gap-2 ${hasMinLength ? 'text-nutri-medium' : 'text-gray-600'}`}
+                  >
+                    {hasMinLength ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Mínimo 8
+                    caracteres
                   </li>
-                  <li className={`flex items-center gap-2 ${hasUppercase ? 'text-nutri-medium' : 'text-gray-600'}`}>
-                    {hasUppercase ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Al menos una letra mayúscula
+                  <li
+                    className={`flex items-center gap-2 ${hasUppercase ? 'text-nutri-medium' : 'text-gray-600'}`}
+                  >
+                    {hasUppercase ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Al menos
+                    una letra mayúscula
                   </li>
-                  <li className={`flex items-center gap-2 ${hasNumber ? 'text-nutri-medium' : 'text-gray-600'}`}>
-                    {hasNumber ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Al menos un número
+                  <li
+                    className={`flex items-center gap-2 ${hasNumber ? 'text-nutri-medium' : 'text-gray-600'}`}
+                  >
+                    {hasNumber ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Al menos un
+                    número
                   </li>
-                  <li className={`flex items-center gap-2 ${hasSpecialChar ? 'text-nutri-medium' : 'text-gray-600'}`}>
-                    {hasSpecialChar ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Un carácter especial (Ej: !@#$%)
+                  <li
+                    className={`flex items-center gap-2 ${hasSpecialChar ? 'text-nutri-medium' : 'text-gray-600'}`}
+                  >
+                    {hasSpecialChar ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Un
+                    carácter especial (Ej: !@#$%)
                   </li>
                 </ul>
               </div>

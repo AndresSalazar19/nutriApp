@@ -1,30 +1,36 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { NutritionistLayout }    from '../../components/layout/NutritionistLayout';
-import { Button }                from '../../components/ui/Button';
-import { AppointmentCard }       from '../../components/ui/AppointmentCard';
+import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
+import { Button } from '../../components/ui/Button';
+import { AppointmentCard } from '../../components/ui/AppointmentCard';
 import { AppointmentViewModal, NewAppointmentModal } from '../../components/ui/AppointmentModal';
 import {
-  CalendarAppointment, CalendarView,
-  MOCK_APPOINTMENTS, DAYS_SHORT,
-  getWeekStart, getWeekDays, formatMonthYear, isSameDay, pad,
+  CalendarAppointment,
+  CalendarView,
+  MOCK_APPOINTMENTS,
+  DAYS_SHORT,
+  getWeekStart,
+  getWeekDays,
+  formatMonthYear,
+  isSameDay,
+  pad,
 } from '../../components/mock/agendaMock';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SLOT_HEIGHT  = 56;   // px per 30-min slot
-const HOUR_START   = 8;
-const HOUR_END     = 19;
-const TOTAL_HOURS  = HOUR_END - HOUR_START;
-const TOTAL_SLOTS  = TOTAL_HOURS * 2;
-const TIME_COL_W   = 56;   // px
+const SLOT_HEIGHT = 56; // px per 30-min slot
+const HOUR_START = 8;
+const HOUR_END = 19;
+const TOTAL_HOURS = HOUR_END - HOUR_START;
+const TOTAL_SLOTS = TOTAL_HOURS * 2;
+const TIME_COL_W = 56; // px
 
 // ─── WeekGrid ─────────────────────────────────────────────────────────────────
 
 interface WeekGridProps {
-  weekDays:    Date[];
+  weekDays: Date[];
   appointments: CalendarAppointment[];
-  today:        Date;
-  onApptClick:  (appt: CalendarAppointment, day: Date) => void;
+  today: Date;
+  onApptClick: (appt: CalendarAppointment, day: Date) => void;
 }
 
 function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps) {
@@ -44,9 +50,12 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
   });
 
   return (
-    <div ref={gridRef} className="overflow-auto flex-1" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+    <div
+      ref={gridRef}
+      className="overflow-auto flex-1"
+      style={{ maxHeight: 'calc(100vh - 200px)' }}
+    >
       <div className="flex" style={{ minWidth: 700 }}>
-
         {/* Time column */}
         <div style={{ width: TIME_COL_W, flexShrink: 0 }} className="pt-0">
           {slots.map((slot, i) => (
@@ -64,8 +73,8 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
 
         {/* Day columns */}
         {weekDays.map((day, dayIdx) => {
-          const isToday   = isSameDay(day, today);
-          const dayAppts  = appointments.filter(a => a.dayIndex === dayIdx);
+          const isToday = isSameDay(day, today);
+          const dayAppts = appointments.filter((a) => a.dayIndex === dayIdx);
 
           return (
             <div key={dayIdx} className="flex-1 relative border-l border-gray-100">
@@ -79,7 +88,7 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
               ))}
 
               {/* Appointments — absolutely positioned */}
-              {dayAppts.map(appt => {
+              {dayAppts.map((appt) => {
                 const topSlots = (appt.startHour * 60 + appt.startMin) / 30 - HOUR_START * 2;
                 const top = topSlots * SLOT_HEIGHT;
                 const endSlots = (appt.endHour * 60 + appt.endMin) / 30 - HOUR_START * 2;
@@ -97,21 +106,22 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
               })}
 
               {/* Today current time line */}
-              {isToday && (() => {
-                const now = new Date();
-                const mins = now.getHours() * 60 + now.getMinutes() - HOUR_START * 60;
-                if (mins < 0 || mins > TOTAL_HOURS * 60) return null;
-                const topPx = (mins / 30) * SLOT_HEIGHT;
-                return (
-                  <div
-                    style={{ position: 'absolute', top: topPx, left: 0, right: 0 }}
-                    className="flex items-center pointer-events-none"
-                  >
-                    <div className="w-2 h-2 bg-admin-accent rounded-full -ml-1 flex-shrink-0" />
-                    <div className="flex-1 border-t-2 border-admin-accent" />
-                  </div>
-                );
-              })()}
+              {isToday &&
+                (() => {
+                  const now = new Date();
+                  const mins = now.getHours() * 60 + now.getMinutes() - HOUR_START * 60;
+                  if (mins < 0 || mins > TOTAL_HOURS * 60) return null;
+                  const topPx = (mins / 30) * SLOT_HEIGHT;
+                  return (
+                    <div
+                      style={{ position: 'absolute', top: topPx, left: 0, right: 0 }}
+                      className="flex items-center pointer-events-none"
+                    >
+                      <div className="w-2 h-2 bg-admin-accent rounded-full -ml-1 flex-shrink-0" />
+                      <div className="flex-1 border-t-2 border-admin-accent" />
+                    </div>
+                  );
+                })()}
             </div>
           );
         })}
@@ -124,20 +134,27 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
 
 function DayHeaders({ weekDays, today }: { weekDays: Date[]; today: Date }) {
   return (
-    <div className="flex border-b border-gray-100 bg-white sticky top-0 z-10" style={{ minWidth: 700 }}>
+    <div
+      className="flex border-b border-gray-100 bg-white sticky top-0 z-10"
+      style={{ minWidth: 700 }}
+    >
       {/* Time col spacer */}
       <div style={{ width: TIME_COL_W, flexShrink: 0 }} />
       {weekDays.map((day, i) => {
         const isToday = isSameDay(day, today);
         return (
           <div key={i} className="flex-1 text-center py-3 border-l border-gray-100">
-            <p className={`text-xs font-semibold uppercase tracking-wide mb-1
-              ${isToday ? 'text-nutri-dark' : 'text-gray-500'}`}>
+            <p
+              className={`text-xs font-semibold uppercase tracking-wide mb-1
+              ${isToday ? 'text-nutri-dark' : 'text-gray-500'}`}
+            >
               {DAYS_SHORT[i]}
             </p>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto
               text-sm font-bold transition
-              ${isToday ? 'bg-nutri-dark text-white' : 'text-gray-700'}`}>
+              ${isToday ? 'bg-nutri-dark text-white' : 'text-gray-700'}`}
+            >
               {day.getDate()}
             </div>
           </div>
@@ -150,18 +167,20 @@ function DayHeaders({ weekDays, today }: { weekDays: Date[]; today: Date }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AgendaPage() {
-  const today    = useMemo(() => new Date(), []);
+  const today = useMemo(() => new Date(), []);
   const [weekStart, setWeekStart] = useState(() => getWeekStart(today));
-  const [view,      setView]      = useState<CalendarView>('Semana');
+  const [view, setView] = useState<CalendarView>('Semana');
   const [appointments, setAppointments] = useState<CalendarAppointment[]>(MOCK_APPOINTMENTS);
-  const [selectedAppt, setSelectedAppt] = useState<{ appt: CalendarAppointment; day: Date } | null>(null);
+  const [selectedAppt, setSelectedAppt] = useState<{ appt: CalendarAppointment; day: Date } | null>(
+    null,
+  );
   const [showNewModal, setShowNewModal] = useState(false);
 
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
 
   const monthLabel = useMemo(() => {
     const start = weekDays[0];
-    const end   = weekDays[6];
+    const end = weekDays[6];
     if (start.getMonth() === end.getMonth()) {
       return formatMonthYear(start);
     }
@@ -185,16 +204,17 @@ export default function AgendaPage() {
   }
 
   function handleNewAppt(appt: Omit<CalendarAppointment, 'id'>) {
-    setAppointments(prev => [...prev, { ...appt, id: `a${Date.now()}` }]);
+    setAppointments((prev) => [...prev, { ...appt, id: `a${Date.now()}` }]);
   }
 
   // Today's appointment count
-  const todayCount = appointments.filter(a => a.dayIndex === (today.getDay() === 0 ? 6 : today.getDay() - 1)).length;
+  const todayCount = appointments.filter(
+    (a) => a.dayIndex === (today.getDay() === 0 ? 6 : today.getDay() - 1),
+  ).length;
 
   return (
     <NutritionistLayout>
       <div className="flex flex-col h-full overflow-hidden">
-
         {/* ── Top bar ── */}
         <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white">
           <div>
@@ -208,20 +228,25 @@ export default function AgendaPage() {
           <div className="flex items-center gap-3">
             {/* View switcher */}
             <div className="flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
-              {(['Semana', 'Mes', 'Lista'] as CalendarView[]).map(v => (
+              {(['Semana', 'Mes', 'Lista'] as CalendarView[]).map((v) => (
                 <button
                   key={v}
                   onClick={() => setView(v)}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${
-                    view === v ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    view === v
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   {v}
                 </button>
               ))}
             </div>
-            <Button variant="primary" onClick={() => setShowNewModal(true)}
-              icon={<span className="text-sm font-bold">+</span>}>
+            <Button
+              variant="primary"
+              onClick={() => setShowNewModal(true)}
+              icon={<span className="text-sm font-bold">+</span>}
+            >
               Nueva Cita
             </Button>
           </div>
@@ -281,7 +306,6 @@ export default function AgendaPage() {
             />
           </div>
         </div>
-
       </div>
 
       {/* ── Modals ── */}
@@ -293,10 +317,7 @@ export default function AgendaPage() {
         />
       )}
       {showNewModal && (
-        <NewAppointmentModal
-          onClose={() => setShowNewModal(false)}
-          onSave={handleNewAppt}
-        />
+        <NewAppointmentModal onClose={() => setShowNewModal(false)} onSave={handleNewAppt} />
       )}
     </NutritionistLayout>
   );

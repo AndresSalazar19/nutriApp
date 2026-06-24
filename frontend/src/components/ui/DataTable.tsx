@@ -46,10 +46,7 @@ export function DataTable<T>({
         <thead>
           <tr className="text-gray-400 text-xs uppercase border-b border-gray-100">
             {columns.map((col) => (
-              <th
-                key={col.key}
-                className={`text-left pb-3 px-4 font-semibold ${col.width ?? ''}`}
-              >
+              <th key={col.key} className={`text-left pb-3 px-4 font-semibold ${col.width ?? ''}`}>
                 {col.header}
               </th>
             ))}
@@ -60,18 +57,12 @@ export function DataTable<T>({
         <tbody>
           {isLoading ? (
             // Skeletons de carga
-            Array.from({ length: 5 }).map((_, i) => (
-              <SkeletonRow key={i} cols={columns.length} />
-            ))
+            Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={columns.length} />)
           ) : data.length === 0 ? (
             // Estado vacío
             <tr>
               <td colSpan={columns.length}>
-                <EmptyState
-                  icon={emptyIcon}
-                  title={emptyTitle}
-                  description={emptyDescription}
-                />
+                <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} />
               </td>
             </tr>
           ) : (

@@ -74,14 +74,16 @@ export function EditFieldModal({
     const trimmed = draft.trim();
     if (validate) {
       const err = validate(trimmed);
-      if (err) { setError(err); return; }
+      if (err) {
+        setError(err);
+        return;
+      }
     }
     onSave(trimmed);
     onClose();
   }
 
-  const keyboardType =
-    type === 'phone' || type === 'numeric' ? 'number-pad' : 'default';
+  const keyboardType = type === 'phone' || type === 'numeric' ? 'number-pad' : 'default';
 
   // ── Date type: no keyboard, taller sheet to fit the picker ────────────────
   const isDate = type === 'date';
@@ -111,12 +113,15 @@ export function EditFieldModal({
           {isDate ? (
             <DatePickerField
               value={draft}
-              onChange={(val) => { setDraft(val); setError(null); }}
+              onChange={(val) => {
+                setDraft(val);
+                setError(null);
+              }}
             />
           ) : type === 'select' ? (
             /* ── Select ── */
             <View style={styles.optionList}>
-              {options.map(opt => (
+              {options.map((opt) => (
                 <TouchableOpacity
                   key={opt}
                   style={[styles.optionRow, draft === opt && styles.optionRowActive]}
@@ -169,9 +174,7 @@ export function EditFieldModal({
           )}
 
           {/* Error for date type */}
-          {isDate && error ? (
-            <Text style={styles.errorText}>⚠ {error}</Text>
-          ) : null}
+          {isDate && error ? <Text style={styles.errorText}>⚠ {error}</Text> : null}
 
           {/* Actions */}
           <View style={styles.actions}>

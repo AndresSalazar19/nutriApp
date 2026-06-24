@@ -1,8 +1,10 @@
-from sqlalchemy.orm import Session
-from app.db.models.content import EducationalContent, ContentType, ContentCategory
-from app.schemas.content import ContentCreate, ContentUpdate
 from datetime import datetime
 from uuid import UUID
+
+from sqlalchemy.orm import Session
+
+from app.db.models.content import ContentCategory, ContentType, EducationalContent
+from app.schemas.content import ContentCreate, ContentUpdate
 
 
 class ContentService:
@@ -27,15 +29,21 @@ class ContentService:
         if q:
             query = query.filter(EducationalContent.title.ilike(f"%{q}%"))
 
-        return query.order_by(EducationalContent.published_at.desc()).offset(skip).limit(limit).all()
+        return (
+            query.order_by(EducationalContent.published_at.desc()).offset(skip).limit(limit).all()
+        )
 
     @staticmethod
     def get_by_id(db: Session, content_id: UUID) -> EducationalContent | None:
-        return db.query(EducationalContent).filter(
-            EducationalContent.id == content_id,
-            EducationalContent.is_published == True,
-            EducationalContent.archived_at == None,
-        ).first()
+        return (
+            db.query(EducationalContent)
+            .filter(
+                EducationalContent.id == content_id,
+                EducationalContent.is_published == True,
+                EducationalContent.archived_at == None,
+            )
+            .first()
+        )
 
     @staticmethod
     def increment_views(db: Session, content: EducationalContent):
@@ -103,7 +111,9 @@ class ContentService:
     ) -> list[EducationalContent]:
         return (
             db.query(EducationalContent)
-            .filter(EducationalContent.author_id == author_id, EducationalContent.archived_at == None)
+            .filter(
+                EducationalContent.author_id == author_id, EducationalContent.archived_at == None
+            )
             .order_by(EducationalContent.created_at.desc())
             .offset(skip)
             .limit(limit)

@@ -36,9 +36,7 @@ interface NutritionistRow {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const AVATAR_COLORS = [
-  'bg-admin-light'
-];
+const AVATAR_COLORS = ['bg-admin-light'];
 
 function getAvatarColor(seed: string): string {
   let hash = 0;
@@ -50,30 +48,29 @@ function getAvatarColor(seed: string): string {
 
 function mapProfileToRow(p: NutritionistProfile): NutritionistRow {
   const firstName = p.user?.person?.first_name ?? '';
-  const lastName  = p.user?.person?.last_name  ?? '';
-  const fullName  = `${firstName} ${lastName}`.trim();
-  const initials  = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase() || '??';
+  const lastName = p.user?.person?.last_name ?? '';
+  const fullName = `${firstName} ${lastName}`.trim();
+  const initials = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase() || '??';
 
   const rowStatus: RowStatus =
-    p.status === 'verified' ? 'active' :
-    p.status === 'rejected' ? 'rejected' : 'pending';
+    p.status === 'verified' ? 'active' : p.status === 'rejected' ? 'rejected' : 'pending';
 
   return {
-    id:               p.id,
-    profileId:        p.id,
+    id: p.id,
+    profileId: p.id,
     initials,
-    color:            getAvatarColor(fullName || p.id),
-    name:             fullName || p.user?.email,
-    email:            p.user?.email ?? '—',
-    specialty:        p.specialty?.name ?? '—',
-    credential:       p.license_number ?? '—',
+    color: getAvatarColor(fullName || p.id),
+    name: fullName || p.user?.email,
+    email: p.user?.email ?? '—',
+    specialty: p.specialty?.name ?? '—',
+    credential: p.license_number ?? '—',
     credentialStatus: p.status === 'verified' ? 'verified' : 'pending',
-    status:           rowStatus,
+    status: rowStatus,
     fullName,
-    licenseNumber:    p.license_number ?? '—',
-    phone:            p.user?.person?.phone ?? '—',
-    yearsExperience:  p.years_experience != null ? `${p.years_experience} años` : '—',
-    education:        p.education ?? '—',
+    licenseNumber: p.license_number ?? '—',
+    phone: p.user?.person?.phone ?? '—',
+    yearsExperience: p.years_experience != null ? `${p.years_experience} años` : '—',
+    education: p.education ?? '—',
   };
 }
 
@@ -88,7 +85,9 @@ function CredentialCell({ status, text }: { status: 'verified' | 'pending'; text
         {status === 'verified' ? '✓' : '⏳'}
       </span>
       <div>
-        <p className={`text-xs font-medium ${status === 'verified' ? 'text-nutri-dark' : 'text-gray-600'}`}>
+        <p
+          className={`text-xs font-medium ${status === 'verified' ? 'text-nutri-dark' : 'text-gray-600'}`}
+        >
           {status === 'verified' ? 'Verificado' : 'Pendiente'}
         </p>
         <p className="text-xs text-gray-500 truncate max-w-[120px]">{text}</p>
@@ -100,7 +99,7 @@ function CredentialCell({ status, text }: { status: 'verified' | 'pending'; text
 // ─── StatusBadge (tabla) ──────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: RowStatus }) {
-  if (status === 'active')   return <Badge variant="active" />;
+  if (status === 'active') return <Badge variant="active" />;
   if (status === 'rejected') return <Badge variant="rejected" />;
   return <Badge variant="pending" />;
 }
@@ -130,7 +129,11 @@ function ActionButtons({
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+          <path
+            fillRule="evenodd"
+            d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+            clipRule="evenodd"
+          />
         </svg>
       </button>
 
@@ -143,9 +146,15 @@ function ActionButtons({
             className="w-7 h-7 flex items-center justify-center rounded-full bg-admin-light hover:bg-admin-medium/20 text-admin-accent disabled:opacity-40 transition"
             title="Rechazar"
           >
-            {busy ? <span className="text-[10px]">…</span> : (
+            {busy ? (
+              <span className="text-[10px]">…</span>
+            ) : (
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             )}
           </button>
@@ -155,15 +164,20 @@ function ActionButtons({
             className="w-7 h-7 flex items-center justify-center rounded-full bg-nutri-light hover:bg-nutri-medium/20 text-nutri-dark disabled:opacity-40 transition"
             title="Aprobar"
           >
-            {busy ? <span className="text-[10px]">…</span> : (
+            {busy ? (
+              <span className="text-[10px]">…</span>
+            ) : (
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
               </svg>
             )}
           </button>
         </>
       )}
-
     </div>
   );
 }
@@ -178,7 +192,7 @@ interface ReviewModalProps {
 
 function ReviewModal({ row, onClose, onAction }: ReviewModalProps) {
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAction = async (action: 'verified' | 'rejected') => {
     setLoading(true);
@@ -202,11 +216,14 @@ function ReviewModal({ row, onClose, onAction }: ReviewModalProps) {
     </div>
   );
 
-  const statusBadge = row.status === 'active'
-    ? <Badge variant="active" />
-    : row.status === 'rejected'
-    ? <Badge variant="rejected" />
-    : <Badge variant="pending" />;
+  const statusBadge =
+    row.status === 'active' ? (
+      <Badge variant="active" />
+    ) : row.status === 'rejected' ? (
+      <Badge variant="rejected" />
+    ) : (
+      <Badge variant="pending" />
+    );
 
   return (
     <Modal isOpen={true} onClose={onClose} size="md">
@@ -215,7 +232,9 @@ function ReviewModal({ row, onClose, onAction }: ReviewModalProps) {
         <div className="flex items-center gap-3">
           <Avatar initials={row.initials} color={row.color} size="lg" />
           <div>
-            <h3 className="font-bold text-gray-800 text-lg leading-tight">{row.fullName || row.name}</h3>
+            <h3 className="font-bold text-gray-800 text-lg leading-tight">
+              {row.fullName || row.name}
+            </h3>
             <div className="mt-1">{statusBadge}</div>
           </div>
         </div>
@@ -229,14 +248,14 @@ function ReviewModal({ row, onClose, onAction }: ReviewModalProps) {
 
       {/* Datos */}
       <div className="space-y-3">
-        <InfoField label="Nombre Completo"    value={row.fullName || '—'} />
+        <InfoField label="Nombre Completo" value={row.fullName || '—'} />
         <InfoField label="Número de Licencia" value={row.licenseNumber} />
         <div className="grid grid-cols-2 gap-3">
-          <InfoField label="Teléfono"            value={row.phone} />
+          <InfoField label="Teléfono" value={row.phone} />
           <InfoField label="Años de Experiencia" value={row.yearsExperience} />
         </div>
-        <InfoField label="Especialidad"       value={row.specialty} />
-        <InfoField label="Educación"          value={row.education} />
+        <InfoField label="Especialidad" value={row.specialty} />
+        <InfoField label="Educación" value={row.education} />
         <InfoField label="Correo Electrónico" value={row.email} />
       </div>
 
@@ -256,14 +275,26 @@ function ReviewModal({ row, onClose, onAction }: ReviewModalProps) {
               onClick={() => handleAction('rejected')}
               className="w-full py-3 rounded-xl bg-admin-dark hover:bg-admin-medium disabled:opacity-50 text-white font-semibold text-sm transition flex items-center justify-center gap-2"
             >
-              {loading ? 'Procesando...' : <><span>✕</span> Rechazar</>}
+              {loading ? (
+                'Procesando...'
+              ) : (
+                <>
+                  <span>✕</span> Rechazar
+                </>
+              )}
             </button>
             <button
               disabled={loading}
               onClick={() => handleAction('verified')}
               className="w-full py-3 rounded-xl bg-nutri-medium hover:bg-nutri-dark disabled:opacity-50 text-white font-semibold text-sm transition flex items-center justify-center gap-2"
             >
-              {loading ? 'Procesando...' : <><span>✓</span> Aprobar</>}
+              {loading ? (
+                'Procesando...'
+              ) : (
+                <>
+                  <span>✓</span> Aprobar
+                </>
+              )}
             </button>
           </div>
         )}
@@ -283,16 +314,16 @@ function ReviewModal({ row, onClose, onAction }: ReviewModalProps) {
 function NutritionistsPage() {
   const { user } = useAuth();
 
-  const [activeNav, setActiveNav]     = useState('Nutricionistas');
-  const [activeTab, setActiveTab]     = useState('Todos');
-  const [search, setSearch]           = useState('');
+  const [activeNav, setActiveNav] = useState('Nutricionistas');
+  const [activeTab, setActiveTab] = useState('Todos');
+  const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selected, setSelected]       = useState<NutritionistRow | null>(null);
-  const [loadingId, setLoadingId]     = useState<string | null>(null);
+  const [selected, setSelected] = useState<NutritionistRow | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const [rows, setRows]       = useState<NutritionistRow[]>([]);
+  const [rows, setRows] = useState<NutritionistRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // ── Carga: incluye todos los estados ───────────────────────────────────────
 
@@ -309,7 +340,7 @@ function NutritionistsPage() {
 
       // Deduplica por id por si acaso
       const seen = new Set<string>();
-      const all  = [...main, ...rejected].filter(p => {
+      const all = [...main, ...rejected].filter((p) => {
         if (seen.has(p.id)) return false;
         seen.add(p.id);
         return true;
@@ -323,19 +354,21 @@ function NutritionistsPage() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // ── Tabs dinámicos ─────────────────────────────────────────────────────────
 
-  const totalCount    = rows.length;
-  const activeCount   = rows.filter(r => r.status === 'active').length;
-  const pendingCount  = rows.filter(r => r.status === 'pending').length;
-  const rejectedCount = rows.filter(r => r.status === 'rejected').length;
+  const totalCount = rows.length;
+  const activeCount = rows.filter((r) => r.status === 'active').length;
+  const pendingCount = rows.filter((r) => r.status === 'pending').length;
+  const rejectedCount = rows.filter((r) => r.status === 'rejected').length;
 
   const TABS = [
-    { label: 'Todos',      count: totalCount    },
-    { label: 'Activos',    count: activeCount   },
-    { label: 'Pendientes', count: pendingCount  },
+    { label: 'Todos', count: totalCount },
+    { label: 'Activos', count: activeCount },
+    { label: 'Pendientes', count: pendingCount },
     { label: 'Rechazados', count: rejectedCount },
   ];
 
@@ -343,9 +376,13 @@ function NutritionistsPage() {
 
   const filtered = rows.filter((r) => {
     const matchTab =
-      activeTab === 'Activos'    ? r.status === 'active'   :
-      activeTab === 'Pendientes' ? r.status === 'pending'  :
-      activeTab === 'Rechazados' ? r.status === 'rejected' : true;
+      activeTab === 'Activos'
+        ? r.status === 'active'
+        : activeTab === 'Pendientes'
+          ? r.status === 'pending'
+          : activeTab === 'Rechazados'
+            ? r.status === 'rejected'
+            : true;
 
     const q = search.toLowerCase();
     const matchSearch =
@@ -360,9 +397,9 @@ function NutritionistsPage() {
   // ── Paginación ─────────────────────────────────────────────────────────────
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const from = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const to   = Math.min(currentPage * PAGE_SIZE, filtered.length);
+  const to = Math.min(currentPage * PAGE_SIZE, filtered.length);
 
   // ── Acción: actualiza estado en la lista sin recargar ─────────────────────
 
@@ -370,15 +407,17 @@ function NutritionistsPage() {
     if (!user?.userId) throw new Error('Sin sesión activa');
     await NutritionistService.review(profileId, action, user.userId);
 
-    setRows(prev => prev.map(r => {
-      if (r.id !== profileId) return r;
-      const newStatus: RowStatus = action === 'verified' ? 'active' : 'rejected';
-      return {
-        ...r,
-        status:           newStatus,
-        credentialStatus: action === 'verified' ? 'verified' : 'pending',
-      };
-    }));
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== profileId) return r;
+        const newStatus: RowStatus = action === 'verified' ? 'active' : 'rejected';
+        return {
+          ...r,
+          status: newStatus,
+          credentialStatus: action === 'verified' ? 'verified' : 'pending',
+        };
+      }),
+    );
   };
 
   // handleAction rápido (botones inline de la tabla)
@@ -445,7 +484,6 @@ function NutritionistsPage() {
       <AdminTopBar title="Gestión de Nutricionistas" />
 
       <div className="px-8 pb-8 pt-4 bg-admin-bg">
-
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center justify-between">
             <span>{error}</span>
@@ -464,21 +502,31 @@ function NutritionistsPage() {
             <SearchInput
               placeholder="Buscar por nombre, email o especialidad..."
               value={search}
-              onChange={(v) => { setSearch(v); setCurrentPage(1); }}
+              onChange={(v) => {
+                setSearch(v);
+                setCurrentPage(1);
+              }}
               className="w-72"
             />
             <span className="text-sm text-gray-500 font-medium">Filtrar por:</span>
             <FilterTabs
               tabs={TABS}
               active={activeTab}
-              onChange={(tab) => { setActiveTab(tab); setCurrentPage(1); }}
+              onChange={(tab) => {
+                setActiveTab(tab);
+                setCurrentPage(1);
+              }}
               accentColor="admin"
             />
           </div>
           <div className="flex items-center gap-2">
             <button className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50 transition">
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
               Excel
             </button>
@@ -505,16 +553,11 @@ function NutritionistsPage() {
             <Pagination current={currentPage} total={totalPages} onChange={setCurrentPage} />
           </div>
         </div>
-
       </div>
 
       {/* Modal de detalle / acción */}
       {selected && (
-        <ReviewModal
-          row={selected}
-          onClose={() => setSelected(null)}
-          onAction={handleAction}
-        />
+        <ReviewModal row={selected} onClose={() => setSelected(null)} onAction={handleAction} />
       )}
     </AdminLayout>
   );
