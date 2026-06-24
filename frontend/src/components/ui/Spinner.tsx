@@ -32,11 +32,7 @@ export function Spinner({ size = 'md', color = 'text-nutri-medium', text }: Spin
           stroke="currentColor"
           strokeWidth="4"
         />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-        />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
       </svg>
       {text ? <p className="text-sm font-medium text-gray-500 animate-pulse">{text}</p> : null}
     </div>
