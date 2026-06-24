@@ -3,7 +3,6 @@ import { AdminLayout } from '../../components/layout/AdminLayout';
 import { AdminTopBar } from '../../components/layout/AdminTopBar';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
 import { SearchInput } from '../../components/ui/SearchInput';
 import { FilterTabs } from '../../components/ui/FilterTabs';
 import { DataTable, Column } from '../../components/ui/DataTable';
