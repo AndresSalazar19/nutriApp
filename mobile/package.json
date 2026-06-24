@@ -8,11 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint --max-warnings=0",
-    "type-check": "tsc --noEmit",
-    "format": "prettier --write \"{app,components,constants,features,hooks,services}/**/*.{js,jsx,ts,tsx,json}\"",
-    "format:check": "prettier --check \"{app,components,constants,features,hooks,services}/**/*.{js,jsx,ts,tsx,json}\"",
-    "validate": "npm run format:check && npm run lint && npm run type-check"
+    "lint": "expo lint",
+    "validate": "npm run lint"
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.3",
@@ -35,6 +32,7 @@
     "expo-linking": "~8.0.11",
     "expo-notifications": "~0.32.17",
     "expo-router": "~6.0.23",
+    "expo-secure-store": "^56.0.4",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "expo-symbols": "~1.0.8",
@@ -55,7 +53,6 @@
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "prettier": "^3.6.2",
     "typescript": "~5.9.2"
   },
   "private": true

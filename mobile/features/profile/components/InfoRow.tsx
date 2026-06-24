@@ -12,7 +12,10 @@ export function InfoRow({ icon, label, value, onPress }: InfoRowProps) {
   return (
     <TouchableOpacity style={styles.infoRow} activeOpacity={0.7} onPress={onPress}>
       <View style={styles.infoIconWrap}>
-        <MaterialCommunityIcons name={icon} size={22} />
+        <MaterialCommunityIcons
+          name={icon}
+          size={22}
+        />
       </View>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text style={styles.infoValue}>{value}</Text>

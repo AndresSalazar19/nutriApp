@@ -11,13 +11,14 @@ interface PressureChartProps {
   height?: number;
 }
 
-export default function BloodPressureChart({
-  systolicData,
-  diastolicData,
+export default function BloodPressureChart({ 
+  systolicData, 
+  diastolicData, 
   labels,
-  width,
-  height = 180, // Incrementamos un poco el alto por defecto para dar aire a las etiquetas
+  width, 
+  height = 180 // Incrementamos un poco el alto por defecto para dar aire a las etiquetas
 }: PressureChartProps) {
+  
   if (systolicData.length < 2 || diastolicData.length < 2) return null;
 
   // Configuración de márgenes para que quepan los textos
@@ -48,8 +49,8 @@ export default function BloodPressureChart({
   const diaPoints = getCoordinates(diastolicData);
 
   // Convertir puntos a string para el componente Polyline
-  const sysPointsStr = sysPoints.map((p) => `${p.x},${p.y}`).join(' ');
-  const diaPointsStr = diaPoints.map((p) => `${p.x},${p.y}`).join(' ');
+  const sysPointsStr = sysPoints.map(p => `${p.x},${p.y}`).join(' ');
+  const diaPointsStr = diaPoints.map(p => `${p.x},${p.y}`).join(' ');
 
   // Líneas de referencia horizontales (Grid) en el fondo
   const gridLinesCount = 3;
@@ -66,14 +67,14 @@ export default function BloodPressureChart({
           return (
             <React.Fragment key={`grid-${i}`}>
               {/* Línea horizontal tenue */}
-              <Line
-                x1={paddingLeft}
-                y1={y}
-                x2={width - paddingRight}
-                y2={y}
-                stroke="#E2E8F0"
-                strokeWidth="1"
-                strokeDasharray="4, 4"
+              <Line 
+                x1={paddingLeft} 
+                y1={y} 
+                x2={width - paddingRight} 
+                y2={y} 
+                stroke="#E2E8F0" 
+                strokeWidth="1" 
+                strokeDasharray="4, 4" 
               />
             </React.Fragment>
           );
@@ -81,70 +82,68 @@ export default function BloodPressureChart({
 
         {/* 2. LÍNEAS DE LOS DATOS */}
         {/* Línea de Sistólica */}
-        <Polyline
-          points={sysPointsStr}
-          fill="none"
-          stroke={COLORS.danger || '#FF5252'}
-          strokeWidth="3"
-          strokeLinejoin="round"
-          strokeLinecap="round"
+        <Polyline 
+          points={sysPointsStr} 
+          fill="none" 
+          stroke={COLORS.danger || '#FF5252'} 
+          strokeWidth="3" 
+          strokeLinejoin="round" 
+          strokeLinecap="round" 
         />
         {/* Línea de Diastólica */}
-        <Polyline
-          points={diaPointsStr}
-          fill="none"
-          stroke="#4A90D9"
-          strokeWidth="3"
-          strokeLinejoin="round"
-          strokeLinecap="round"
+        <Polyline 
+          points={diaPointsStr} 
+          fill="none" 
+          stroke="#4A90D9" 
+          strokeWidth="3" 
+          strokeLinejoin="round" 
+          strokeLinecap="round" 
         />
 
         {/* 3. PUNTOS FINALES (DESTACADOS) */}
         {sysPoints.length > 0 && (
-          <Circle
-            cx={sysPoints[sysPoints.length - 1].x}
-            cy={sysPoints[sysPoints.length - 1].y}
-            r={4.5}
-            fill={COLORS.surface || '#FFF'}
-            stroke={COLORS.danger || '#FF5252'}
-            strokeWidth="3"
+          <Circle 
+            cx={sysPoints[sysPoints.length - 1].x} 
+            cy={sysPoints[sysPoints.length - 1].y} 
+            r={4.5} 
+            fill={COLORS.surface || '#FFF'} 
+            stroke={COLORS.danger || '#FF5252'} 
+            strokeWidth="3" 
           />
         )}
         {diaPoints.length > 0 && (
-          <Circle
-            cx={diaPoints[diaPoints.length - 1].x}
-            cy={diaPoints[diaPoints.length - 1].y}
-            r={4.5}
-            fill={COLORS.surface || '#FFF'}
-            stroke="#4A90D9"
-            strokeWidth="3"
+          <Circle 
+            cx={diaPoints[diaPoints.length - 1].x} 
+            cy={diaPoints[diaPoints.length - 1].y} 
+            r={4.5} 
+            fill={COLORS.surface || '#FFF'} 
+            stroke="#4A90D9" 
+            strokeWidth="3" 
           />
         )}
       </Svg>
 
       {/* 4. EJE X DINÁMICO (ETIQUETAS DEL PERÍODO) */}
       {/* Usamos una capa absoluta nativa de React Native abajo para manejar las fuentes de forma más limpia */}
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: paddingLeft,
-          right: paddingRight,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          height: paddingBottom,
-        }}
-      >
+      <View style={{
+        position: 'absolute',
+        bottom: 0,
+        left: paddingLeft,
+        right: paddingRight,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        height: paddingBottom
+      }}>
         {labels.map((label, index) => (
-          <Text
-            key={`label-${index}`}
-            style={{
-              fontSize: 11,
-              color: '#94A3B8',
+          <Text 
+            key={`label-${index}`} 
+            style={{ 
+              fontSize: 11, 
+              color: '#94A3B8', 
               fontWeight: '600',
               textAlign: 'center',
-              width: chartWidth / labels.length,
+              width: chartWidth / labels.length
             }}
           >
             {label}

@@ -32,7 +32,11 @@ function StatCard({
 }) {
   return (
     <View style={styles.statCard}>
-      <MaterialCommunityIcons name={icon} size={22} color={color} />
+      <MaterialCommunityIcons
+        name={icon}
+        size={22}
+        color={color}
+      />
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={styles.statUnit}>{unit}</Text>
     </View>
@@ -58,7 +62,11 @@ function ActionCard({
     <TouchableOpacity style={styles.actionCard} activeOpacity={0.8}>
       <View style={[styles.actionAccent, { backgroundColor: accentColor }]} />
       <View style={styles.actionIconWrap}>
-        <MaterialCommunityIcons name={icon} size={24} color={accentColor} />
+        <MaterialCommunityIcons
+          name={icon}
+          size={24}
+          color={accentColor}
+        />
       </View>
       <Text style={styles.actionTitle}>{title}</Text>
       <Text style={styles.actionSubtitle}>{subtitle}</Text>
@@ -76,7 +84,11 @@ function ActionCard({
 function ReminderCard() {
   return (
     <View style={styles.reminderCard}>
-      <MaterialCommunityIcons name="lightbulb-on-outline" size={22} color="#f57f17" />
+      <MaterialCommunityIcons
+        name="lightbulb-on-outline"
+        size={22}
+        color="#f57f17"
+      />
       <View style={styles.reminderBody}>
         <Text style={styles.reminderTitle}>Recordatorio del día</Text>
         <Text style={styles.reminderText}>
@@ -90,7 +102,11 @@ function ReminderCard() {
 // ── FAB de Nutricionista ──────────────────────────────────────────────────────
 function NutritionistFloatingButton({ onPress }: { onPress: () => void }) {
   return (
-    <TouchableOpacity style={styles.nutritionistFab} activeOpacity={0.85} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.nutritionistFab}
+      activeOpacity={0.85}
+      onPress={onPress}
+    >
       <View style={styles.fabInner}>
         <MaterialCommunityIcons name="chat" size={28} color="#fff" />
       </View>
@@ -108,7 +124,9 @@ export default function HomeScreen() {
       {/* ── Green Header ── */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerGreeting}>Hola, Juan</Text>
+          <Text style={styles.headerGreeting}>
+            Hola, Juan
+          </Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
@@ -135,7 +153,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ReminderCard />
-
+        
         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
 
         <View style={styles.actionsGrid}>
@@ -171,7 +189,7 @@ export default function HomeScreen() {
             <Text style={styles.resourceEmptyText}>No hay recursos disponibles aún.</Text>
           </View>
         ) : (
-          previewItems.map((item) => (
+          previewItems.map(item => (
             <TouchableOpacity
               key={item.id}
               style={styles.resourceRow}
@@ -181,18 +199,15 @@ export default function HomeScreen() {
               <View style={styles.resourceIconWrap}>
                 <MaterialCommunityIcons
                   name={
-                    (CATEGORY_ICON[
-                      item.category
-                    ] as keyof typeof MaterialCommunityIcons.glyphMap) ?? 'book-open-page-variant'
+                    (CATEGORY_ICON[item.category] as keyof typeof MaterialCommunityIcons.glyphMap)
+                    ?? 'book-open-page-variant'
                   }
                   size={24}
                   color={COLORS.primary}
                 />
               </View>
               <View style={styles.resourceBody}>
-                <Text style={styles.resourceTitle} numberOfLines={1}>
-                  {item.title}
-                </Text>
+                <Text style={styles.resourceTitle} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.resourceSubtitle}>
                   {CATEGORY_LABEL[item.category] ?? item.category}
                   {item.tags && item.tags.length > 0 ? ` · ${item.tags[0]}` : ''}
@@ -208,7 +223,10 @@ export default function HomeScreen() {
       </ScrollView>
 
       <NutritionistFloatingButton onPress={() => {}} />
-      <AIFloatingButton onPress={() => {}} style={{ bottom: 100, right: 90 }} />
+      <AIFloatingButton
+        onPress={() => {}}
+        style={{ bottom: 100, right: 90 }}
+      />
 
       {/* ── Bottom Tab Bar ── */}
       <BottomTabBar activeTab="inicio" />
@@ -303,6 +321,46 @@ const styles = StyleSheet.create({
     paddingTop: 18,
   },
 
+  // ── Reminder Card ──
+  reminderCard: {
+    backgroundColor: '#fffde7',
+    borderRadius: 14,
+    borderLeftWidth: 4,
+    borderLeftColor: '#fdd835',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+    shadowColor: '#f9a825',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  reminderIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(253,216,53,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  reminderBulb: { fontSize: 20 },
+  reminderBody: { flex: 1 },
+  reminderTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#f57f17',
+    marginBottom: 3,
+  },
+  reminderText: {
+    fontSize: 12,
+    color: '#795548',
+    lineHeight: 17,
+  },
+
   // ── Section Title ──
   sectionTitle: {
     fontSize: 17,
@@ -384,72 +442,6 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: COLORS.primary,
-  },
-
-  // ── PDF Row ──
-  pdfRow: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  pdfIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: COLORS.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  pdfIcon: { fontSize: 20 },
-  pdfText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  pdfArrow: {
-    fontSize: 20,
-    color: '#ccc',
-  },
-
-  // ── Reminder ──
-  reminderCard: {
-    backgroundColor: '#fffde7',
-    borderRadius: 14,
-    borderLeftWidth: 4,
-    borderLeftColor: '#fdd835',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 22,
-  },
-  reminderBulb: {
-    fontSize: 22,
-    marginRight: 12,
-    marginTop: 2,
-  },
-  reminderBody: { flex: 1 },
-  reminderTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#f57f17',
-    marginBottom: 4,
-  },
-  reminderText: {
-    fontSize: 12,
-    color: '#795548',
-    lineHeight: 18,
   },
 
   // ── Section header row ──

@@ -2,11 +2,11 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import * as Notifications from 'expo-notifications';
-import { useEffect } from 'react';
+import * as Notifications from "expo-notifications";
+import { useEffect } from "react";
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { requestNotificationPermissions } from '@/services/notification-service';
+import { requestNotificationPermissions } from "@/services/notification-service";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

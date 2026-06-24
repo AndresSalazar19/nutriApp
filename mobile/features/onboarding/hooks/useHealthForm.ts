@@ -13,7 +13,7 @@ export function useHealthForm() {
 
   const toggleAllergy = (allergy: string) => {
     setSelectedAllergies((prev) =>
-      prev.includes(allergy) ? prev.filter((a) => a !== allergy) : [...prev, allergy],
+      prev.includes(allergy) ? prev.filter((a) => a !== allergy) : [...prev, allergy]
     );
   };
 
@@ -29,22 +29,14 @@ export function useHealthForm() {
   });
 
   return {
-    weight,
-    setWeight,
-    height,
-    setHeight,
-    systolic,
-    setSystolic,
-    diastolic,
-    setDiastolic,
-    hasHypertension,
-    setHasHypertension,
-    medications,
-    setMedications,
-    selectedAllergies,
-    toggleAllergy,
-    dietaryRestrictions,
-    setDietaryRestrictions,
+    weight, setWeight,
+    height, setHeight,
+    systolic, setSystolic,
+    diastolic, setDiastolic,
+    hasHypertension, setHasHypertension,
+    medications, setMedications,
+    selectedAllergies, toggleAllergy,
+    dietaryRestrictions, setDietaryRestrictions,
     getData,
   };
 }

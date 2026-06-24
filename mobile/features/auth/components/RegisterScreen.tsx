@@ -55,13 +55,7 @@ function DatePickerModal({ visible, value, onChange, onClose, onConfirm }: DateP
   }, [visible, value]);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      statusBarTranslucent
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <Pressable style={dpStyles.backdrop} onPress={onClose} />
       <View style={dpStyles.sheet}>
         <View style={dpStyles.handle} />
@@ -71,13 +65,7 @@ function DatePickerModal({ visible, value, onChange, onClose, onConfirm }: DateP
           <TouchableOpacity style={dpStyles.btnCancel} onPress={onClose}>
             <Text style={dpStyles.btnCancelText}>Cancelar</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={dpStyles.btnSave}
-            onPress={() => {
-              onConfirm(draft);
-              onClose();
-            }}
-          >
+          <TouchableOpacity style={dpStyles.btnSave} onPress={() => { onConfirm(draft); onClose(); }}>
             <Text style={dpStyles.btnSaveText}>Confirmar</Text>
           </TouchableOpacity>
         </View>
@@ -89,47 +77,29 @@ function DatePickerModal({ visible, value, onChange, onClose, onConfirm }: DateP
 const dpStyles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
   sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 48 : 36,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1, shadowRadius: 12, elevation: 20,
   },
   handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#ddd',
-    alignSelf: 'center',
-    marginBottom: 16,
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 16,
   },
   title: { fontSize: 16, fontWeight: '700', color: '#1a1a2e', marginBottom: 14 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
   btnCancel: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#e0e0e0',
-    alignItems: 'center',
+    flex: 1, paddingVertical: 14, borderRadius: 12,
+    borderWidth: 1.5, borderColor: '#e0e0e0', alignItems: 'center',
   },
   btnCancelText: { fontSize: 15, fontWeight: '600', color: '#888' },
   btnSave: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
+    flex: 1, paddingVertical: 14, borderRadius: 12,
+    backgroundColor: COLORS.primary, alignItems: 'center',
   },
   btnSaveText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });
@@ -145,30 +115,23 @@ export default function RegisterScreen() {
     identification: '',
     email: '',
     phone: '',
-    birthDate: '', // formato "DD/MM/AAAA"
+    birthDate: '',   // formato "DD/MM/AAAA"
     password: '',
     confirmPassword: '',
     gender: '',
   });
-  const [acceptTerms, setAcceptTerms] = useState(false);
-  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+  const [acceptTerms, setAcceptTerms]       = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy]   = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const updateField = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleRegister = async () => {
-    const { fullName, email, phone, birthDate, password, confirmPassword, gender, identification } =
-      form;
+    const { fullName, email, phone, birthDate, password, confirmPassword, gender, identification } = form;
 
-    if (
-      !fullName.trim() ||
-      !email.trim() ||
-      !phone.trim() ||
-      !birthDate.trim() ||
-      !password.trim() ||
-      !confirmPassword.trim()
-    ) {
+    if (!fullName.trim() || !email.trim() || !phone.trim() || !birthDate.trim() ||
+        !password.trim() || !confirmPassword.trim()) {
       Alert.alert('Campos requeridos', 'Por favor completa todos los campos.');
       return;
     }
@@ -181,9 +144,9 @@ export default function RegisterScreen() {
       return;
     }
 
-    const nameParts = fullName.trim().split(' ');
+    const nameParts  = fullName.trim().split(' ');
     const first_name = nameParts[0] ?? '';
-    const last_name = nameParts.slice(1).join(' ') || first_name;
+    const last_name  = nameParts.slice(1).join(' ') || first_name;
 
     const date_of_birth = parseDateToISO(birthDate);
     if (!date_of_birth) {
@@ -196,7 +159,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (identification.trim().length !== 10) {
+    if (identification.trim().length !== 10 ) {
       Alert.alert('Cédula inválida', 'La cédula debe tener exactamente 10 caracteres.');
       return;
     }
@@ -222,6 +185,7 @@ export default function RegisterScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+
           {/* Panel verde superior */}
           <View style={styles.topPanel}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -236,6 +200,7 @@ export default function RegisterScreen() {
 
           {/* Panel blanco */}
           <View style={styles.bottomPanel}>
+
             {error ? (
               <View style={styles.errorBox}>
                 <Text style={styles.errorText}>⚠️ {error}</Text>
@@ -334,15 +299,27 @@ export default function RegisterScreen() {
             />
 
             {/* Términos */}
-            <Checkbox checked={acceptTerms} onPress={() => setAcceptTerms(!acceptTerms)}>
+            <Checkbox
+              checked={acceptTerms}
+              onPress={() => setAcceptTerms(!acceptTerms)}
+            >
               <Text style={styles.checkLabel}>
-                Acepto los <Text style={styles.checkLink}>Términos y Condiciones</Text>
+                Acepto los{' '}
+                <Text style={styles.checkLink}>
+                  Términos y Condiciones
+                </Text>
               </Text>
             </Checkbox>
 
-            <Checkbox checked={acceptPrivacy} onPress={() => setAcceptPrivacy(!acceptPrivacy)}>
+            <Checkbox
+              checked={acceptPrivacy}
+              onPress={() => setAcceptPrivacy(!acceptPrivacy)}
+            >
               <Text style={styles.checkLabel}>
-                Acepto la <Text style={styles.checkLink}>Política de Privacidad</Text>
+                Acepto la{' '}
+                <Text style={styles.checkLink}>
+                  Política de Privacidad
+                </Text>
               </Text>
             </Checkbox>
 
@@ -352,11 +329,10 @@ export default function RegisterScreen() {
               onPress={handleRegister}
               disabled={loading}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.btnPrimaryText}>Crear Cuenta</Text>
-              )}
+              {loading
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.btnPrimaryText}>Crear Cuenta</Text>
+              }
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => router.push('/login')}>
@@ -364,6 +340,7 @@ export default function RegisterScreen() {
                 ¿Ya tienes cuenta? <Text style={styles.loginLink}>Inicia Sesión</Text>
               </Text>
             </TouchableOpacity>
+
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -376,6 +353,7 @@ export default function RegisterScreen() {
         onConfirm={(val) => updateField('birthDate', val)}
         onClose={() => setShowDatePicker(false)}
       />
+
     </SafeAreaView>
   );
 }
@@ -383,71 +361,40 @@ export default function RegisterScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.primary },
+  container:   { flex: 1, backgroundColor: COLORS.primary },
   topPanel: {
     backgroundColor: COLORS.primary,
     alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 36,
-    paddingHorizontal: 24,
+    paddingTop: 20, paddingBottom: 36, paddingHorizontal: 24,
   },
   backBtn: {
     alignSelf: 'flex-start',
     backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: 20,
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
+    borderRadius: 20, width: 36, height: 36,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  backArrow: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  backArrow:   { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   logoCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
+    marginBottom: 14, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 6,
   },
-  logoEmoji: { fontSize: 32 },
-  title: { fontSize: 26, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
-  subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.85)' },
+  logoEmoji:   { fontSize: 32 },
+  title:       { fontSize: 26, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
+  subtitle:    { fontSize: 13, color: 'rgba(255,255,255,0.85)' },
   bottomPanel: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 32,
+    flex: 1, backgroundColor: '#fff',
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32,
   },
-  errorBox: {
-    backgroundColor: '#fff0f0',
-    borderWidth: 1,
-    borderColor: '#ffcccc',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorText: { color: '#cc0000', fontSize: 13 },
-  label: { fontSize: 13, fontWeight: '600', color: '#333', marginBottom: 6 },
+  errorBox:    { backgroundColor: '#fff0f0', borderWidth: 1, borderColor: '#ffcccc', borderRadius: 10, padding: 12, marginBottom: 16 },
+  errorText:   { color: '#cc0000', fontSize: 13 },
+  label:       { fontSize: 13, fontWeight: '600', color: '#333', marginBottom: 6 },
   input: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    fontSize: 14,
-    color: '#333',
-    backgroundColor: '#fafafa',
-    marginBottom: 16,
+    borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 13,
+    fontSize: 14, color: '#333', backgroundColor: '#fafafa', marginBottom: 16,
   },
   pickerContainer: {
     borderWidth: 1,
@@ -456,56 +403,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
     marginBottom: 16,
     overflow: 'hidden',
-  },
+  },  
 
   picker: {
     paddingHorizontal: 14,
     color: '#333',
   },
   // Fecha — mismo aspecto que input pero como botón
-  dateRow: { justifyContent: 'center' },
-  dateText: { fontSize: 14, color: '#333' },
+  dateRow:         { justifyContent: 'center' },
+  dateText:        { fontSize: 14, color: '#333' },
   datePlaceholder: { color: '#bbb' },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    marginBottom: 16,
-    backgroundColor: '#fafafa',
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12,
+    paddingHorizontal: 14, marginBottom: 16, backgroundColor: '#fafafa',
   },
-  inputFlex: { flex: 1, paddingVertical: 13, fontSize: 14, color: '#333' },
-  inputIcon: { fontSize: 16, marginLeft: 8 },
-  checkRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  inputFlex:   { flex: 1, paddingVertical: 13, fontSize: 14, color: '#333' },
+  inputIcon:   { fontSize: 16, marginLeft: 8 },
+  checkRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 20, height: 20, borderRadius: 5,
+    borderWidth: 2, borderColor: COLORS.primary,
+    alignItems: 'center', justifyContent: 'center',
   },
   checkboxActive: { backgroundColor: COLORS.primary },
-  checkmark: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  checkLabel: { fontSize: 13, color: '#555', flexShrink: 1 },
-  checkLink: { color: COLORS.primary, fontWeight: '600' },
+  checkmark:      { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  checkLabel:     { fontSize: 13, color: '#555', flexShrink: 1 },
+  checkLink:      { color: COLORS.primary, fontWeight: '600' },
   btnPrimary: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 16,
-    borderRadius: 50,
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: COLORS.primary, paddingVertical: 16,
+    borderRadius: 50, alignItems: 'center', marginBottom: 20,
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
   },
-  btnDisabled: { opacity: 0.7 },
-  btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  loginText: { textAlign: 'center', fontSize: 13, color: '#888' },
-  loginLink: { color: COLORS.primary, fontWeight: 'bold' },
+  btnDisabled:     { opacity: 0.7 },
+  btnPrimaryText:  { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  loginText:       { textAlign: 'center', fontSize: 13, color: '#888' },
+  loginLink:       { color: COLORS.primary, fontWeight: 'bold' },
 });
