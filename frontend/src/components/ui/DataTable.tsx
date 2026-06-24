@@ -1,5 +1,6 @@
 import React from 'react';
 import { EmptyState } from './EmptyState';
+import { Spinner } from './Spinner';
 
 export interface Column<T> {
   key: string;
@@ -16,18 +17,6 @@ interface DataTableProps<T> {
   emptyTitle?: string;
   emptyDescription?: string;
   isLoading?: boolean;
-}
-
-function SkeletonRow({ cols }: { cols: number }) {
-  return (
-    <tr className="border-b border-gray-50">
-      {Array.from({ length: cols }).map((_, i) => (
-        <td key={i} className="py-3 px-4">
-          <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
-        </td>
-      ))}
-    </tr>
-  );
 }
 
 export function DataTable<T>({
@@ -56,17 +45,18 @@ export function DataTable<T>({
         {/* Cuerpo */}
         <tbody>
           {isLoading ? (
-            // Skeletons de carga
-            Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={columns.length} />)
+            <tr>
+              <td colSpan={columns.length} className="py-20 text-center">
+                <Spinner color="text-nutri-admin" text="Cargando registros..." />
+              </td>
+            </tr>
           ) : data.length === 0 ? (
-            // Estado vacío
             <tr>
               <td colSpan={columns.length}>
                 <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} />
               </td>
             </tr>
           ) : (
-            // Filas de datos
             data.map((row) => (
               <tr
                 key={keyExtractor(row)}
