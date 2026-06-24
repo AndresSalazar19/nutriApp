@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 
 from app.db.base import Base
 
+
 class PatientNutritionist(Base):
     __tablename__ = "patient_nutritionist"
 
@@ -20,14 +21,9 @@ class PatientNutritionist(Base):
     assigned_at = Column(Date, nullable=False)
     ended_at = Column(Date, nullable=True)
     patient = relationship(
-        "User",
-        foreign_keys=[patient_id],
-        back_populates="patient_relations_as_patient"
+        "User", foreign_keys=[patient_id], back_populates="patient_relations_as_patient"
     )
 
     nutritionist = relationship(
-        "User",
-        foreign_keys=[nutritionist_id],
-        back_populates="patient_relations_as_nutritionist"
+        "User", foreign_keys=[nutritionist_id], back_populates="patient_relations_as_nutritionist"
     )
-

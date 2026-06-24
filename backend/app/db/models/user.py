@@ -35,13 +35,13 @@ class User(Base):
     patient_relations_as_patient = relationship(
         "PatientNutritionist",
         foreign_keys="PatientNutritionist.patient_id",
-        back_populates="patient"
+        back_populates="patient",
     )
 
     patient_relations_as_nutritionist = relationship(
         "PatientNutritionist",
         foreign_keys="PatientNutritionist.nutritionist_id",
-        back_populates="nutritionist"
+        back_populates="nutritionist",
     )
 
 

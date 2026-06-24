@@ -11,12 +11,12 @@ from app.schemas.patient_nutritionist import (
 )
 from app.services.user_service import UserService, UserRole
 
+
 class PatientNutritionistService:
 
     @staticmethod
     def get_all(
-        db: Session,
-        q: PatientNutritionistQueryParams | None = None
+        db: Session, q: PatientNutritionistQueryParams | None = None
     ) -> list[PatientNutritionistResponse]:
 
         query = db.query(PatientNutritionist)
@@ -27,68 +27,48 @@ class PatientNutritionistService:
             elif q.status == "inactive":
                 query = query.filter(PatientNutritionist.is_active == False)
             if q.patient_id:
-                query = query.filter(
-                    PatientNutritionist.patient_id == q.patient_id
-                )
+                query = query.filter(PatientNutritionist.patient_id == q.patient_id)
 
             if q.nutritionist_id:
-                query = query.filter(
-                    PatientNutritionist.nutritionist_id == q.nutritionist_id
-                )
+                query = query.filter(PatientNutritionist.nutritionist_id == q.nutritionist_id)
 
         results = query.all()
-        return [
-            PatientNutritionistResponse.model_validate(p)
-            for p in results
-        ]
+        return [PatientNutritionistResponse.model_validate(p) for p in results]
 
     @staticmethod
     def get_by_id(db: Session, profile_id: uuid.UUID):
-        return (
-            db.query(PatientNutritionist)
-            .filter(PatientNutritionist.id == profile_id)
-            .first()
-        )
+        return db.query(PatientNutritionist).filter(PatientNutritionist.id == profile_id).first()
 
     @staticmethod
     def create(db: Session, data: PatientNutritionistRequest):
 
         patient = UserService.get_by_id(db, data.patient_id)
         if not patient:
-            raise HTTPException(
-                status_code=404,
-                detail="Paciente no existe"
-            )
+            raise HTTPException(status_code=404, detail="Paciente no existe")
 
         nutritionist = UserService.get_by_id(db, data.nutritionist_id)
         if not nutritionist:
-            raise HTTPException(
-                status_code=404,
-                detail="Nutricionista no existe"
-            )
+            raise HTTPException(status_code=404, detail="Nutricionista no existe")
 
         if patient.role != UserRole.patient:
-            raise HTTPException(
-                status_code=400,
-                detail="El user_id no es un paciente"
-            )
+            raise HTTPException(status_code=400, detail="El user_id no es un paciente")
 
         if nutritionist.role != UserRole.nutritionist:
-            raise HTTPException(
-                status_code=400,
-                detail="El user_id no es un nutricionista"
+            raise HTTPException(status_code=400, detail="El user_id no es un nutricionista")
+
+        existing = (
+            db.query(PatientNutritionist)
+            .filter(
+                PatientNutritionist.patient_id == data.patient_id,
+                PatientNutritionist.nutritionist_id == data.nutritionist_id,
+                PatientNutritionist.is_active == True,
             )
-        
-        existing = db.query(PatientNutritionist).filter(
-            PatientNutritionist.patient_id == data.patient_id,
-            PatientNutritionist.nutritionist_id == data.nutritionist_id,
-            PatientNutritionist.is_active == True
-        ).first()
+            .first()
+        )
 
         if existing:
             raise HTTPException(
-                status_code=409,
-                detail="El paciente ya está asignado a este nutricionista"
+                status_code=409, detail="El paciente ya está asignado a este nutricionista"
             )
 
         profile = PatientNutritionist(

@@ -9,7 +9,7 @@ class PatientNutritionistResponse(BaseModel):
     id: uuid.UUID
     patient_id: uuid.UUID
     nutritionist_id: uuid.UUID
-    assigned_at: datetime   
+    assigned_at: datetime
     ended_at: Optional[datetime] = None
     is_active: bool
     patient: UserResponse | None = None
@@ -23,8 +23,8 @@ class PatientNutritionistRequest(BaseModel):
     patient_id: uuid.UUID
     nutritionist_id: uuid.UUID
 
+
 class PatientNutritionistQueryParams(BaseModel):
     status: Literal["active", "inactive"] | None = None
     patient_id: uuid.UUID | None = None
     nutritionist_id: uuid.UUID | None = None
-

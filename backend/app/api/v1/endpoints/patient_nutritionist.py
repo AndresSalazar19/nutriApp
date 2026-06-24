@@ -17,8 +17,7 @@ router = APIRouter(prefix="/patient_nutritionists", tags=["patient_nutritionists
 
 @router.get("", response_model=list[PatientNutritionistResponse])
 def get_patient_nutritionists(
-    query_params: PatientNutritionistQueryParams = Depends(),
-    db: Session = Depends(get_db)
+    query_params: PatientNutritionistQueryParams = Depends(), db: Session = Depends(get_db)
 ):
     return PatientNutritionistService.get_all(db, q=query_params)
 
