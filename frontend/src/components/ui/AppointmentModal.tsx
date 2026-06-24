@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FiCalendar, FiClock, FiFileText } from 'react-icons/fi';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { CalendarAppointment, ConsultType, pad } from '../../pages/Appoinment/agendaUtils';
+import { ConsultType, pad } from '../../pages/Appoinment/agendaUtils';
 import { AppointmentService } from '../../services/Appointments/AppointmentService';
-import { ToCalendarAppointment } from '../../services/Appointments/appointment.transform';
 import {
   PatientNutritionistService,
   PatientNutritionistPatient,
@@ -108,7 +107,7 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
 
 interface NewModalProps {
   onClose: () => void;
-  onSave: (appt: Omit<CalendarAppointment, 'id'>) => void;
+  onSave: () => void;
   prefillDay?: number;
   prefillWeekStart?: Date;
 }
@@ -125,7 +124,8 @@ export function NewAppointmentModal({ onClose, onSave, prefillWeekStart }: NewMo
   });
   const [patients, setPatients] = useState<PatientNutritionistPatient[]>([]);
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function update<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -152,17 +152,21 @@ export function NewAppointmentModal({ onClose, onSave, prefillWeekStart }: NewMo
       notes: form.notes || null,
     };
 
+    let success = false;
     try {
-      setLoading(true);
-      const created = await AppointmentService.create(payload as any);
-      const cal = ToCalendarAppointment(created);
-      onSave(cal as any);
-      onClose();
+      setSubmitError(null);
+      setIsSubmitting(true);
+      await AppointmentService.create(payload as any);
+      success = true;
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Error creando la cita');
+      setSubmitError(err?.message || 'Error creando la cita');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
+    }
+
+    if (success) {
+      onSave();
     }
   }
 
@@ -280,12 +284,18 @@ export function NewAppointmentModal({ onClose, onSave, prefillWeekStart }: NewMo
           />
         </Field>
 
+        {submitError && (
+          <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+            {submitError}
+          </div>
+        )}
+
         <div className="flex gap-2 pt-1">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancelar
           </Button>
-          <Button variant="primary" onClick={handleSave} className="flex-1" disabled={loading}>
-            {loading ? 'Guardando...' : 'Guardar Cita'}
+          <Button variant="primary" onClick={handleSave} className="flex-1" disabled={isSubmitting}>
+            {isSubmitting ? 'Guardando...' : 'Guardar Cita'}
           </Button>
         </div>
       </div>
