@@ -54,4 +54,4 @@ jobs:
       - run: black --check app tests
       - run: ruff check app tests
       - run: bandit -r app -x app/db
-      - run: pytest
+      - run: python -m pytest
