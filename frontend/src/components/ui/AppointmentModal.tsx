@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiCalendar, FiClock, FiFileText } from 'react-icons/fi';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { CalendarAppointment, ConsultType, pad } from '../../pages/Appoinment/agendaUtils';
-import { MOCK_PATIENTS } from '../../components/mock/patientsMock';
 import { AppointmentService } from '../../services/Appointments/AppointmentService';
 import { ToCalendarAppointment } from '../../services/Appointments/appointment.transform';
+import {
+  PatientNutritionistService,
+  PatientNutritionistPatient,
+} from '../../services/PatientNutritionist/patientNutritionistService';
 import { useAuth } from '../../hooks/useAuth';
 
 // ─── Helpers de fecha ──────────────────────────────────────────────────────
@@ -117,9 +120,10 @@ export function NewAppointmentModal({ onClose, onSave, prefillWeekStart }: NewMo
     startTime: '09:00',
     endTime: '10:00',
     date: todayLocalISO(),
-    type: 'Presencial' as ConsultType,
+    type: 'in_person' as ConsultType,
     notes: '',
   });
+  const [patients, setPatients] = useState<PatientNutritionistPatient[]>([]);
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -140,11 +144,11 @@ export function NewAppointmentModal({ onClose, onSave, prefillWeekStart }: NewMo
 
     const durationMin = eh * 60 + em - (sh * 60 + sm);
     const payload = {
-      patient_id: form.patientId || undefined,
-      nutritionist_id: user?.userId ?? undefined,
+      patient_id: form.patientId,
+      nutritionist_id: user?.userId,
       scheduled_at: startDateIso ?? new Date().toISOString(),
       duration_min: durationMin > 0 ? durationMin : 45,
-      modality: form.type === 'Virtual' ? 'virtual' : 'presencial',
+      modality: form.type === 'Virtual' ? 'virtual' : 'in_person',
       notes: form.notes || null,
     };
 
@@ -162,31 +166,47 @@ export function NewAppointmentModal({ onClose, onSave, prefillWeekStart }: NewMo
     }
   }
 
+  useEffect(() => {
+    async function loadPatients() {
+      if (!user?.userId) return;
+
+      try {
+        const loadedPatients = await PatientNutritionistService.listPatientsByNutritionist(
+          user.userId,
+        );
+        setPatients(loadedPatients);
+      } catch (error) {
+        console.error('Error cargando pacientes del nutricionista:', error);
+      }
+    }
+
+    void loadPatients();
+  }, [user?.userId]);
+
   return (
     <Modal isOpen onClose={onClose} title="Nueva Cita" size="sm">
       <div className="space-y-4">
-        <Field label="Paciente (maqueta)">
+        <Field label="Paciente">
           <div>
             <select
               value={form.patientId}
               onChange={(e) => {
                 const id = e.target.value;
-                const p = MOCK_PATIENTS.find((x) => x.id === id);
+                const selected = patients.find((x) => x.id === id);
                 update('patientId', id);
-                update('patientName', p ? `${p.firstName} ${p.lastName}` : '');
+                update('patientName', selected ? selected.fullName : '');
               }}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             >
               <option value="">— Seleccionar paciente —</option>
-              {MOCK_PATIENTS.map((p) => (
-                <option
-                  key={p.id}
-                  value={p.id}
-                >{`${p.initials} · ${p.firstName} ${p.lastName}`}</option>
+              {patients.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.fullName}
+                </option>
               ))}
             </select>
             <div className="text-xs text-gray-400 mt-1">
-              Selecciona un paciente de la lista (maqueta).
+              Selecciona un paciente asignado a este nutricionista.
             </div>
           </div>
         </Field>
