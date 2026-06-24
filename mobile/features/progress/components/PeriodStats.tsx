@@ -38,8 +38,8 @@ export default function PeriodStats({
         <View style={styles.row}>
           <StatTile
             icon="water"
-            iconColor="#4A90D9"
-            iconBg="#E8EFF8"
+            iconColor={COLORS.primaryMedium}
+            iconBg={COLORS.primaryLight}
             label="Hidratación"
             value={hydration.value}
             unit={hydration.unit}
@@ -47,9 +47,9 @@ export default function PeriodStats({
           />
           <View style={styles.gap} />
           <StatTile
-            icon="flame"
-            iconColor="#FF9800"
-            iconBg="#FFF3E0"
+            icon="fire"
+            iconColor={COLORS.primaryMedium}
+            iconBg={COLORS.primaryLight}
             label="Calorías"
             value={calories.value}
             subtitle={calories.subtitle}
@@ -58,9 +58,9 @@ export default function PeriodStats({
         <View style={styles.rowGap} />
         <View style={styles.row}>
           <StatTile
-            icon="body"
-            iconColor="#9C6FD6"
-            iconBg="#F3EEFB"
+            icon="run"
+            iconColor={COLORS.primaryMedium}
+            iconBg={COLORS.primaryLight}
             label="Actividad"
             value={activity.value}
             unit={activity.unit}
@@ -68,7 +68,7 @@ export default function PeriodStats({
           />
           <View style={styles.gap} />
           <StatTile
-            icon="checkmark-circle"
+            icon="check-circle"
             iconColor={COLORS.primary}
             iconBg={COLORS.primaryLight}
             label="Adherencia"

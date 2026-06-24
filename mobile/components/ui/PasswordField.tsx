@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
+import { COLORS } from '@/constants/colors';
 
 export function PasswordField(props: TextInputProps) {
   const [visible, setVisible] = useState(false);
@@ -28,7 +29,7 @@ export function PasswordField(props: TextInputProps) {
         <MaterialCommunityIcons
           name={visible ? 'eye-off-outline' : 'eye-outline'}
           size={22}
-          color="#999"
+          color={COLORS.textMuted}
         />
       </TouchableOpacity>
     </View>
@@ -40,16 +41,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 14,
-    backgroundColor: '#fafafa',
+    backgroundColor: COLORS.inputBg,
   },
 
   input: {
     flex: 1,
     paddingVertical: 14,
     fontSize: 14,
-    color: '#333',
+    color: COLORS.textPrimary,
   },
 });

@@ -1,13 +1,3 @@
-/**
- * DatePickerField
- *
- * Renders a native date picker adapted per platform:
- *  - iOS   → inline spinner inside the modal sheet (no extra tap needed)
- *  - Android → opens the system date picker dialog on press
- *
- * Output format: "DD/MM/AAAA" (matches the existing app convention)
- */
-
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
@@ -21,9 +11,6 @@ import {
 } from 'react-native';
 import { COLORS } from '@/constants/colors';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** "DD/MM/AAAA" → Date  (returns today if parsing fails) */
 function parseDisplayDate(display: string): Date {
   const parts = display.split('/');
   if (parts.length === 3) {
@@ -34,7 +21,6 @@ function parseDisplayDate(display: string): Date {
   return new Date();
 }
 
-/** Date → "DD/MM/AAAA" */
 function toDisplayDate(date: Date): string {
   const dd   = String(date.getDate()).padStart(2, '0');
   const mm   = String(date.getMonth() + 1).padStart(2, '0');
@@ -42,33 +28,23 @@ function toDisplayDate(date: Date): string {
   return `${dd}/${mm}/${yyyy}`;
 }
 
-const MAX_DATE = new Date(); // today — no future birth dates
+const MAX_DATE = new Date();
 const MIN_DATE = new Date(1900, 0, 1);
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface DatePickerFieldProps {
-  /** Current value in "DD/MM/AAAA" format */
   value: string;
-  /** Called with the new value in "DD/MM/AAAA" format whenever the date changes */
   onChange: (value: string) => void;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
   const currentDate = parseDisplayDate(value);
-
-  // Android only: controls whether the system dialog is open
   const [showAndroid, setShowAndroid] = useState(false);
 
   function handleChange(_event: DateTimePickerEvent, selected?: Date) {
-    // Android closes automatically after selection; iOS stays open
     if (Platform.OS === 'android') setShowAndroid(false);
     if (selected) onChange(toDisplayDate(selected));
   }
 
-  // ── iOS: always-visible inline spinner ────────────────────────────────────
   if (Platform.OS === 'ios') {
     return (
       <View style={styles.iosWrapper}>
@@ -86,7 +62,6 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
     );
   }
 
-  // ── Android: pressable row that opens the system dialog ───────────────────
   return (
     <>
       <TouchableOpacity
@@ -113,10 +88,7 @@ export function DatePickerField({ value, onChange }: DatePickerFieldProps) {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  // iOS
   iosWrapper: {
     alignItems: 'center',
     marginVertical: 4,
@@ -125,15 +97,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 180,
   },
-
-  // Android
   androidRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#e0e0e0',
+    borderColor: COLORS.border,
     borderRadius: 12,
-    backgroundColor: '#fafafa',
+    backgroundColor: COLORS.inputBg,
     paddingHorizontal: 14,
     paddingVertical: 14,
     marginBottom: 8,
@@ -150,7 +120,7 @@ const styles = StyleSheet.create({
   },
   androidChevron: {
     fontSize: 22,
-    color: '#bbb',
+    color: COLORS.textMuted,
     fontWeight: '300',
   },
 });

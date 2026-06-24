@@ -22,9 +22,6 @@ import { Picker } from '@react-native-picker/picker';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { Checkbox } from '@/components/ui/Checkbox';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** "DD/MM/AAAA" → "YYYY-MM-DD" para el backend */
 function parseDateToISO(input: string): string | null {
   const parts = input.split('/');
   if (parts.length !== 3) return null;
@@ -34,9 +31,6 @@ function parseDateToISO(input: string): string | null {
   if (isNaN(d.getTime())) return null;
   return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
 }
-
-// ─── DatePicker Modal ─────────────────────────────────────────────────────────
-// Sheet modal reutilizable que envuelve DatePickerField para usarlo en Register
 
 interface DatePickerModalProps {
   visible: boolean;
@@ -49,7 +43,6 @@ interface DatePickerModalProps {
 function DatePickerModal({ visible, value, onChange, onClose, onConfirm }: DatePickerModalProps) {
   const [draft, setDraft] = useState(value);
 
-  // Sincroniza cuando se abre
   React.useEffect(() => {
     if (visible) setDraft(value);
   }, [visible, value]);
@@ -75,36 +68,34 @@ function DatePickerModal({ visible, value, onChange, onClose, onConfirm }: DateP
 }
 
 const dpStyles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  backdrop: { flex: 1, backgroundColor: COLORS.backdrop },
   sheet: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 48 : 36,
-    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowColor: COLORS.black, shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1, shadowRadius: 12, elevation: 20,
   },
   handle: {
     width: 40, height: 4, borderRadius: 2,
-    backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 16,
+    backgroundColor: COLORS.border, alignSelf: 'center', marginBottom: 16,
   },
-  title: { fontSize: 16, fontWeight: '700', color: '#1a1a2e', marginBottom: 14 },
+  title: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 14 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
   btnCancel: {
     flex: 1, paddingVertical: 14, borderRadius: 12,
-    borderWidth: 1.5, borderColor: '#e0e0e0', alignItems: 'center',
+    borderWidth: 1.5, borderColor: COLORS.border, alignItems: 'center',
   },
-  btnCancelText: { fontSize: 15, fontWeight: '600', color: '#888' },
+  btnCancelText: { fontSize: 15, fontWeight: '600', color: COLORS.textMuted },
   btnSave: {
     flex: 1, paddingVertical: 14, borderRadius: 12,
     backgroundColor: COLORS.primary, alignItems: 'center',
   },
-  btnSaveText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  btnSaveText: { fontSize: 15, fontWeight: '700', color: COLORS.textOnPrimary },
 });
-
-// ─── RegisterScreen ───────────────────────────────────────────────────────────
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -115,7 +106,7 @@ export default function RegisterScreen() {
     identification: '',
     email: '',
     phone: '',
-    birthDate: '',   // formato "DD/MM/AAAA"
+    birthDate: '',
     password: '',
     confirmPassword: '',
     gender: '',
@@ -186,7 +177,6 @@ export default function RegisterScreen() {
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
 
-          {/* Panel verde superior */}
           <View style={styles.topPanel}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
               <Text style={styles.backArrow}>←</Text>
@@ -198,7 +188,6 @@ export default function RegisterScreen() {
             <Text style={styles.subtitle}>Completa tus datos para comenzar</Text>
           </View>
 
-          {/* Panel blanco */}
           <View style={styles.bottomPanel}>
 
             {error ? (
@@ -207,49 +196,47 @@ export default function RegisterScreen() {
               </View>
             ) : null}
 
-            {/* Nombre */}
             <Text style={styles.label}>Nombre Completo</Text>
             <TextInput
               style={styles.input}
               placeholder="Juan Pérez García"
-              placeholderTextColor="#bbb"
+              placeholderTextColor={COLORS.placeholder}
               value={form.fullName}
               onChangeText={(v) => updateField('fullName', v)}
               editable={!loading}
             />
 
-            {/* Cédula */}
             <Text style={styles.label}>Cédula</Text>
             <TextInput
               style={styles.input}
               placeholder="0934567890"
               keyboardType="phone-pad"
-              placeholderTextColor="#bbb"
+              placeholderTextColor={COLORS.placeholder}
               value={form.identification}
               onChangeText={(v) => updateField('identification', v)}
               editable={!loading}
             />
 
-            {/* Género */}
             <Text style={styles.label}>Género</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={form.gender}
                 onValueChange={(value) => updateField('gender', value)}
                 enabled={!loading}
+                style={styles.picker}
+                dropdownIconColor={COLORS.textPrimary}
               >
-                <Picker.Item label="Seleccione un género" value="" color="#bbb" />
-                <Picker.Item label="Femenino" value="femenino" />
-                <Picker.Item label="Masculino" value="masculino" />
+                <Picker.Item label="Seleccione un género" value="" color={COLORS.placeholder} style={styles.pickerItem} />
+                <Picker.Item label="Femenino" value="femenino" color={COLORS.textPrimary} style={styles.pickerItem} />
+                <Picker.Item label="Masculino" value="masculino" color={COLORS.textPrimary} style={styles.pickerItem} />
               </Picker>
             </View>
 
-            {/* Correo */}
             <Text style={styles.label}>Correo Electrónico</Text>
             <TextInput
               style={styles.input}
               placeholder="juan@ejemplo.com"
-              placeholderTextColor="#bbb"
+              placeholderTextColor={COLORS.placeholder}
               keyboardType="email-address"
               autoCapitalize="none"
               value={form.email}
@@ -257,19 +244,17 @@ export default function RegisterScreen() {
               editable={!loading}
             />
 
-            {/* Teléfono */}
             <Text style={styles.label}>Teléfono</Text>
             <TextInput
               style={styles.input}
               placeholder="0999 999 999"
-              placeholderTextColor="#bbb"
+              placeholderTextColor={COLORS.placeholder}
               keyboardType="phone-pad"
               value={form.phone}
               onChangeText={(v) => updateField('phone', v)}
               editable={!loading}
             />
 
-            {/* Fecha de nacimiento — abre DatePickerModal */}
             <Text style={styles.label}>Fecha de Nacimiento</Text>
             <TouchableOpacity
               style={[styles.input, styles.dateRow]}
@@ -282,7 +267,6 @@ export default function RegisterScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Contraseña */}
             <Text style={styles.label}>Contraseña</Text>
             <PasswordField
               value={form.password}
@@ -290,7 +274,6 @@ export default function RegisterScreen() {
               placeholder="••••••••"
             />
 
-            {/* Confirmar contraseña */}
             <Text style={styles.label}>Confirmar Contraseña</Text>
             <PasswordField
               value={form.confirmPassword}
@@ -298,7 +281,6 @@ export default function RegisterScreen() {
               placeholder="••••••••"
             />
 
-            {/* Términos */}
             <Checkbox
               checked={acceptTerms}
               onPress={() => setAcceptTerms(!acceptTerms)}
@@ -323,14 +305,13 @@ export default function RegisterScreen() {
               </Text>
             </Checkbox>
 
-            {/* Botón */}
             <TouchableOpacity
               style={[styles.btnPrimary, loading && styles.btnDisabled]}
               onPress={handleRegister}
               disabled={loading}
             >
               {loading
-                ? <ActivityIndicator color="#fff" />
+                ? <ActivityIndicator color={COLORS.textOnPrimary} />
                 : <Text style={styles.btnPrimaryText}>Crear Cuenta</Text>
               }
             </TouchableOpacity>
@@ -345,7 +326,6 @@ export default function RegisterScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* DatePicker Modal */}
       <DatePickerModal
         visible={showDatePicker}
         value={form.birthDate}
@@ -358,8 +338,6 @@ export default function RegisterScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: COLORS.primary },
   topPanel: {
@@ -369,56 +347,59 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: COLORS.overlay,
     borderRadius: 20, width: 36, height: 36,
     alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  backArrow:   { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  backArrow:   { color: COLORS.textOnPrimary, fontSize: 18, fontWeight: 'bold' },
   logoCircle: {
     width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
-    marginBottom: 14, shadowColor: '#000',
+    backgroundColor: COLORS.surface, alignItems: 'center', justifyContent: 'center',
+    marginBottom: 14, shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 6,
   },
   logoEmoji:   { fontSize: 32 },
-  title:       { fontSize: 26, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
-  subtitle:    { fontSize: 13, color: 'rgba(255,255,255,0.85)' },
+  title:       { fontSize: 26, fontWeight: 'bold', color: COLORS.textOnPrimary, marginBottom: 4 },
+  subtitle:    { fontSize: 13, color: COLORS.overlayMedium },
   bottomPanel: {
-    flex: 1, backgroundColor: '#fff',
+    flex: 1, backgroundColor: COLORS.surface,
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
     paddingHorizontal: 24, paddingTop: 32, paddingBottom: 32,
   },
-  errorBox:    { backgroundColor: '#fff0f0', borderWidth: 1, borderColor: '#ffcccc', borderRadius: 10, padding: 12, marginBottom: 16 },
-  errorText:   { color: '#cc0000', fontSize: 13 },
-  label:       { fontSize: 13, fontWeight: '600', color: '#333', marginBottom: 6 },
+  errorBox:    { backgroundColor: COLORS.errorLight, borderWidth: 1, borderColor: COLORS.errorBorder, borderRadius: 10, padding: 12, marginBottom: 16 },
+  errorText:   { color: COLORS.error, fontSize: 13 },
+  label:       { fontSize: 13, fontWeight: '600', color: COLORS.textPrimary, marginBottom: 6 },
   input: {
-    borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12,
+    borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 13,
-    fontSize: 14, color: '#333', backgroundColor: '#fafafa', marginBottom: 16,
+    fontSize: 14, color: COLORS.textPrimary, backgroundColor: COLORS.inputBg, marginBottom: 16,
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: COLORS.border,
     borderRadius: 12,
-    backgroundColor: '#fafafa',
+    backgroundColor: COLORS.inputBg,
     marginBottom: 16,
     overflow: 'hidden',
-  },  
-
+  },
   picker: {
     paddingHorizontal: 14,
-    color: '#333',
+    color: COLORS.textPrimary,
+    backgroundColor: COLORS.inputBg,
   },
-  // Fecha — mismo aspecto que input pero como botón
+  pickerItem: {
+    fontSize: 14,
+    backgroundColor: COLORS.surface,
+  },
   dateRow:         { justifyContent: 'center' },
-  dateText:        { fontSize: 14, color: '#333' },
-  datePlaceholder: { color: '#bbb' },
+  dateText:        { fontSize: 14, color: COLORS.textPrimary },
+  datePlaceholder: { color: COLORS.placeholder },
   inputWrapper: {
     flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12,
-    paddingHorizontal: 14, marginBottom: 16, backgroundColor: '#fafafa',
+    borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
+    paddingHorizontal: 14, marginBottom: 16, backgroundColor: COLORS.inputBg,
   },
-  inputFlex:   { flex: 1, paddingVertical: 13, fontSize: 14, color: '#333' },
+  inputFlex:   { flex: 1, paddingVertical: 13, fontSize: 14, color: COLORS.textPrimary },
   inputIcon:   { fontSize: 16, marginLeft: 8 },
   checkRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   checkbox: {
@@ -427,8 +408,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   checkboxActive: { backgroundColor: COLORS.primary },
-  checkmark:      { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  checkLabel:     { fontSize: 13, color: '#555', flexShrink: 1 },
+  checkmark:      { color: COLORS.textOnPrimary, fontSize: 12, fontWeight: 'bold' },
+  checkLabel:     { fontSize: 13, color: COLORS.textSecondary, flexShrink: 1 },
   checkLink:      { color: COLORS.primary, fontWeight: '600' },
   btnPrimary: {
     backgroundColor: COLORS.primary, paddingVertical: 16,
@@ -437,7 +418,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
   },
   btnDisabled:     { opacity: 0.7 },
-  btnPrimaryText:  { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  loginText:       { textAlign: 'center', fontSize: 13, color: '#888' },
+  btnPrimaryText:  { color: COLORS.textOnPrimary, fontSize: 16, fontWeight: 'bold' },
+  loginText:       { textAlign: 'center', fontSize: 13, color: COLORS.textMuted },
   loginLink:       { color: COLORS.primary, fontWeight: 'bold' },
 });

@@ -38,11 +38,11 @@ export default function PeriodSelector({ selected, onSelect } : PeriodSelectorPr
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: 20,
-    backgroundColor: 'transparent', // Para que se vea el fondo verde
+    backgroundColor: 'transparent',
   },
   container: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Botones inactivos semitransparentes
+    backgroundColor: COLORS.overlaySubtle, // Botones inactivos semitransparentes
     borderRadius: Radius.full,
     padding: 4,
   },
@@ -53,11 +53,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
   },
   tabActive: {
-    backgroundColor: '#fff', // Barra blanca cuando está activo
+    backgroundColor: COLORS.surface,
   },
   label: {
     fontWeight: '600',
-    color: '#fff',
+    color: COLORS.textOnPrimary,
   },
   labelActive: {
     color: COLORS.primary, // Texto verde dentro de la barra blanca

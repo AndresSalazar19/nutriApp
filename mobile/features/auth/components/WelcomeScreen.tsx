@@ -18,7 +18,6 @@ export default function WelcomeScreen() {
   const router = useRouter();
 
   const handleLogin = () => {
-    // Aquí irá la navegación al dashboard cuando esté listo
     console.log('Iniciar sesión');
     router.push('/login');
   };
@@ -33,9 +32,7 @@ export default function WelcomeScreen() {
 
       {/* Panel superior verde */}
       <View style={styles.topPanel}>
-        {/* Logo */}
         <View style={styles.logoCircle}>
-          {/* Reemplaza este Text por tu <Image> del logo SVG/PNG cuando lo tengas */}
           <Text style={styles.logoEmoji}>🌿</Text>
         </View>
 
@@ -49,17 +46,14 @@ export default function WelcomeScreen() {
           Controla tu hipertensión con alimentación saludable
         </Text>
 
-        {/* Botón Iniciar Sesión */}
         <TouchableOpacity style={styles.btnPrimary} onPress={handleLogin}>
           <Text style={styles.btnPrimaryText}>Iniciar Sesión</Text>
         </TouchableOpacity>
 
-        {/* Botón Crear Cuenta */}
         <TouchableOpacity style={styles.btnSecondary} onPress={handleRegister}>
           <Text style={styles.btnSecondaryText}>Crear Cuenta</Text>
         </TouchableOpacity>
 
-        {/* Términos */}
         <Text style={styles.termsText}>
           Al continuar, aceptas nuestros{'\n'}
           <Text style={styles.termsLink}>Términos y Condiciones</Text>
@@ -73,10 +67,9 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
   },
 
-  // ── Panel verde superior ──
   topPanel: {
     backgroundColor: COLORS.primary,
     height: height * 0.52,
@@ -89,11 +82,11 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -105,55 +98,20 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.textOnPrimary,
     marginBottom: 4,
   },
-  brandSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
-    marginBottom: 28,
-  },
-  featureListWrapper: {
-  width: '100%',
-  alignItems: 'center',
-  },
-  featureList: {
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  featureIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  featureEmoji: {
-    fontSize: 18,
-  },
-  featureLabel: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
 
-  // ── Panel blanco inferior ──
   bottomPanel: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     marginTop: -24,
     paddingHorizontal: 28,
     paddingTop: 36,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -162,13 +120,13 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#1b5e20',
+    color: COLORS.primary,
     marginBottom: 8,
     textAlign: 'center',
   },
   welcomeSubtitle: {
     fontSize: 13,
-    color: '#888',
+    color: COLORS.textMuted,
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 20,
@@ -187,7 +145,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   btnPrimaryText: {
-    color: '#fff',
+    color: COLORS.textOnPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -207,7 +165,7 @@ const styles = StyleSheet.create({
   },
   termsText: {
     fontSize: 11,
-    color: '#aaa',
+    color: COLORS.textMuted,
     textAlign: 'center',
     lineHeight: 18,
   },
@@ -216,5 +174,3 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
-
-
