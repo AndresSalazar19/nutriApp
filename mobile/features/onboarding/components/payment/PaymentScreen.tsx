@@ -16,8 +16,7 @@ import { usePaymentForm } from '../../hooks/usePaymentForm';
 import { processPayment } from '../../services/onboardingService';
 import { PLANS } from '../../constants';
 import { COLORS } from '@/constants/colors';
-
-const ORANGE = '#F39C12';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function PaymentScreen() {
   const router = useRouter();
@@ -57,14 +56,15 @@ export default function PaymentScreen() {
             <Text style={styles.planSummaryPeriod}> /mes</Text>
           </View>
           <View style={styles.freeBadge}>
-            <Text style={styles.freeBadgeText}>🎉 Primera semana GRATIS</Text>
+            <MaterialCommunityIcons name="party-popper" size={14} color={COLORS.primary} />
+            <Text style={styles.freeBadgeText}>Primera semana GRATIS</Text>
           </View>
         </View>
 
         {/* Payment Method */}
         <Text style={styles.sectionTitle}>Método de Pago</Text>
         <TouchableOpacity style={styles.paymentMethodCard} activeOpacity={0.8}>
-          <Text style={styles.paymentMethodIcon}>💳</Text>
+          <MaterialCommunityIcons name="credit-card-outline" size={28} color={COLORS.primary} />
           <View>
             <Text style={styles.paymentMethodName}>Tarjeta de Crédito/Débito</Text>
             <Text style={styles.paymentMethodBrands}>Visa, Mastercard</Text>
@@ -83,7 +83,7 @@ export default function PaymentScreen() {
           placeholder="1234 5678 9012 3456"
           keyboardType="numeric"
           maxLength={19}
-          rightIcon="💳"
+          rightIcon="credit-card-outline"
         />
 
         <LabeledInput
@@ -113,7 +113,7 @@ export default function PaymentScreen() {
               keyboardType="numeric"
               maxLength={4}
               secureTextEntry
-              rightIcon="🔒"
+              rightIcon="lock-outline"
             />
           </View>
         </View>
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   // Plan Summary
   planSummary: {
     borderWidth: 2,
-    borderColor: ORANGE,
+    borderColor: COLORS.primary,
     borderRadius: 14,
     padding: 14,
     backgroundColor: '#FFFBF4',
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   planSummaryTitle: { fontSize: 14, fontWeight: '600', color: '#333', flex: 1 },
-  planSummaryName: { color: ORANGE, fontWeight: '800' },
+  planSummaryName: { color: COLORS.primary, fontWeight: '800' },
   planSummaryRight: { alignItems: 'flex-end' },
   planSummarySmall: { fontSize: 10, color: '#888', lineHeight: 15 },
   planSummaryPriceRow: { flexDirection: 'row', alignItems: 'flex-end' },
@@ -208,13 +208,16 @@ const styles = StyleSheet.create({
   planSummaryPeriod: { fontSize: 13, color: '#888', marginBottom: 4 },
   freeBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FFF3CD',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.primaryLight,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
     marginTop: 6,
   },
-  freeBadgeText: { fontSize: 12, fontWeight: '700', color: '#B8860B' },
+  freeBadgeText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
 
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A1A', marginBottom: 10 },
 

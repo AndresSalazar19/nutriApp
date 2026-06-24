@@ -8,6 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 
 export default function SuccessScreen() {
@@ -15,10 +16,10 @@ export default function SuccessScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <View style={styles.container}>
         <View style={styles.iconCircle}>
-          <Text style={styles.icon}>🎉</Text>
+          <MaterialCommunityIcons name="check-decagram" size={48} color={COLORS.primary} />
         </View>
 
         <Text style={styles.title}>¡Todo listo!</Text>
@@ -29,15 +30,15 @@ export default function SuccessScreen() {
 
         <View style={styles.card}>
           <View style={styles.cardRow}>
-            <Text style={styles.cardIcon}>✅</Text>
+            <MaterialCommunityIcons name="check-circle-outline" size={20} color={COLORS.primaryMedium} />
             <Text style={styles.cardText}>Perfil médico completado</Text>
           </View>
           <View style={styles.cardRow}>
-            <Text style={styles.cardIcon}>✅</Text>
+            <MaterialCommunityIcons name="check-circle-outline" size={20} color={COLORS.primaryMedium} />
             <Text style={styles.cardText}>Plan de suscripción activado</Text>
           </View>
           <View style={styles.cardRow}>
-            <Text style={styles.cardIcon}>✅</Text>
+            <MaterialCommunityIcons name="check-circle-outline" size={20} color={COLORS.primaryMedium} />
             <Text style={styles.cardText}>Pago procesado exitosamente</Text>
           </View>
         </View>
@@ -47,7 +48,8 @@ export default function SuccessScreen() {
           onPress={() => router.replace('/(tabs)')}
           activeOpacity={0.85}
         >
-          <Text style={styles.continueButtonText}>Comenzar ahora →</Text>
+          <Text style={styles.continueButtonText}>Comenzar ahora</Text>
+          <MaterialCommunityIcons name="arrow-right" size={18} color={COLORS.textOnPrimary} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -55,7 +57,7 @@ export default function SuccessScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F5F5F5' },
+  safeArea: { flex: 1, backgroundColor: COLORS.background },
   container: {
     flex: 1,
     alignItems: 'center',
@@ -71,48 +73,49 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
   },
-  icon: { fontSize: 48 },
   title: {
     fontSize: 28,
     fontWeight: '800',
-    color: '#1A1A1A',
+    color: COLORS.textPrimary,
     marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: '#666',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
   },
   card: {
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 20,
     gap: 12,
     marginBottom: 32,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
   },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardIcon: { fontSize: 18 },
-  cardText: { fontSize: 14, color: '#333', fontWeight: '500' },
+  cardText: { fontSize: 14, color: COLORS.textPrimary, fontWeight: '500' },
   continueButton: {
     width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     backgroundColor: COLORS.primary,
     borderRadius: 14,
     paddingVertical: 16,
-    alignItems: 'center',
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 6,
   },
-  continueButtonText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
+  continueButtonText: { color: COLORS.textOnPrimary, fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
 });

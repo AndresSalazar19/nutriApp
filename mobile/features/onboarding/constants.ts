@@ -5,7 +5,7 @@ export const ONBOARDING_STEPS: StepConfig[] = [
   { id: 1, label: 'Perfil\nMédico' },
   { id: 2, label: 'Plan' },
   { id: 3, label: 'Pago' },
-  { id: 4, label: 'Listo', icon: '✓' },
+  { id: 4, label: 'Listo', icon: '4' },
 ];
 
 export const ALLERGIES = ['Lácteos', 'Gluten', 'Mariscos', 'Soya', 'Huevos'];
@@ -31,10 +31,10 @@ export const PLANS: Plan[] = [
     name: 'Plan Estándar',
     price: '$34.99',
     period: '/mes',
-    badge: '⭐ Más Popular',
+    badge: 'Más Popular',
     savingsText: 'Ahorra 30%',
-    accentColor: '#F39C12',
-    titleColor: '#F39C12',
+    accentColor: COLORS.primaryMedium,
+    titleColor: COLORS.primaryMedium,
     features: [
       'Todo en Básico, más:',
       'Consultas quincenales',
@@ -49,8 +49,8 @@ export const PLANS: Plan[] = [
     name: 'Plan Premium',
     price: '$49.99',
     period: '/mes',
-    accentColor: '#9B59B6',
-    titleColor: '#9B59B6',
+    accentColor: COLORS.primaryAccent,
+    titleColor: COLORS.primaryAccent,
     features: [
       'Todo en Estándar, más:',
       'Consultas semanales',
