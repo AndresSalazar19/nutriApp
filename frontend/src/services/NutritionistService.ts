@@ -45,6 +45,12 @@ export interface NutritionistProfile {
   specialty: NutritionistSpecialty | null;
 }
 
+// NUEVO: Interfaz para los documentos del nutricionista
+export interface NutritionistDocuments {
+  cv_url: string | null;
+  senescyt_url: string | null;
+}
+
 function authHeaders(): Record<string, string> {
   const token = tokenStorage.get() ?? '';
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -64,25 +70,49 @@ export const NutritionistService = {
       headers: authHeaders(),
     });
     const data = await response.json();
-    // El endpoint devuelve un array directo: [{...}, {...}]
     return Array.isArray(data) ? data : (data.data ?? []);
   },
 
+  // ACTUALIZADO: Se añade el parámetro opcional rejectionReason
   async review(
     profileId: string,
     status: 'verified' | 'rejected',
     verifiedBy: string,
+    rejectionReason?: string,
   ): Promise<NutritionistProfile> {
+    // Armamos el payload dinámicamente. Si es verified, manda null, si es rejected, manda la razón.
+    const payload = {
+      status,
+      verified_by: verifiedBy,
+      rejection_reason: status === 'rejected' ? rejectionReason : null,
+    };
+
     const response = await fetch(`${API_URL}/nutritionists/${profileId}/review`, {
       method: 'PATCH',
       headers: authHeaders(),
-      body: JSON.stringify({ status, verified_by: verifiedBy }),
+      body: JSON.stringify(payload),
     });
+
     const data = await response.json();
     if (!response.ok) {
       const msg = data?.detail ?? data?.errors?.[0] ?? `Error ${response.status}`;
       throw new Error(msg);
     }
     return data.data ?? data;
+  },
+
+  // NUEVO: Método para obtener las rutas de los PDFs
+  async getDocuments(profileId: string): Promise<NutritionistDocuments> {
+    const response = await fetch(`${API_URL}/nutritionists/${profileId}/documents`, {
+      headers: authHeaders(),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      const msg = data?.detail ?? `Error al cargar documentos (${response.status})`;
+      throw new Error(msg);
+    }
+
+    return data;
   },
 };

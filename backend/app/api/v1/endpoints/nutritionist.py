@@ -12,6 +12,7 @@ from app.db.models.nutritionist import DocumentType, NutritionistStatus
 from app.db.models.user import GenderEnum
 from app.schemas.nutritionist import (
     NutritionistCreateRequest,
+    NutritionistDocumentsResponse,
     NutritionistProfileResponse,
     NutritionistStatusUpdate,
 )
@@ -54,6 +55,25 @@ def approval_nutritionist(
     )
 
     return JSONResponse(status_code=200, content=resp.model_dump())
+
+
+@router.get("/{nutritionist_id}/documents", response_model=NutritionistDocumentsResponse)
+def get_nutritionist_documents(nutritionist_id: uuid.UUID, db: Session = Depends(get_db)):
+    profile = NutritionistService.get_by_id(db, nutritionist_id)
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Nutricionista no encontrado")
+
+    cv_url: str | None = None
+    senescyt_url: str | None = None
+
+    for document in profile.documents:
+        if document.document_type == DocumentType.cv:
+            cv_url = document.file_path
+        elif document.document_type == DocumentType.senescyt:
+            senescyt_url = document.file_path
+
+    return NutritionistDocumentsResponse(cv_url=cv_url, senescyt_url=senescyt_url)
 
 
 def save_pdf(file: UploadFile) -> dict:
