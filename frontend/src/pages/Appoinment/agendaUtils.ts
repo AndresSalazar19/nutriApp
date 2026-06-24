@@ -18,15 +18,14 @@ export interface CalendarAppointment {
   notes?: string;
 }
 
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 export const DAYS_SHORT = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
 
 /** Returns the Monday of the week containing `date` */
 export function getWeekStart(date: Date): Date {
   const d = new Date(date);
-  const day = d.getDay();                   // 0=Sun … 6=Sat
-  const diff = day === 0 ? -6 : 1 - day;   // shift to Monday
+  const day = d.getDay(); // 0=Sun … 6=Sat
+  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
@@ -46,9 +45,11 @@ export function formatMonthYear(date: Date): string {
 }
 
 export function isSameDay(a: Date, b: Date): boolean {
-  return a.getDate() === b.getDate() &&
+  return (
+    a.getDate() === b.getDate() &&
     a.getMonth() === b.getMonth() &&
-    a.getFullYear() === b.getFullYear();
+    a.getFullYear() === b.getFullYear()
+  );
 }
 
 export function pad(n: number): string {

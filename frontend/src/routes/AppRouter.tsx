@@ -11,14 +11,14 @@ const RegisterPage = lazy(() => import('../pages/Register/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('../components/auth/ForgotPasswordPage'));
 
 //NUTRIONIST
-const MainView          = lazy(() => import('../pages/MainView/MainView'));
-const HomePage          = lazy(() => import('../pages/MainView/HomePage'));
-const PatientsPage      = lazy(() => import('../pages/MainView/PatientsPage'));
-const AgendaPage        = lazy(() => import('../pages/Appoinment/AgendaPage'));
-const ReportsPage       = lazy(() => import('../pages/MainView/ReportsPage'));
-const ResourcesPage     = lazy(() => import('../pages/MainView/ResourcesPage'));
-const PlansPage         = lazy(() => import('../pages/MainView/PlansPage'));
-const MessagesPage      = lazy(() => import('../pages/MainView/MessagesPage'));
+const MainView = lazy(() => import('../pages/MainView/MainView'));
+const HomePage = lazy(() => import('../pages/MainView/HomePage'));
+const PatientsPage = lazy(() => import('../pages/MainView/PatientsPage'));
+const AgendaPage = lazy(() => import('../pages/Appoinment/AgendaPage'));
+const ReportsPage = lazy(() => import('../pages/MainView/ReportsPage'));
+const ResourcesPage = lazy(() => import('../pages/MainView/ResourcesPage'));
+const PlansPage = lazy(() => import('../pages/MainView/PlansPage'));
+const MessagesPage = lazy(() => import('../pages/MainView/MessagesPage'));
 
 //ADMIN
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
