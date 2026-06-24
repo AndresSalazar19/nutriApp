@@ -1,13 +1,16 @@
-from typing import Any, List
+from typing import Any
+
 from app.schemas.response import ApiResponse, StatusSchema
 
 
 def success_response(
     data: Any = None,
-    list_data: List[Any] | None = None,
+    list_data: list[Any] | None = None,
     operation: int = 1,
-    messages: List[str] = [],
+    messages: list[str] | None = None,
 ) -> ApiResponse:
+    """Build the standard successful API response envelope."""
+    messages = messages or []
     count = len(list_data) if list_data else (1 if data else 0)
     return ApiResponse(
         operation=operation,
@@ -20,10 +23,11 @@ def success_response(
 
 
 def error_response(
-    messages: List[str],
+    messages: list[str],
     status_code: int = 500,
     operation: int = 0,
 ) -> ApiResponse:
+    """Build the standard unsuccessful API response envelope."""
     return ApiResponse(
         operation=operation,
         status=StatusSchema(isSuccessfully=False, messages=messages),

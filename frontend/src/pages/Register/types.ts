@@ -10,9 +10,9 @@ export interface FormState {
   email: string;
   phone: string;
   birthDate: string;
-  gender: string; 
-  specialties: string;     
-  yearsExperience: string;  
+  gender: string;
+  specialties: string;
+  yearsExperience: string;
   password: string;
   confirmPassword: string;
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Modal }            from '../../components/ui/Modal';
-import { Button }           from '../../components/ui/Button';
+import { Modal } from '../../components/ui/Modal';
+import { Button } from '../../components/ui/Button';
 import { CalendarAppointment, ConsultType, DAYS_ES, pad } from '../../components/mock/agendaMock';
 
 // ─── View modal ───────────────────────────────────────────────────────────────
@@ -13,17 +13,18 @@ interface ViewModalProps {
 
 export function AppointmentViewModal({ appt, dayDate, onClose }: ViewModalProps) {
   const isVirtual = appt.type === 'Virtual';
-  const badge     = isVirtual ? 'bg-blue-100 text-blue-700'   : 'bg-green-100 text-green-700';
-  const dot       = isVirtual ? 'bg-blue-500'                 : 'bg-green-500';
+  const badge = isVirtual ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
+  const dot = isVirtual ? 'bg-blue-500' : 'bg-green-500';
 
   const dateStr = dayDate.toLocaleDateString('es-EC', {
-    weekday: 'long', day: 'numeric', month: 'long',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
   });
 
   return (
     <Modal isOpen onClose={onClose} title="Detalle de Cita" size="sm">
       <div className="space-y-4">
-
         {/* Patient */}
         <div className="flex items-center gap-3">
           <div
@@ -34,7 +35,9 @@ export function AppointmentViewModal({ appt, dayDate, onClose }: ViewModalProps)
           </div>
           <div>
             <p className="font-bold text-gray-800">{appt.patientName}</p>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 w-fit mt-0.5 ${badge}`}>
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 w-fit mt-0.5 ${badge}`}
+            >
               <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
               {appt.type}
             </span>
@@ -44,15 +47,21 @@ export function AppointmentViewModal({ appt, dayDate, onClose }: ViewModalProps)
         {/* Details */}
         <div className="bg-gray-50 rounded-xl p-4 space-y-2.5 text-sm">
           <Row icon="📅" label="Fecha" value={dateStr} />
-          <Row icon="🕐" label="Hora"
+          <Row
+            icon="🕐"
+            label="Hora"
             value={`${pad(appt.startHour)}:${pad(appt.startMin)} – ${pad(appt.endHour)}:${pad(appt.endMin)}`}
           />
           {appt.notes && <Row icon="📝" label="Notas" value={appt.notes} />}
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose} className="flex-1">Cerrar</Button>
-          <Button variant="primary" className="flex-1">Editar cita</Button>
+          <Button variant="outline" onClick={onClose} className="flex-1">
+            Cerrar
+          </Button>
+          <Button variant="primary" className="flex-1">
+            Editar cita
+          </Button>
         </div>
       </div>
     </Modal>
@@ -72,37 +81,45 @@ function Row({ icon, label, value }: { icon: string; label: string; value: strin
 // ─── New appointment modal ────────────────────────────────────────────────────
 
 interface NewModalProps {
-  onClose:  () => void;
-  onSave:   (appt: Omit<CalendarAppointment, 'id'>) => void;
+  onClose: () => void;
+  onSave: (appt: Omit<CalendarAppointment, 'id'>) => void;
   prefillDay?: number;
 }
 
 export function NewAppointmentModal({ onClose, onSave, prefillDay }: NewModalProps) {
   const [form, setForm] = useState({
     patientName: '',
-    startTime:   '09:00',
-    endTime:     '10:00',
-    dayIndex:    prefillDay ?? 0,
-    type:        'Presencial' as ConsultType,
-    notes:       '',
+    startTime: '09:00',
+    endTime: '10:00',
+    dayIndex: prefillDay ?? 0,
+    type: 'Presencial' as ConsultType,
+    notes: '',
   });
 
-  function update<K extends keyof typeof form>(k: K, v: typeof form[K]) {
-    setForm(f => ({ ...f, [k]: v }));
+  function update<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
+    setForm((f) => ({ ...f, [k]: v }));
   }
 
   function handleSave() {
     const [sh, sm] = form.startTime.split(':').map(Number);
     const [eh, em] = form.endTime.split(':').map(Number);
     onSave({
-      patientName:     form.patientName || 'Paciente',
-      patientInitials: (form.patientName.split(' ').map(w => w[0]).join('').slice(0, 2) || 'PA').toUpperCase(),
-      patientColor:    '#22c55e',
-      startHour: sh, startMin: sm,
-      endHour:   eh, endMin:   em,
-      dayIndex:  form.dayIndex,
-      type:      form.type,
-      notes:     form.notes,
+      patientName: form.patientName || 'Paciente',
+      patientInitials: (
+        form.patientName
+          .split(' ')
+          .map((w) => w[0])
+          .join('')
+          .slice(0, 2) || 'PA'
+      ).toUpperCase(),
+      patientColor: '#22c55e',
+      startHour: sh,
+      startMin: sm,
+      endHour: eh,
+      endMin: em,
+      dayIndex: form.dayIndex,
+      type: form.type,
+      notes: form.notes,
     });
     onClose();
   }
@@ -110,12 +127,11 @@ export function NewAppointmentModal({ onClose, onSave, prefillDay }: NewModalPro
   return (
     <Modal isOpen onClose={onClose} title="Nueva Cita" size="sm">
       <div className="space-y-4">
-
         <Field label="Paciente">
           <input
             type="text"
             value={form.patientName}
-            onChange={e => update('patientName', e.target.value)}
+            onChange={(e) => update('patientName', e.target.value)}
             placeholder="Nombre del paciente"
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
           />
@@ -124,23 +140,31 @@ export function NewAppointmentModal({ onClose, onSave, prefillDay }: NewModalPro
         <Field label="Día">
           <select
             value={form.dayIndex}
-            onChange={e => update('dayIndex', Number(e.target.value))}
+            onChange={(e) => update('dayIndex', Number(e.target.value))}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
           >
-            {DAYS_ES.map((d, i) => <option key={d} value={i}>{d}</option>)}
+            {DAYS_ES.map((d, i) => (
+              <option key={d} value={i}>
+                {d}
+              </option>
+            ))}
           </select>
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Hora inicio">
-            <input type="time" value={form.startTime}
-              onChange={e => update('startTime', e.target.value)}
+            <input
+              type="time"
+              value={form.startTime}
+              onChange={(e) => update('startTime', e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             />
           </Field>
           <Field label="Hora fin">
-            <input type="time" value={form.endTime}
-              onChange={e => update('endTime', e.target.value)}
+            <input
+              type="time"
+              value={form.endTime}
+              onChange={(e) => update('endTime', e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
             />
           </Field>
@@ -148,7 +172,7 @@ export function NewAppointmentModal({ onClose, onSave, prefillDay }: NewModalPro
 
         <Field label="Tipo">
           <div className="flex gap-2">
-            {(['Presencial', 'Virtual'] as ConsultType[]).map(t => (
+            {(['Presencial', 'Virtual'] as ConsultType[]).map((t) => (
               <button
                 key={t}
                 onClick={() => update('type', t)}
@@ -170,15 +194,19 @@ export function NewAppointmentModal({ onClose, onSave, prefillDay }: NewModalPro
           <input
             type="text"
             value={form.notes}
-            onChange={e => update('notes', e.target.value)}
+            onChange={(e) => update('notes', e.target.value)}
             placeholder="Control mensual, primera consulta..."
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
           />
         </Field>
 
         <div className="flex gap-2 pt-1">
-          <Button variant="outline" onClick={onClose} className="flex-1">Cancelar</Button>
-          <Button variant="primary" onClick={handleSave} className="flex-1">Guardar Cita</Button>
+          <Button variant="outline" onClick={onClose} className="flex-1">
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleSave} className="flex-1">
+            Guardar Cita
+          </Button>
         </div>
       </div>
     </Modal>

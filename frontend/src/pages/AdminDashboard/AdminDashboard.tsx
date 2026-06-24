@@ -17,10 +17,42 @@ import {
 } from 'react-icons/md';
 
 const statsCards = [
-  { icon: MdEmojiEvents, iconBg: 'bg-admin-light', label: 'Nutricionistas', value: '15', change: '↑ 2 este mes', changeType: 'positive' as const, accentColor: 'text-gray-900' },
-  { icon: MdPeople, iconBg: 'bg-admin-light', label: 'Clientes Totales', value: '347', change: '↑ 23 este mes', changeType: 'positive' as const, accentColor: 'text-gray-900' },
-  { icon: MdDescription, iconBg: 'bg-admin-light', label: 'Suscripciones Activas', value: '289', change: '83% tasa', changeType: 'neutral' as const, accentColor: 'text-gray-900' },
-  { icon: MdLocalFlorist, iconBg: 'bg-admin-light', label: 'Artículos Publicados', value: '128', change: '↑ 8 esta semana', changeType: 'positive' as const, accentColor: 'text-gray-900' },
+  {
+    icon: MdEmojiEvents,
+    iconBg: 'bg-admin-light',
+    label: 'Nutricionistas',
+    value: '15',
+    change: '↑ 2 este mes',
+    changeType: 'positive' as const,
+    accentColor: 'text-gray-900',
+  },
+  {
+    icon: MdPeople,
+    iconBg: 'bg-admin-light',
+    label: 'Clientes Totales',
+    value: '347',
+    change: '↑ 23 este mes',
+    changeType: 'positive' as const,
+    accentColor: 'text-gray-900',
+  },
+  {
+    icon: MdDescription,
+    iconBg: 'bg-admin-light',
+    label: 'Suscripciones Activas',
+    value: '289',
+    change: '83% tasa',
+    changeType: 'neutral' as const,
+    accentColor: 'text-gray-900',
+  },
+  {
+    icon: MdLocalFlorist,
+    iconBg: 'bg-admin-light',
+    label: 'Artículos Publicados',
+    value: '128',
+    change: '↑ 8 esta semana',
+    changeType: 'positive' as const,
+    accentColor: 'text-gray-900',
+  },
 ];
 
 interface Nutritionist {
@@ -34,27 +66,103 @@ interface Nutritionist {
 }
 
 const nutritionists: Nutritionist[] = [
-  { id: '1', initials: 'AS', color: 'bg-admin-light',  name: 'Dr. Alfonso Silva',     email: 'alfonso.silva@nutria.com',   specialty: 'Hipertensión', status: 'active'  },
-  { id: '2', initials: 'MG', color: 'bg-admin-light',   name: 'Dra. María García',     email: 'maria.garcia@nutria.com',    specialty: 'Diabetes',     status: 'active'  },
-  { id: '3', initials: 'JR', color: 'bg-admin-light',   name: 'Dr. Juan Rodríguez',    email: 'juan.rodriguez@nutria.com',  specialty: 'Obesidad',     status: 'active'  },
-  { id: '4', initials: 'LC', color: 'bg-admin-light',   name: 'Dra. Laura Castro',     email: 'laura.castro@nutria.com',    specialty: 'Deportiva',    status: 'pending' },
-  { id: '5', initials: 'PM', color: 'bg-admin-light', name: 'Dr. Pedro Morales',     email: 'pedro.morales@nutria.com',   specialty: 'Cardiología',  status: 'active'  },
-  { id: '6', initials: 'ST', color: 'bg-admin-light', name: 'Dra. Sara Torres',      email: 'sara.torres@nutria.com',     specialty: 'Pediatría',    status: 'active'  },
-  { id: '7', initials: 'DF', color: 'bg-admin-light',   name: 'Dr. Daniel Fernández',  email: 'daniel.fernandez@nutria.com',specialty: 'Renal',        status: 'active'  },
+  {
+    id: '1',
+    initials: 'AS',
+    color: 'bg-admin-light',
+    name: 'Dr. Alfonso Silva',
+    email: 'alfonso.silva@nutria.com',
+    specialty: 'Hipertensión',
+    status: 'active',
+  },
+  {
+    id: '2',
+    initials: 'MG',
+    color: 'bg-admin-light',
+    name: 'Dra. María García',
+    email: 'maria.garcia@nutria.com',
+    specialty: 'Diabetes',
+    status: 'active',
+  },
+  {
+    id: '3',
+    initials: 'JR',
+    color: 'bg-admin-light',
+    name: 'Dr. Juan Rodríguez',
+    email: 'juan.rodriguez@nutria.com',
+    specialty: 'Obesidad',
+    status: 'active',
+  },
+  {
+    id: '4',
+    initials: 'LC',
+    color: 'bg-admin-light',
+    name: 'Dra. Laura Castro',
+    email: 'laura.castro@nutria.com',
+    specialty: 'Deportiva',
+    status: 'pending',
+  },
+  {
+    id: '5',
+    initials: 'PM',
+    color: 'bg-admin-light',
+    name: 'Dr. Pedro Morales',
+    email: 'pedro.morales@nutria.com',
+    specialty: 'Cardiología',
+    status: 'active',
+  },
+  {
+    id: '6',
+    initials: 'ST',
+    color: 'bg-admin-light',
+    name: 'Dra. Sara Torres',
+    email: 'sara.torres@nutria.com',
+    specialty: 'Pediatría',
+    status: 'active',
+  },
+  {
+    id: '7',
+    initials: 'DF',
+    color: 'bg-admin-light',
+    name: 'Dr. Daniel Fernández',
+    email: 'daniel.fernandez@nutria.com',
+    specialty: 'Renal',
+    status: 'active',
+  },
 ];
 
 const quickActions = [
-  { icon: MdPersonAdd, title: 'Agregar Nutricionista', desc: 'Registrar nuevo profesional', iconBg: 'bg-admin-light' },
-  { icon: MdGroup, title: 'Gestionar Clientes', desc: 'Ver todos los usuarios', iconBg: 'bg-admin-light' },
-  { icon: MdLibraryBooks, title: 'Publicar Contenido', desc: 'Artículos y recursos', iconBg: 'bg-admin-light' },
-  { icon: MdBarChart, title: 'Ver Reportes', desc: 'Estadísticas del sistema', iconBg: 'bg-admin-light' },
+  {
+    icon: MdPersonAdd,
+    title: 'Agregar Nutricionista',
+    desc: 'Registrar nuevo profesional',
+    iconBg: 'bg-admin-light',
+  },
+  {
+    icon: MdGroup,
+    title: 'Gestionar Clientes',
+    desc: 'Ver todos los usuarios',
+    iconBg: 'bg-admin-light',
+  },
+  {
+    icon: MdLibraryBooks,
+    title: 'Publicar Contenido',
+    desc: 'Artículos y recursos',
+    iconBg: 'bg-admin-light',
+  },
+  {
+    icon: MdBarChart,
+    title: 'Ver Reportes',
+    desc: 'Estadísticas del sistema',
+    iconBg: 'bg-admin-light',
+  },
 ];
 
 const systemActivity = [
   { text: 'Nuevo nutricionista registrado: Dr. Daniel Fernández', time: 'Hace 2h' },
-  { text: '8 nuevos artículos publicados en la biblioteca',        time: 'Hace 5h' },
-  { text: '23 nuevos clientes registrados esta semana',            time: 'Hoy'     },
-  { text: 'Sistema actualizado a versión 2.5.1',                   time: 'Ayer'    },
+  { text: '8 nuevos artículos publicados en la biblioteca', time: 'Hace 5h' },
+  { text: '23 nuevos clientes registrados esta semana', time: 'Hoy' },
+  { text: 'Sistema actualizado a versión 2.5.1', time: 'Ayer' },
 ];
 
 const columns: Column<Nutritionist>[] = [
@@ -92,10 +200,12 @@ function AdminDashboard() {
       {/* Top bar */}
       <AdminTopBar title="Panel de Administración" />
 
-<div className="bg-admin-bg px-8 pb-8 pt-2">
-          {/* Bienvenida */}
-          <p className="text-admin-dark font-medium mb-0.5">Bienvenido al panel administrativo</p>
-          <p className="text-gray-500 text-sm mb-6">Gestiona nutricionistas, clientes y contenido de la plataforma</p>
+      <div className="bg-admin-bg px-8 pb-8 pt-2">
+        {/* Bienvenida */}
+        <p className="text-admin-dark font-medium mb-0.5">Bienvenido al panel administrativo</p>
+        <p className="text-gray-500 text-sm mb-6">
+          Gestiona nutricionistas, clientes y contenido de la plataforma
+        </p>
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-7">
@@ -110,12 +220,13 @@ function AdminDashboard() {
 
         {/* Grid inferior */}
         <div className="grid grid-cols-5 gap-6">
-
           {/* Tabla nutricionistas — 3 columnas */}
           <div className="col-span-3 bg-white rounded-xl border-none shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-gray-800 text-base">Nutricionistas Recientes</h2>
-              <button className="text-gray-900 font-medium text-sm hover:underline">Ver todos →</button>
+              <button className="text-gray-900 font-medium text-sm hover:underline">
+                Ver todos →
+              </button>
             </div>
             <DataTable
               columns={columns}
@@ -128,7 +239,6 @@ function AdminDashboard() {
 
           {/* Columna derecha — 2 columnas */}
           <div className="col-span-2 flex flex-col gap-5">
-
             {/* Acciones rápidas */}
             <div className="bg-white rounded-xl border-none shadow-sm p-5">
               <h2 className="font-bold text-gray-800 text-base mb-4">Acciones Rápidas</h2>
@@ -138,11 +248,15 @@ function AdminDashboard() {
                     key={action.title}
                     className="flex items-start gap-3 p-3 rounded-lg bg-admin-bg hover:bg-admin-light transition text-left"
                   >
-                    <div className={`w-9 h-9 ${action.iconBg} rounded-full flex items-center justify-center flex-shrink-0`}>
+                    <div
+                      className={`w-9 h-9 ${action.iconBg} rounded-full flex items-center justify-center flex-shrink-0`}
+                    >
                       <action.icon className="text-xl text-admin-dark" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900 text-xs leading-tight">{action.title}</p>
+                      <p className="font-semibold text-gray-900 text-xs leading-tight">
+                        {action.title}
+                      </p>
                       <p className="text-gray-500 text-xs">{action.desc}</p>
                     </div>
                   </button>
@@ -165,7 +279,6 @@ function AdminDashboard() {
                 ))}
               </ul>
             </div>
-
           </div>
         </div>
       </div>

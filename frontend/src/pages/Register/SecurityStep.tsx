@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { StepProps, FormErrors } from './types';
 import { SectionTitle } from './SectionTitle';
 import { InputField } from './InputField';
-import {
-  FaCheckCircle,
-} from 'react-icons/fa';
+import { FaCheckCircle } from 'react-icons/fa';
 
 import { FiCircle } from 'react-icons/fi';
 import { PasswordVisibilityToggle } from '../../components/PasswordVisibilityToggle';
@@ -15,7 +13,13 @@ export interface SecurityStepProps extends StepProps {
   errors: FormErrors;
 }
 
-export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, acceptTerms, setAcceptTerms, errors }) => {
+export const SecurityStep: React.FC<SecurityStepProps> = ({
+  form,
+  update,
+  acceptTerms,
+  setAcceptTerms,
+  errors,
+}) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -43,33 +47,28 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
       <div className="mb-4 bg-gray-50 rounded-lg p-3 border border-gray-100">
         <p className="text-xs text-gray-600 font-semibold mb-2">La contraseña debe contener:</p>
         <ul className="text-xs space-y-1">
-          <li className={`flex items-center gap-2 ${hasMinLength ? 'text-nutri-medium' : 'text-gray-600'}`}>
-              {hasMinLength ? (
-                <FaCheckCircle size={14} />
-              ) : (
-                <FiCircle size={14} />
-              )} Mínimo 8 caracteres
+          <li
+            className={`flex items-center gap-2 ${hasMinLength ? 'text-nutri-medium' : 'text-gray-600'}`}
+          >
+            {hasMinLength ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Mínimo 8
+            caracteres
           </li>
-          <li className={`flex items-center gap-2 ${hasUppercase ? 'text-nutri-medium' : 'text-gray-600'}`}>
-            {hasUppercase ? (
-              <FaCheckCircle size={14} />
-            ) : (
-              <FiCircle size={14} />
-            )} Al menos una letra mayúscula
+          <li
+            className={`flex items-center gap-2 ${hasUppercase ? 'text-nutri-medium' : 'text-gray-600'}`}
+          >
+            {hasUppercase ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Al menos una letra
+            mayúscula
           </li>
-          <li className={`flex items-center gap-2 ${hasNumber ? 'text-nutri-medium' : 'text-gray-600'}`}>
-            {hasNumber ? (
-              <FaCheckCircle size={14} />
-            ) : (
-              <FiCircle size={14} />
-            )} Al menos un número
+          <li
+            className={`flex items-center gap-2 ${hasNumber ? 'text-nutri-medium' : 'text-gray-600'}`}
+          >
+            {hasNumber ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Al menos un número
           </li>
-          <li className={`flex items-center gap-2 ${hasSpecialChar ? 'text-nutri-medium' : 'text-gray-600'}`}>
-            {hasSpecialChar ? (
-              <FaCheckCircle size={14} />
-            ) : (
-              <FiCircle size={14} />
-            )} Un carácter especial (Ej: !@#$%)
+          <li
+            className={`flex items-center gap-2 ${hasSpecialChar ? 'text-nutri-medium' : 'text-gray-600'}`}
+          >
+            {hasSpecialChar ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Un carácter
+            especial (Ej: !@#$%)
           </li>
         </ul>
       </div>
@@ -124,11 +123,24 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
           type="checkbox"
           id="terms"
           checked={acceptTerms}
-          onChange={e => setAcceptTerms(e.target.checked)}
+          onChange={(e) => setAcceptTerms(e.target.checked)}
           className="accent-nutri-medium w-4 h-4 cursor-pointer"
         />
         <label htmlFor="terms" className="text-xs text-gray-600 cursor-pointer">
-          Acepto los <button type="button" className="text-nutri-medium font-semibold hover:text-nutri-dark hover:underline bg-transparent border-none p-0 cursor-pointer">Términos de Servicio</button> y <button type="button" className="text-nutri-medium font-semibold hover:text-nutri-dark hover:underline bg-transparent border-none p-0 cursor-pointer">Política de Privacidad</button>
+          Acepto los{' '}
+          <button
+            type="button"
+            className="text-nutri-medium font-semibold hover:text-nutri-dark hover:underline bg-transparent border-none p-0 cursor-pointer"
+          >
+            Términos de Servicio
+          </button>{' '}
+          y{' '}
+          <button
+            type="button"
+            className="text-nutri-medium font-semibold hover:text-nutri-dark hover:underline bg-transparent border-none p-0 cursor-pointer"
+          >
+            Política de Privacidad
+          </button>
         </label>
       </div>
       {errors.acceptTerms && (

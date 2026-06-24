@@ -1,10 +1,13 @@
+import uuid
+from typing import Literal
+
 from pydantic import BaseModel
+
 from app.db.models.nutritionist import NutritionistStatus
 from app.db.models.user import GenderEnum
-from app.schemas.user  import UserResponse
-from typing import Literal
 from app.schemas.catalog import SpecialistResponse
-import uuid
+from app.schemas.user import UserResponse
+
 
 class NutritionistProfileResponse(BaseModel):
     id: uuid.UUID
@@ -22,9 +25,11 @@ class NutritionistProfileResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class NutritionistStatusUpdate(BaseModel):
     status: Literal[NutritionistStatus.verified, NutritionistStatus.rejected]
     verified_by: uuid.UUID
+
 
 class NutritionistCreateRequest(BaseModel):
     email: str
@@ -38,6 +43,7 @@ class NutritionistCreateRequest(BaseModel):
     specialty_id: int
     years_experience: int | None = None
     license_number: str | None = None
+
 
 class NutritionistDocumentCreate(BaseModel):
     document_type: str  # "cv" o "senescyt"

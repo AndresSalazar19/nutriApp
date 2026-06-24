@@ -1,12 +1,6 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
-import {
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
@@ -14,7 +8,6 @@ import { COLORS } from '@/constants/colors';
 const { height } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
-
   const router = useRouter();
 
   const handleLogin = () => {
@@ -30,7 +23,6 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-
       {/* Panel superior verde */}
       <View style={styles.topPanel}>
         {/* Logo */}
@@ -65,7 +57,6 @@ export default function WelcomeScreen() {
           <Text style={styles.termsLink}>Términos y Condiciones</Text>
         </Text>
       </View>
-
     </SafeAreaView>
   );
 }
@@ -114,8 +105,8 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   featureListWrapper: {
-  width: '100%',
-  alignItems: 'center',
+    width: '100%',
+    alignItems: 'center',
   },
   featureList: {
     gap: 12,
@@ -216,5 +207,3 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
-
-

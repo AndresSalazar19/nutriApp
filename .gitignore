@@ -1,7 +1,13 @@
 # Python
 backend/venv/
+venv/
 backend/__pycache__/
+**/__pycache__/
 backend/.env
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.coverage
+backend/htmlcov/
 *.pyc
 *.pyo
 *.pyd
@@ -10,9 +16,14 @@ backend/.env
 frontend/node_modules/
 **/node_modules/
 frontend/build/
+mobile/dist/
+.expo/
 .eslintcache
 .env
 .claude/
-__pycache__/
-venv/
-*.pyc
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

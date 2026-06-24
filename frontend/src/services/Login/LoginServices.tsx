@@ -1,6 +1,6 @@
-import { ApiResponse } from "../../models/ApiResponse";
-import { LoginData } from "./LoginData";
-import { API_URL } from "../../config/api";
+import { ApiResponse } from '../../models/ApiResponse';
+import { LoginData } from './LoginData';
+import { API_URL } from '../../config/api';
 
 export const RegistrerServices = {
   async iniciarSesion(email: string, password: string): Promise<ApiResponse<LoginData>> {
@@ -15,7 +15,7 @@ export const RegistrerServices = {
       const data: ApiResponse<LoginData> = await response.json();
       return data;
     } catch (error) {
-      console.error("Error en RegistrerServices.iniciarSesion:", error);
+      console.error('Error en RegistrerServices.iniciarSesion:', error);
       throw error;
     }
   },
@@ -42,7 +42,7 @@ export const RegistrerServices = {
 
       return data;
     } catch (error) {
-      console.error("Error en RegistrerServices.cambiarContrasena:", error);
+      console.error('Error en RegistrerServices.cambiarContrasena:', error);
       throw error;
     }
   },

@@ -1,20 +1,31 @@
 import React, { useState } from 'react';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
-import { Avatar }             from '../../components/ui/Avatar';
-import { LineChart }          from '../../components/charts/LineChart';
-import { MacroBarChart }      from '../../components/charts/MacroBarChart';
+import { Avatar } from '../../components/ui/Avatar';
+import { LineChart } from '../../components/charts/LineChart';
+import { MacroBarChart } from '../../components/charts/MacroBarChart';
 import {
-  REPORT_PATIENTS, getReportData,
-  RANGE_OPTIONS, RangeOption,
-  CorrelationCard, WeeklyActivity,
+  REPORT_PATIENTS,
+  getReportData,
+  RANGE_OPTIONS,
+  RangeOption,
+  CorrelationCard,
+  WeeklyActivity,
 } from '../../components/mock/reportsMock';
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
 
 function StatCard({
-  icon, label, value, sub, subColor = 'text-gray-500',
+  icon,
+  label,
+  value,
+  sub,
+  subColor = 'text-gray-500',
 }: {
-  icon: string; label: string; value: string; sub?: string; subColor?: string;
+  icon: string;
+  label: string;
+  value: string;
+  sub?: string;
+  subColor?: string;
 }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5">
@@ -32,15 +43,16 @@ function StatCard({
 
 function CorrelCard({ card }: { card: CorrelationCard }) {
   const isPositive = card.positive;
-  const bg   = isPositive ? 'bg-nutri-bg border-nutri-light'  : 'bg-admin-bg border-admin-light';
-  const text = isPositive ? 'text-nutri-dark'               : 'text-admin-dark';
-  const val  = isPositive ? 'text-nutri-medium'             : 'text-admin-accent';
+  const bg = isPositive ? 'bg-nutri-bg border-nutri-light' : 'bg-admin-bg border-admin-light';
+  const text = isPositive ? 'text-nutri-dark' : 'text-admin-dark';
+  const val = isPositive ? 'text-nutri-medium' : 'text-admin-accent';
 
   return (
     <div className={`rounded-xl border p-3.5 ${bg}`}>
       <p className={`text-xs font-semibold mb-2 ${text}`}>{card.label}</p>
       <p className={`text-3xl font-bold mb-1 ${val}`}>
-        {card.value > 0 ? '+' : ''}{card.value.toFixed(2)}
+        {card.value > 0 ? '+' : ''}
+        {card.value.toFixed(2)}
       </p>
       {card.description.split('\n').map((line, i) => (
         <p key={i} className="text-xs leading-tight text-gray-600">
@@ -60,7 +72,10 @@ function ActivityRow({ week, days, goal }: WeeklyActivity) {
     <div className="flex items-center gap-3">
       <span className="text-xs text-gray-500 w-10 flex-shrink-0">{week}</span>
       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+        <div
+          className={`h-full rounded-full ${color} transition-all`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
       <span className="text-xs text-gray-500 w-12 text-right flex-shrink-0">{days} días</span>
     </div>
@@ -69,8 +84,16 @@ function ActivityRow({ week, days, goal }: WeeklyActivity) {
 
 // ─── Section card ─────────────────────────────────────────────────────────────
 
-function Section({ title, subtitle, children, action }: {
-  title: string; subtitle?: string; children: React.ReactNode; action?: React.ReactNode;
+function Section({
+  title,
+  subtitle,
+  children,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5">
@@ -90,50 +113,57 @@ function Section({ title, subtitle, children, action }: {
 
 export default function ReportsPage() {
   const [selectedId, setSelectedId] = useState(REPORT_PATIENTS[0].id);
-  const [range,      setRange]      = useState<RangeOption>('Últimos 3 meses');
+  const [range, setRange] = useState<RangeOption>('Últimos 3 meses');
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [rangeOpen,    setRangeOpen]    = useState(false);
+  const [rangeOpen, setRangeOpen] = useState(false);
 
-  const patient = REPORT_PATIENTS.find(p => p.id === selectedId)!;
-  const data    = getReportData(selectedId);
-
-  const adherenceColor =
-    data.adherence >= 80 ? 'text-nutri-dark' :
-    data.adherence >= 60 ? 'text-gray-500' : 'text-admin-accent';
+  const patient = REPORT_PATIENTS.find((p) => p.id === selectedId)!;
+  const data = getReportData(selectedId);
 
   const adherenceChangeColor = data.adherenceChange >= 0 ? 'text-nutri-dark' : 'text-admin-accent';
 
   return (
     <NutritionistLayout>
-
       {/* ── Top bar ── */}
       <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Análisis de Progreso - Pacientes</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Visualización de métricas y tendencias de salud</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Visualización de métricas y tendencias de salud
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Patient selector */}
           <div className="relative">
             <button
-              onClick={() => { setDropdownOpen(v => !v); setRangeOpen(false); }}
+              onClick={() => {
+                setDropdownOpen((v) => !v);
+                setRangeOpen(false);
+              }}
               className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg
                 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
             >
               <Avatar initials={patient.initials} color={patient.color} size="sm" />
               {patient.name}
               <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
 
             {dropdownOpen && (
               <div className="absolute right-0 mt-1 w-52 bg-white rounded-xl border border-gray-100 shadow-xl z-20 py-1">
-                {REPORT_PATIENTS.map(p => (
+                {REPORT_PATIENTS.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => { setSelectedId(p.id); setDropdownOpen(false); }}
+                    onClick={() => {
+                      setSelectedId(p.id);
+                      setDropdownOpen(false);
+                    }}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition
                       ${p.id === selectedId ? 'text-green-700 font-semibold' : 'text-gray-700'}`}
                   >
@@ -148,22 +178,32 @@ export default function ReportsPage() {
           {/* Range selector */}
           <div className="relative">
             <button
-              onClick={() => { setRangeOpen(v => !v); setDropdownOpen(false); }}
+              onClick={() => {
+                setRangeOpen((v) => !v);
+                setDropdownOpen(false);
+              }}
               className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg
                 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
             >
               📅 {range}
               <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
 
             {rangeOpen && (
               <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl border border-gray-100 shadow-xl z-20 py-1">
-                {RANGE_OPTIONS.map(r => (
+                {RANGE_OPTIONS.map((r) => (
                   <button
                     key={r}
-                    onClick={() => { setRange(r); setRangeOpen(false); }}
+                    onClick={() => {
+                      setRange(r);
+                      setRangeOpen(false);
+                    }}
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition
                       ${r === range ? 'text-green-700 font-semibold' : 'text-gray-700'}`}
                   >
@@ -185,34 +225,40 @@ export default function ReportsPage() {
       {(dropdownOpen || rangeOpen) && (
         <div
           className="fixed inset-0 z-10"
-          onClick={() => { setDropdownOpen(false); setRangeOpen(false); }}
+          onClick={() => {
+            setDropdownOpen(false);
+            setRangeOpen(false);
+          }}
         />
       )}
 
       <div className="px-6 py-4 space-y-3">
-
         {/* ── Stat cards ── */}
         <div className="grid grid-cols-4 gap-4">
           <StatCard
-            icon="⚖️" label="Pérdida de Peso"
+            icon="⚖️"
+            label="Pérdida de Peso"
             value={`-${data.weightLost} kg`}
             sub={`↓ ${data.weightLostPct}% del peso inicial`}
             subColor="text-green-500"
           />
           <StatCard
-            icon="❤️" label="Presión Arterial Actual"
+            icon="❤️"
+            label="Presión Arterial Actual"
             value={`${data.bloodPressureSys}/${data.bloodPressureDia}`}
             sub={data.bloodPressureNote}
             subColor={data.bloodPressureSys < 130 ? 'text-green-500' : 'text-orange-500'}
           />
           <StatCard
-            icon="📋" label="Adherencia al Plan"
+            icon="📋"
+            label="Adherencia al Plan"
             value={`${data.adherence}%`}
             sub={`${data.adherenceChange >= 0 ? '↑' : '↓'} ${Math.abs(data.adherenceChange)}% vs mes anterior`}
             subColor={adherenceChangeColor}
           />
           <StatCard
-            icon="🏃" label="Actividad Física"
+            icon="🏃"
+            label="Actividad Física"
             value={`${data.activityDays} días/semana`}
             sub={`→ ${data.activityNote} · Meta: ${data.activityGoal} días/sem`}
             subColor="text-gray-500"
@@ -221,19 +267,17 @@ export default function ReportsPage() {
 
         {/* ── Charts row 1: Weight + Blood Pressure ── */}
         <div className="grid grid-cols-2 gap-5">
-
-          <Section
-            title="Evolución del Peso"
-            subtitle="Octubre 2025 – Enero 2026"
-          >
+          <Section title="Evolución del Peso" subtitle="Octubre 2025 – Enero 2026">
             <LineChart
               height={120}
-              series={[{
-                data:        data.weightHistory,
-                color:       '#16a34a',
-                label:       'Peso (kg)',
-                fillOpacity: 0.1,
-              }]}
+              series={[
+                {
+                  data: data.weightHistory,
+                  color: '#16a34a',
+                  label: 'Peso (kg)',
+                  fillOpacity: 0.1,
+                },
+              ]}
               goalLine={{ value: 70, color: '#f59e0b', label: 'Meta: 70 kg' }}
             />
             <div className="flex items-center gap-4 mt-2 text-xs">
@@ -241,20 +285,23 @@ export default function ReportsPage() {
                 <span className="w-3 h-0.5 bg-green-600 inline-block rounded" /> Peso (kg)
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 bg-amber-400 inline-block rounded border-dashed" /> Zona meta
+                <span className="w-3 h-0.5 bg-amber-400 inline-block rounded border-dashed" /> Zona
+                meta
               </span>
             </div>
           </Section>
 
-          <Section
-            title="Evolución de Presión Arterial"
-            subtitle="Sistólica y Diastólica (mmHg)"
-          >
+          <Section title="Evolución de Presión Arterial" subtitle="Sistólica y Diastólica (mmHg)">
             <LineChart
               height={120}
               series={[
-                { data: data.systolicHistory,  color: '#ef4444', label: 'Sistólica'  },
-                { data: data.diastolicHistory, color: '#f97316', label: 'Diastólica', dashed: false },
+                { data: data.systolicHistory, color: '#ef4444', label: 'Sistólica' },
+                {
+                  data: data.diastolicHistory,
+                  color: '#f97316',
+                  label: 'Diastólica',
+                  dashed: false,
+                },
               ]}
               goalLine={{ value: 120, color: '#22c55e', label: 'Normal' }}
             />
@@ -271,7 +318,6 @@ export default function ReportsPage() {
 
         {/* ── Charts row 2: Macros + Correlations ── */}
         <div className="grid grid-cols-2 gap-5">
-
           <Section
             title="Distribución de Macronutrientes"
             subtitle="Promedio consumido vs. recomendado (últimos 30 días)"
@@ -299,12 +345,11 @@ export default function ReportsPage() {
           }
         >
           <div className="space-y-3 mt-1">
-            {data.weeklyActivity.map(w => (
+            {data.weeklyActivity.map((w) => (
               <ActivityRow key={w.week} {...w} />
             ))}
           </div>
         </Section>
-
       </div>
     </NutritionistLayout>
   );

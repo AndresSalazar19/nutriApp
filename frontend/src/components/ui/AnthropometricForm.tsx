@@ -40,7 +40,14 @@ interface AnthropometricFormProps {
 
 // ─── Helpers de UI (siguen el estilo del proyecto) ──────────────────────────────
 
-function Field({ label, value, onChange, unit, placeholder, type = 'number' }: {
+function Field({
+  label,
+  value,
+  onChange,
+  unit,
+  placeholder,
+  type = 'number',
+}: {
   label: string;
   value: string;
   onChange: (v: string) => void;
@@ -93,16 +100,25 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
   const [bioFile, setBioFile] = useState<File | null>(null);
 
   const [skinfolds, setSkinfolds] = useState<SkinfoldData>({
-    triceps: '', subscapular: '', suprailiac: '', abdominal: '', thigh: '',
+    triceps: '',
+    subscapular: '',
+    suprailiac: '',
+    abdominal: '',
+    thigh: '',
   });
   const [circumferences, setCircumferences] = useState<CircumferenceData>({
-    waist: '', hip: '', arm: '', thigh: '', calf: '', neck: '',
+    waist: '',
+    hip: '',
+    arm: '',
+    thigh: '',
+    calf: '',
+    neck: '',
   });
 
   const updateSkinfold = (field: keyof SkinfoldData, value: string) =>
-    setSkinfolds(prev => ({ ...prev, [field]: value }));
+    setSkinfolds((prev) => ({ ...prev, [field]: value }));
   const updateCircumference = (field: keyof CircumferenceData, value: string) =>
-    setCircumferences(prev => ({ ...prev, [field]: value }));
+    setCircumferences((prev) => ({ ...prev, [field]: value }));
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -125,7 +141,6 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
 
   return (
     <div className="flex flex-col gap-5 max-h-[70vh] overflow-y-auto pr-2">
-
       {/* Encabezado contextual */}
       <p className="text-sm text-gray-500">
         Registrando medición para <span className="font-semibold text-gray-700">{patientName}</span>
@@ -160,8 +175,20 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
           </label>
 
           <div className="grid grid-cols-2 gap-3 mt-4">
-            <Field label="% Grasa" value={fatPercent} onChange={setFatPercent} unit="%" placeholder="32" />
-            <Field label="Masa Muscular" value={muscleMass} onChange={setMuscleMass} unit="kg" placeholder="45" />
+            <Field
+              label="% Grasa"
+              value={fatPercent}
+              onChange={setFatPercent}
+              unit="%"
+              placeholder="32"
+            />
+            <Field
+              label="Masa Muscular"
+              value={muscleMass}
+              onChange={setMuscleMass}
+              unit="kg"
+              placeholder="45"
+            />
           </div>
         </div>
       </div>
@@ -170,11 +197,36 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
       <div>
         <SectionTitle icon="🤏">Pliegues Cutáneos</SectionTitle>
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Tríceps" value={skinfolds.triceps} onChange={(v) => updateSkinfold('triceps', v)} unit="mm" />
-          <Field label="Subescapular" value={skinfolds.subscapular} onChange={(v) => updateSkinfold('subscapular', v)} unit="mm" />
-          <Field label="Suprailíaco" value={skinfolds.suprailiac} onChange={(v) => updateSkinfold('suprailiac', v)} unit="mm" />
-          <Field label="Abdominal" value={skinfolds.abdominal} onChange={(v) => updateSkinfold('abdominal', v)} unit="mm" />
-          <Field label="Muslo" value={skinfolds.thigh} onChange={(v) => updateSkinfold('thigh', v)} unit="mm" />
+          <Field
+            label="Tríceps"
+            value={skinfolds.triceps}
+            onChange={(v) => updateSkinfold('triceps', v)}
+            unit="mm"
+          />
+          <Field
+            label="Subescapular"
+            value={skinfolds.subscapular}
+            onChange={(v) => updateSkinfold('subscapular', v)}
+            unit="mm"
+          />
+          <Field
+            label="Suprailíaco"
+            value={skinfolds.suprailiac}
+            onChange={(v) => updateSkinfold('suprailiac', v)}
+            unit="mm"
+          />
+          <Field
+            label="Abdominal"
+            value={skinfolds.abdominal}
+            onChange={(v) => updateSkinfold('abdominal', v)}
+            unit="mm"
+          />
+          <Field
+            label="Muslo"
+            value={skinfolds.thigh}
+            onChange={(v) => updateSkinfold('thigh', v)}
+            unit="mm"
+          />
         </div>
       </div>
 
@@ -182,12 +234,42 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
       <div>
         <SectionTitle icon="⭕">Circunferencias</SectionTitle>
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Cintura" value={circumferences.waist} onChange={(v) => updateCircumference('waist', v)} unit="cm" />
-          <Field label="Cadera" value={circumferences.hip} onChange={(v) => updateCircumference('hip', v)} unit="cm" />
-          <Field label="Brazo" value={circumferences.arm} onChange={(v) => updateCircumference('arm', v)} unit="cm" />
-          <Field label="Muslo" value={circumferences.thigh} onChange={(v) => updateCircumference('thigh', v)} unit="cm" />
-          <Field label="Pantorrilla" value={circumferences.calf} onChange={(v) => updateCircumference('calf', v)} unit="cm" />
-          <Field label="Cuello" value={circumferences.neck} onChange={(v) => updateCircumference('neck', v)} unit="cm" />
+          <Field
+            label="Cintura"
+            value={circumferences.waist}
+            onChange={(v) => updateCircumference('waist', v)}
+            unit="cm"
+          />
+          <Field
+            label="Cadera"
+            value={circumferences.hip}
+            onChange={(v) => updateCircumference('hip', v)}
+            unit="cm"
+          />
+          <Field
+            label="Brazo"
+            value={circumferences.arm}
+            onChange={(v) => updateCircumference('arm', v)}
+            unit="cm"
+          />
+          <Field
+            label="Muslo"
+            value={circumferences.thigh}
+            onChange={(v) => updateCircumference('thigh', v)}
+            unit="cm"
+          />
+          <Field
+            label="Pantorrilla"
+            value={circumferences.calf}
+            onChange={(v) => updateCircumference('calf', v)}
+            unit="cm"
+          />
+          <Field
+            label="Cuello"
+            value={circumferences.neck}
+            onChange={(v) => updateCircumference('neck', v)}
+            unit="cm"
+          />
         </div>
       </div>
 
@@ -205,12 +287,13 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
 
       {/* ── Acciones ── */}
       <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
-        <Button variant="outline" onClick={onCancel}>Cancelar</Button>
+        <Button variant="outline" onClick={onCancel}>
+          Cancelar
+        </Button>
         <Button variant="primary" icon={<span>💾</span>} onClick={handleSubmit}>
           Guardar Medición
         </Button>
       </div>
-
     </div>
   );
 }

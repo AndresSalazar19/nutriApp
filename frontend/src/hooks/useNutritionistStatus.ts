@@ -27,7 +27,7 @@ export function useNutritionistStatus(): NutritionistStatusState {
     hasFetched.current = true;
 
     NutritionistService.getStatus(user.userId)
-      .then(res => {
+      .then((res) => {
         if (res.status.isSuccessfully) {
           setState({ status: res.data.status, loading: false, error: null });
         } else {

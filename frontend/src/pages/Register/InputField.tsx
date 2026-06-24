@@ -12,7 +12,15 @@ interface InputFieldProps extends StepProps {
 }
 
 export const InputField = ({
-  label, field, type = 'text', placeholder, className = '', form, update, error, inputProps,
+  label,
+  field,
+  type = 'text',
+  placeholder,
+  className = '',
+  form,
+  update,
+  error,
+  inputProps,
 }: InputFieldProps) => (
   <div className={`mb-4 ${className}`}>
     <label className="block text-xs font-semibold text-gray-700 mb-1">{label}</label>
@@ -20,7 +28,7 @@ export const InputField = ({
       type={type}
       placeholder={placeholder}
       value={form[field]}
-      onChange={e => update(field, e.target.value)}
+      onChange={(e) => update(field, e.target.value)}
       className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none transition bg-white ${
         error
           ? 'border-admin-accent focus:ring-1 focus:ring-admin-accent focus:border-admin-accent text-admin-accent'

@@ -6,7 +6,6 @@ import { SecurityStep } from './SecurityStep';
 import { useFormValidation } from './useFormValidation';
 import { RegistrerServices } from '../../services/Registrer/RegisterServices';
 
-
 function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,8 +30,8 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
   // Marks field as touched and updates state
   const update = (field: keyof FormState, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-    setTouched(prev => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setTouched((prev) => {
       const next = new Set(prev);
       next.add(field);
       return next;
@@ -41,16 +40,16 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
   // Only pass errors for fields the user has already interacted with
   const displayErrors: FormErrors = Object.fromEntries(
-    Object.entries(errors).filter(([field]) => touched.has(field as keyof FormState))
+    Object.entries(errors).filter(([field]) => touched.has(field as keyof FormState)),
   );
 
   const nextStep = () => {
     setTouched(new Set());
-    setStep(prev => Math.min(prev + 1, 3));
+    setStep((prev) => Math.min(prev + 1, 3));
   };
   const prevStep = () => {
     setTouched(new Set());
-    setStep(prev => Math.max(prev - 1, 1));
+    setStep((prev) => Math.max(prev - 1, 1));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,7 +104,6 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
       } else {
         onGoToLogin();
       }
-
     } catch (error) {
       console.error('❌ Error al registrar nutricionista:', error);
       const message = error instanceof Error ? error.message : 'Error desconocido';
@@ -117,7 +115,6 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start py-8 px-4">
-
       {/* Botón Volver */}
       <div className="w-full max-w-xl mb-4">
         <button
@@ -131,7 +128,6 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
       {/* Contenedor Principal */}
       <div className="bg-white rounded-2xl shadow-md w-full max-w-xl px-6 md:px-10 py-8">
-
         {/* Encabezado */}
         <div className="flex flex-col items-center mb-6">
           <div className="w-12 h-12 bg-nutri-medium rounded-full flex items-center justify-center mb-3 shadow">
@@ -143,7 +139,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
         {/* Barra de Progreso */}
         <div className="flex justify-between mb-8 gap-2">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div
               key={i}
               className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
@@ -155,10 +151,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
         {/* Formulario */}
         <form onSubmit={handleSubmit}>
-
-          {step === 1 && (
-            <PersonalInfoStep form={form} update={update} errors={displayErrors} />
-          )}
+          {step === 1 && <PersonalInfoStep form={form} update={update} errors={displayErrors} />}
 
           {step === 2 && (
             <ProfessionalInfoStep
@@ -199,12 +192,9 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
               disabled={isSubmitting || !isStepValid}
               className="flex-1 bg-nutri-medium hover:bg-nutri-dark text-white font-bold py-3 px-8 rounded-xl transition text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
             >
-              {isSubmitting
-                ? 'Procesando...'
-                : (step === 3 ? 'Finalizar Registro' : 'Continuar')}
+              {isSubmitting ? 'Procesando...' : step === 3 ? 'Finalizar Registro' : 'Continuar'}
             </button>
           </div>
-
         </form>
 
         {/* Enlace al Login */}
@@ -221,7 +211,6 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
             </button>
           </p>
         </div>
-
       </div>
     </div>
   );

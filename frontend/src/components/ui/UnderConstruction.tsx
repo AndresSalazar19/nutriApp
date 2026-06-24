@@ -23,7 +23,8 @@ const UnderConstruction: React.FC = () => {
 
         <h2 className="text-2xl font-semibold text-slate-900 mb-3">Sección en Desarrollo</h2>
         <p className="text-base text-slate-500">
-          Estamos trabajando en esta sección para brindarte las mejores herramientas. ¡Estará disponible muy pronto!
+          Estamos trabajando en esta sección para brindarte las mejores herramientas. ¡Estará
+          disponible muy pronto!
         </p>
       </div>
     </div>

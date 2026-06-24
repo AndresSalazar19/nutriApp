@@ -5,25 +5,30 @@ import { SearchInput } from '../../components/ui/SearchInput';
 import { FilterTabs } from '../../components/ui/FilterTabs';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ArticleCard, Article } from '../../components/ui/Articlecard';
-import { ContentService, ContentItem, CONTENT_CATEGORIES, CONTENT_TYPES } from '../../services/Content/ContentService';
+import {
+  ContentService,
+  ContentItem,
+  CONTENT_CATEGORIES,
+  CONTENT_TYPES,
+} from '../../services/Content/ContentService';
 
 const SORT_OPTIONS = ['Más reciente', 'Más antiguo', 'A-Z', 'Z-A'];
 
 const CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
-  nutrition:    { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  nutrition: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
   hypertension: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
-  recipes:      { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
-  exercise:     { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
-  lifestyle:    { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
-  tips:         { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  recipes: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  exercise: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  lifestyle: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+  tips: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
 };
 
 function categoryLabel(value: string) {
-  return CONTENT_CATEGORIES.find(c => c.value === value)?.label ?? value;
+  return CONTENT_CATEGORIES.find((c) => c.value === value)?.label ?? value;
 }
 
 function typeLabel(value: string) {
-  return CONTENT_TYPES.find(t => t.value === value)?.label ?? value;
+  return CONTENT_TYPES.find((t) => t.value === value)?.label ?? value;
 }
 
 // ── Modal de vista de contenido ──────────────────────────────────────────────
@@ -32,25 +37,33 @@ function ViewModal({ item, onClose }: { item: ContentItem; onClose: () => void }
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-gray-100">
           <div className="min-w-0 pr-4">
             <div className="flex items-center gap-2 mb-1">
-              <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${CATEGORY_STYLES[item.category]?.color ?? 'bg-admin-light text-admin-dark'}`}>
+              <span
+                className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${CATEGORY_STYLES[item.category]?.color ?? 'bg-admin-light text-admin-dark'}`}
+              >
                 {categoryLabel(item.category)}
               </span>
               <span className="text-xs text-gray-400">{typeLabel(item.content_type)}</span>
               {item.is_premium && (
-                <span className="text-xs font-bold bg-nutri-light text-nutri-dark px-2 py-0.5 rounded-full">⭐ Premium</span>
+                <span className="text-xs font-bold bg-nutri-light text-nutri-dark px-2 py-0.5 rounded-full">
+                  ⭐ Premium
+                </span>
               )}
             </div>
             <h2 className="text-lg font-bold text-gray-900 leading-snug">{item.title}</h2>
           </div>
-          <button onClick={onClose}
-            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition text-lg font-bold">
+          <button
+            onClick={onClose}
+            className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition text-lg font-bold"
+          >
             ×
           </button>
         </div>
@@ -58,10 +71,10 @@ function ViewModal({ item, onClose }: { item: ContentItem; onClose: () => void }
         {/* Meta */}
         <div className="flex items-center gap-4 px-6 py-3 text-xs text-gray-400 border-b border-gray-50">
           <span>👁 {item.view_count} vistas</span>
-          {item.tags && item.tags.length > 0 && (
-            <span>🏷 {item.tags.join(', ')}</span>
-          )}
-          <span>📅 {item.created_at ? new Date(item.created_at).toLocaleDateString('es-EC') : '—'}</span>
+          {item.tags && item.tags.length > 0 && <span>🏷 {item.tags.join(', ')}</span>}
+          <span>
+            📅 {item.created_at ? new Date(item.created_at).toLocaleDateString('es-EC') : '—'}
+          </span>
         </div>
 
         {/* Cuerpo */}
@@ -76,15 +89,15 @@ function ViewModal({ item, onClose }: { item: ContentItem; onClose: () => void }
 // ── Componente principal ─────────────────────────────────────────────────────
 
 function ContentPage() {
-  const [activeNav, setActiveNav]         = useState('Contenido');
-  const [activeStatus, setActiveStatus]   = useState('Todos');
-  const [search, setSearch]               = useState('');
-  const [sortOpen, setSortOpen]           = useState(false);
-  const [sortBy, setSortBy]               = useState('Más reciente');
-  const [items, setItems]                 = useState<ContentItem[]>([]);
-  const [loading, setLoading]             = useState(false);
+  const [activeNav, setActiveNav] = useState('Contenido');
+  const [activeStatus, setActiveStatus] = useState('Todos');
+  const [search, setSearch] = useState('');
+  const [sortOpen, setSortOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('Más reciente');
+  const [items, setItems] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [viewItem, setViewItem]           = useState<ContentItem | null>(null);
+  const [viewItem, setViewItem] = useState<ContentItem | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -94,69 +107,84 @@ function ContentPage() {
       .finally(() => setLoading(false));
   }, [search]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleApprove = async (article: Article) => {
     setActionLoading(article.id);
-    try { await ContentService.approve(article.id); load(); }
-    catch (e) { console.error(e); }
-    finally { setActionLoading(null); }
+    try {
+      await ContentService.approve(article.id);
+      load();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleDelete = async (article: Article) => {
     setActionLoading(article.id);
-    try { await ContentService.archive(article.id); load(); }
-    catch (e) { console.error(e); }
-    finally { setActionLoading(null); }
+    try {
+      await ContentService.archive(article.id);
+      load();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleView = (article: Article) => {
-    const raw = items.find(i => i.id === article.id) ?? null;
+    const raw = items.find((i) => i.id === article.id) ?? null;
     setViewItem(raw);
   };
 
   // Filtrar
   let filtered = items.filter((item) => {
-    if (activeStatus === 'Aprobados')  return item.is_approved && item.is_published;
+    if (activeStatus === 'Aprobados') return item.is_approved && item.is_published;
     if (activeStatus === 'Pendientes') return !item.is_approved;
     return true;
   });
 
   // Ordenar por fecha de envío (created_at); A-Z/Z-A por título
   filtered = [...filtered].sort((a, b) => {
-    if (sortBy === 'A-Z')        return a.title.localeCompare(b.title);
-    if (sortBy === 'Z-A')        return b.title.localeCompare(a.title);
+    if (sortBy === 'A-Z') return a.title.localeCompare(b.title);
+    if (sortBy === 'Z-A') return b.title.localeCompare(a.title);
     if (sortBy === 'Más antiguo') return (a.created_at ?? '').localeCompare(b.created_at ?? '');
     // "Más reciente" — orden de envío desc (ya viene así del backend, pero aplicamos igual)
     return (b.created_at ?? '').localeCompare(a.created_at ?? '');
   });
 
   const articles: Article[] = filtered.map((item) => {
-    const style = CATEGORY_STYLES[item.category] ?? { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' };
+    const style = CATEGORY_STYLES[item.category] ?? {
+      color: 'bg-admin-light text-admin-dark',
+      bg: 'bg-white',
+    };
     return {
-      id:            item.id,
-      title:         item.title,
-      body:          item.body,
-      description:   item.tags?.join(', ') ?? categoryLabel(item.category),
-      category:      categoryLabel(item.category),
+      id: item.id,
+      title: item.title,
+      body: item.body,
+      description: item.tags?.join(', ') ?? categoryLabel(item.category),
+      category: categoryLabel(item.category),
       categoryColor: style.color,
-      cardBg:        style.bg,
-      status:        (item.is_published ? 'active' : 'draft') as 'active' | 'draft',
-      date:          item.created_at
-                     ? `Enviado: ${new Date(item.created_at).toLocaleDateString('es-EC')}`
-                     : '—',
-      is_approved:   item.is_approved,
-      is_published:  item.is_published,
+      cardBg: style.bg,
+      status: (item.is_published ? 'active' : 'draft') as 'active' | 'draft',
+      date: item.created_at
+        ? `Enviado: ${new Date(item.created_at).toLocaleDateString('es-EC')}`
+        : '—',
+      is_approved: item.is_approved,
+      is_published: item.is_published,
     };
   });
 
-  const pendingCount  = items.filter(i => !i.is_approved).length;
-  const approvedCount = items.filter(i => i.is_approved && i.is_published).length;
+  const pendingCount = items.filter((i) => !i.is_approved).length;
+  const approvedCount = items.filter((i) => i.is_approved && i.is_published).length;
 
   const statusTabs = [
-    { label: 'Todos',      count: items.length  },
-    { label: 'Aprobados',  count: approvedCount  },
-    { label: 'Pendientes', count: pendingCount    },
+    { label: 'Todos', count: items.length },
+    { label: 'Aprobados', count: approvedCount },
+    { label: 'Pendientes', count: pendingCount },
   ];
 
   return (
@@ -164,13 +192,13 @@ function ContentPage() {
       <AdminTopBar title="Biblioteca de Contenido" />
 
       <div className="px-8 pb-8 pt-4 bg-admin-bg">
-
         {/* Alerta pendientes */}
         {pendingCount > 0 && (
           <div className="mb-5 flex items-center gap-3 bg-admin-light border border-admin-medium text-admin-dark text-sm rounded-xl px-4 py-3">
             <span className="text-lg">⏳</span>
             <span>
-              Hay <strong>{pendingCount}</strong> contenido{pendingCount !== 1 ? 's' : ''} pendiente{pendingCount !== 1 ? 's' : ''} de aprobación.
+              Hay <strong>{pendingCount}</strong> contenido{pendingCount !== 1 ? 's' : ''} pendiente
+              {pendingCount !== 1 ? 's' : ''} de aprobación.
             </span>
           </div>
         )}
@@ -199,7 +227,7 @@ function ContentPage() {
             >
               Ordenar: {sortBy}
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
               </svg>
             </button>
             {sortOpen && (
@@ -207,9 +235,14 @@ function ContentPage() {
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt}
-                    onClick={() => { setSortBy(opt); setSortOpen(false); }}
+                    onClick={() => {
+                      setSortBy(opt);
+                      setSortOpen(false);
+                    }}
                     className={`w-full text-left px-4 py-2 text-xs transition ${
-                      sortBy === opt ? 'text-admin-dark font-semibold bg-admin-light' : 'text-gray-600 hover:bg-gray-50'
+                      sortBy === opt
+                        ? 'text-admin-dark font-semibold bg-admin-light'
+                        : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     {opt}
@@ -235,7 +268,10 @@ function ContentPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {articles.map((article) => (
-              <div key={article.id} className={actionLoading === article.id ? 'opacity-60 pointer-events-none' : ''}>
+              <div
+                key={article.id}
+                className={actionLoading === article.id ? 'opacity-60 pointer-events-none' : ''}
+              >
                 <ArticleCard
                   article={article}
                   onView={handleView}
@@ -249,9 +285,7 @@ function ContentPage() {
       </div>
 
       {/* Modal de vista */}
-      {viewItem && (
-        <ViewModal item={viewItem} onClose={() => setViewItem(null)} />
-      )}
+      {viewItem && <ViewModal item={viewItem} onClose={() => setViewItem(null)} />}
     </AdminLayout>
   );
 }

@@ -21,9 +21,7 @@ export function Pagination({ current, total, onChange }: PaginationProps) {
           key={page}
           onClick={() => onChange(page)}
           className={`w-7 h-7 rounded text-sm font-medium transition ${
-            page === current
-              ? 'bg-red-500 text-white'
-              : 'text-gray-500 hover:bg-gray-100'
+            page === current ? 'bg-red-500 text-white' : 'text-gray-500 hover:bg-gray-100'
           }`}
         >
           {page}

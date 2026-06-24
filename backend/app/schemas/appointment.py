@@ -1,10 +1,17 @@
-from pydantic import BaseModel
-from app.schemas.user  import UserResponse
-from app.schemas.nutritionist import NutritionistProfileResponse
-from datetime import date, time, datetime
-from app.db.models.appointment import AppointmentStatus, AppointmentTypeModality, AvailabilityRuleType
-from typing import Optional
 import uuid
+from datetime import date, datetime, time
+from typing import Optional
+
+from pydantic import BaseModel
+
+from app.db.models.appointment import (
+    AppointmentStatus,
+    AppointmentTypeModality,
+    AvailabilityRuleType,
+)
+from app.schemas.nutritionist import NutritionistProfileResponse
+from app.schemas.user import UserResponse
+
 
 class AppointmentRequest(BaseModel):
     patient_id: uuid.UUID
@@ -13,6 +20,7 @@ class AppointmentRequest(BaseModel):
     duration_min: int = 45
     modality: AppointmentTypeModality = AppointmentTypeModality.virtual
     notes: Optional[str] = None
+
 
 class AppointmentResponse(BaseModel):
     id: uuid.UUID
@@ -28,7 +36,7 @@ class AppointmentResponse(BaseModel):
     cancelled_at: str | None = None
 
     patient: UserResponse
-    nutritionist: UserResponse 
+    nutritionist: UserResponse
 
     class Config:
         from_attributes = True
@@ -40,6 +48,7 @@ class AppointmentUpdateRequest(BaseModel):
     modality: Optional[AppointmentTypeModality] = None
     notes: Optional[str] = None
 
+
 class AvailabilityNutritionistRequest(BaseModel):
     rule_type: AvailabilityRuleType
     day_of_week: int
@@ -47,6 +56,7 @@ class AvailabilityNutritionistRequest(BaseModel):
     start_time: time
     end_time: time
     is_available: bool = True
+
 
 class AvailabilityNutritionistResponse(BaseModel):
     id: uuid.UUID
@@ -60,4 +70,4 @@ class AvailabilityNutritionistResponse(BaseModel):
     nutritionist: NutritionistProfileResponse
 
     class Config:
-        from_attributes = True    
+        from_attributes = True

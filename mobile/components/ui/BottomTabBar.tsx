@@ -11,7 +11,7 @@ const TABS: {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
   href: string;
-  }[] = [
+}[] = [
   {
     key: 'inicio',
     icon: 'home-outline',
@@ -51,7 +51,7 @@ interface BottomTabBarProps {
 export function BottomTabBar({ activeTab }: BottomTabBarProps) {
   return (
     <View style={styles.tabBar}>
-      {TABS.map(tab => (
+      {TABS.map((tab) => (
         <TouchableOpacity
           key={tab.key}
           style={styles.tabItem}
@@ -61,11 +61,7 @@ export function BottomTabBar({ activeTab }: BottomTabBarProps) {
           <MaterialCommunityIcons
             name={tab.icon}
             size={22}
-            color={
-              activeTab === tab.key
-                ? COLORS.primary
-                : '#4caf50'
-            }
+            color={activeTab === tab.key ? COLORS.primary : '#4caf50'}
           />
           <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
             {tab.label}
