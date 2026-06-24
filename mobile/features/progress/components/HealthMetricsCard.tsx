@@ -35,19 +35,25 @@ const LABELS_BY_PERIOD: Record<Period, string[]> = {
 };
 
 interface HealthMetricsCardProps {
-  period: Period; 
+  period: Period;
   dateLabel?: string;
   systolicData?: number[];
   diastolicData?: number[];
-  nutrients?: Array<{ label: string; current: number; target: number; unit: string; color: string }>;
+  nutrients?: Array<{
+    label: string;
+    current: number;
+    target: number;
+    unit: string;
+    color: string;
+  }>;
 }
 
 export default function HealthMetricsCard({
-  period, 
+  period,
   dateLabel = '23 - 29 de Octubre, 2025',
   systolicData = [120, 122, 119, 125, 121, 118, 120],
   diastolicData = [80, 81, 79, 84, 80, 78, 79],
-  nutrients = []
+  nutrients = [],
 }: HealthMetricsCardProps) {
   const [activeMetric, setActiveMetric] = useState<MetricType>('Presión');
   const currentSys = systolicData[systolicData.length - 1];
@@ -75,7 +81,9 @@ export default function HealthMetricsCard({
             <View>
               <Text style={styles.metricSubLabel}>{PRESSURE_SUBTITLE_BY_PERIOD[period]}</Text>
               <View style={styles.pressureValues}>
-                <Text style={styles.pressureValue}>{currentSys}/{currentDia}</Text>
+                <Text style={styles.pressureValue}>
+                  {currentSys}/{currentDia}
+                </Text>
                 <Text style={styles.pressureUnit}>mmHg</Text>
               </View>
             </View>
@@ -92,11 +100,11 @@ export default function HealthMetricsCard({
           </View>
 
           <View style={styles.chartContainer}>
-            <BloodPressureChart 
-              systolicData={systolicData} 
-              diastolicData={diastolicData} 
-              labels={currentLabels} 
-              width={CHART_WIDTH} 
+            <BloodPressureChart
+              systolicData={systolicData}
+              diastolicData={diastolicData}
+              labels={currentLabels}
+              width={CHART_WIDTH}
             />
           </View>
         </View>
@@ -105,7 +113,7 @@ export default function HealthMetricsCard({
           <Text style={styles.metricSubLabel}>{NUTRIENT_SUBTITLE_BY_PERIOD[period]}</Text>
           <View style={styles.nutrientsList}>
             {nutrients.map((item, index) => (
-              <NutrientProgressBar key={index} {...item}/>
+              <NutrientProgressBar key={index} {...item} />
             ))}
           </View>
         </View>
@@ -115,87 +123,87 @@ export default function HealthMetricsCard({
 }
 
 const styles = StyleSheet.create({
-  card: { 
-    marginHorizontal: Spacing.md, 
-    marginVertical: Spacing.sm, 
-    backgroundColor: COLORS.surface, 
-    borderRadius: Radius.lg, 
-    padding: Spacing.md, 
-    ...Shadows.md 
+  card: {
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.sm,
+    backgroundColor: COLORS.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    ...Shadows.md,
   },
-  header: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: Spacing.md, 
-    flexWrap: 'wrap', 
-    gap: 8 
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  dateLabel: { 
-    ...Typography.label, 
-    color: COLORS.textMuted, 
-    textTransform: 'uppercase', 
-    marginBottom: 2 
+  dateLabel: {
+    ...Typography.label,
+    color: COLORS.textMuted,
+    textTransform: 'uppercase',
+    marginBottom: 2,
   },
-  sectionTitle: { 
-    fontSize: 18, 
-    fontWeight: '700', 
-    color: COLORS.textPrimary 
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
   },
-  contentContainer: { 
-    marginTop: Spacing.xs 
+  contentContainer: {
+    marginTop: Spacing.xs,
   },
-  metricSubLabel: { 
-    ...Typography.bodySmall, 
-    color: COLORS.textMuted, 
-    marginBottom: Spacing.xs 
+  metricSubLabel: {
+    ...Typography.bodySmall,
+    color: COLORS.textMuted,
+    marginBottom: Spacing.xs,
   },
-  valueRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'flex-end', 
-    marginBottom: Spacing.sm 
+  valueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: Spacing.sm,
   },
-  pressureValues: { 
-    flexDirection: 'row', 
-    alignItems: 'flex-end', 
-    gap: 4 
+  pressureValues: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 4,
   },
-  pressureValue: { 
-    fontSize: 32, 
-    fontWeight: '800', 
-    color: COLORS.textPrimary, 
-    lineHeight: 36 
+  pressureValue: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    lineHeight: 36,
   },
-  pressureUnit: { 
-    fontSize: 14, 
-    color: COLORS.textSecondary, 
-    marginBottom: 4 
+  pressureUnit: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginBottom: 4,
   },
-  legendContainer: { 
-    flexDirection: 'row', 
-    gap: 12, 
-    marginBottom: 6 
+  legendContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 6,
   },
-  legendItem: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    gap: 4 
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  legendDot: { 
-    width: 8, 
-    height: 8, 
-    borderRadius: 4 
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  legendText: { 
-    fontSize: 12, 
-    color: COLORS.textSecondary 
+  legendText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
   },
-  chartContainer: { 
-    marginTop: Spacing.xs 
+  chartContainer: {
+    marginTop: Spacing.xs,
   },
-  nutrientsList: { 
-    gap: Spacing.sm, 
-    marginTop: Spacing.xs 
+  nutrientsList: {
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
   },
 });

@@ -1,7 +1,9 @@
-from pydantic import BaseModel, EmailStr
-from datetime import date
-from app.db.models.user import UserRole
 import uuid
+from datetime import date
+
+from pydantic import BaseModel, EmailStr
+
+from app.db.models.user import UserRole
 
 
 class UserCreate(BaseModel):
@@ -15,9 +17,11 @@ class UserCreate(BaseModel):
     gender: str | None = None
     role: UserRole = UserRole.patient
 
+
 class UserRequest(BaseModel):
     email: EmailStr
     password: str
+
 
 class PersonResponse(BaseModel):
     first_name: str
@@ -26,11 +30,12 @@ class PersonResponse(BaseModel):
     phone: str | None = None
     avatar_url: str | None = None
     cedula: str | None = None
-    gender : str | None = None
+    gender: str | None = None
 
     class Config:
         from_attributes = True
-        
+
+
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: EmailStr
@@ -41,6 +46,7 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class ChangePasswordRequest(BaseModel):
     email: str

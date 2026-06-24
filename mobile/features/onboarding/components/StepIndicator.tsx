@@ -28,25 +28,15 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => 
                   (isActive || isCompleted) && styles.stepCircleTextActive,
                 ]}
               >
-                {isCompleted ? '✓' : step.icon ?? step.id}
+                {isCompleted ? '✓' : (step.icon ?? step.id)}
               </Text>
             </View>
-            <Text
-              style={[
-                styles.stepLabel,
-                (isActive || isCompleted) && styles.stepLabelActive,
-              ]}
-            >
+            <Text style={[styles.stepLabel, (isActive || isCompleted) && styles.stepLabelActive]}>
               {step.label}
             </Text>
           </View>
           {index < ONBOARDING_STEPS.length - 1 && (
-            <View
-              style={[
-                styles.stepLine,
-                isCompleted && styles.stepLineCompleted,
-              ]}
-            />
+            <View style={[styles.stepLine, isCompleted && styles.stepLineCompleted]} />
           )}
         </React.Fragment>
       );

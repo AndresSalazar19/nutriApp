@@ -40,10 +40,7 @@ export function useProfileForm() {
     : '';
 
   // ── Open a specific field modal ───────────────────────────────────────────
-  function openModal(
-    field: keyof PersonalInfo | keyof HealthInfo,
-    section: 'personal' | 'health',
-  ) {
+  function openModal(field: keyof PersonalInfo | keyof HealthInfo, section: 'personal' | 'health') {
     setActiveModal({ field, section });
   }
 
@@ -56,7 +53,7 @@ export function useProfileForm() {
     if (!activeModal) return;
 
     if (activeModal.section === 'personal') {
-      setProfile(prev => ({
+      setProfile((prev) => ({
         ...prev,
         personalInfo: {
           ...prev.personalInfo,
@@ -64,7 +61,7 @@ export function useProfileForm() {
         },
       }));
     } else {
-      setProfile(prev => ({
+      setProfile((prev) => ({
         ...prev,
         healthInfo: {
           ...prev.healthInfo,

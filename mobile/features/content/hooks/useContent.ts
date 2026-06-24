@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { ContentService, ContentItem, ContentDetail } from '../services/contentService';
 
 export function useContent() {
-  const [items, setItems]     = useState<ContentItem[]>([]);
+  const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     setLoading(true);
@@ -15,7 +15,9 @@ export function useContent() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   return { items, loading, error, refresh };
 }
@@ -23,7 +25,7 @@ export function useContent() {
 export function useContentDetail(id: string) {
   const [content, setContent] = useState<ContentDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;

@@ -9,7 +9,7 @@ const SettingsPage: React.FC = () => {
   return (
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
       <AdminTopBar title="Configuración" />
-      
+
       <div className="px-8 pb-8 pt-8 h-full flex flex-col justify-center">
         <UnderConstruction />
       </div>

@@ -33,7 +33,7 @@ export default function PeriodStats({
     <View style={styles.section}>
       {/* El título ahora cambia dinámicamente */}
       <Text style={styles.sectionTitle}>{TITLE_BY_PERIOD[period]}</Text>
-      
+
       <View style={styles.grid}>
         <View style={styles.row}>
           <StatTile

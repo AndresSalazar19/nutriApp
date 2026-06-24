@@ -32,7 +32,7 @@ export interface NutritionistSpecialty {
 }
 
 export interface NutritionistProfile {
-  id: string;               // profile_id — usado para aprobar/rechazar
+  id: string; // profile_id — usado para aprobar/rechazar
   license_number: string;
   bio: string | null;
   specialty_id: number;

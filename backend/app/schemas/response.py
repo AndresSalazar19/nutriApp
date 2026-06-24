@@ -1,11 +1,14 @@
-from pydantic import BaseModel
-from typing import Any, Generic, TypeVar, List
+from typing import Generic, TypeVar
+
+from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
+
 class StatusSchema(BaseModel):
     isSuccessfully: bool
-    messages: List[str] = []
+    messages: list[str] = Field(default_factory=list)
+
 
 class ApiResponse(BaseModel, Generic[T]):
     operation: int
@@ -13,4 +16,4 @@ class ApiResponse(BaseModel, Generic[T]):
     statusCode: int
     count: int
     data: T | None = None
-    listData: List[T] | None = None
+    listData: list[T] | None = None

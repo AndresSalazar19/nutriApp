@@ -1,6 +1,6 @@
-import { ApiResponse } from "../../models/ApiResponse";
-import { Especialidad } from "./Especialidad";
-import { API_URL } from "../../config/api";
+import { ApiResponse } from '../../models/ApiResponse';
+import { Especialidad } from './Especialidad';
+import { API_URL } from '../../config/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ export interface NutritionistRegisterData {
   password: string;
   first_name: string;
   last_name: string;
-  date_of_birth: string;        // YYYY-MM-DD
+  date_of_birth: string; // YYYY-MM-DD
   phone: string;
   gender: string;
   cedula: string;
@@ -36,12 +36,12 @@ export interface NutritionistRegisterData {
   years_experience: number;
 }
 export interface RegisteredNutritionist {
-  id: string;          // id del nutritionist_profile
-  user_id: string;     // id del user creado
+  id: string; // id del nutritionist_profile
+  user_id: string; // id del user creado
   license_number: string;
   specialty_id: number;
   years_experience: number;
-  status: string;      // 'pending' al crear
+  status: string; // 'pending' al crear
 }
 
 /**
@@ -64,22 +64,21 @@ export interface RegisteredUser {
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export const RegistrerServices = {
-
   /**
-   * Registra un nutricionista completo en una sola llamada atómica.
+   * Registra un nutricionista completo enviando un `FormData`.
    * El backend crea internamente: user + person + nutritionist_profile.
-   * Envía JSON — el endpoint recibe NutritionistCreateRequest (Pydantic).
-   * Los archivos CV/Senescyt se suben en un paso posterior.
+   * Debe incluir los campos de texto y los archivos (`cv_file`, `senescyt_file`) en el FormData.
+   * El navegador establecerá automáticamente el header `Content-Type` con el boundary.
    *
    * Endpoint: POST /api/v1/nutritionists
    */
-  async crearNutricionista(data: NutritionistRegisterData): Promise<ApiResponse<RegisteredNutritionist>> {
-    console.log('📤 Enviando registro de nutricionista al backend');
+  async crearNutricionista(formData: FormData): Promise<ApiResponse<RegisteredNutritionist>> {
+    console.log('Enviando registro de nutricionista al backend (FormData)');
 
     const response = await fetch(`${API_URL}/nutritionists`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      // No establecer 'Content-Type' para que el navegador añada el boundary
+      body: formData,
     });
 
     const result: ApiResponse<RegisteredNutritionist> = await response.json();
@@ -111,7 +110,7 @@ export const RegistrerServices = {
 
     const data: ApiResponse<RegisteredUser> = await response.json();
 
-    console.log('📥 Respuesta del backend:', data);
+    console.log('Respuesta del backend:', data);
 
     if (!response.ok || !data.status.isSuccessfully) {
       const messages = data.status?.messages ?? [];
@@ -127,5 +126,4 @@ export const RegistrerServices = {
     const data = await response.json();
     return data;
   },
-
 };

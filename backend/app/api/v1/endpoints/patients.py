@@ -4,16 +4,16 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+
+from app.core.response import error_response, success_response
 from app.db.base import get_db
 from app.schemas.patient import (
-    PatientListItem,
-    PatientDetailResponse,
+    FlagUpdate,
     HistoryEntry,
     NotesUpdate,
-    FlagUpdate,
+    PatientDetailResponse,
     StatusUpdate,
 )
-from app.core.response import success_response, error_response
 from app.services.patient_service import PatientService
 
 router = APIRouter(prefix="/patients", tags=["patients"])

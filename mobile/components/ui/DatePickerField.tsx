@@ -8,17 +8,9 @@
  * Output format: "DD/MM/AAAA" (matches the existing app convention)
  */
 
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS } from '@/constants/colors';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -36,8 +28,8 @@ function parseDisplayDate(display: string): Date {
 
 /** Date → "DD/MM/AAAA" */
 function toDisplayDate(date: Date): string {
-  const dd   = String(date.getDate()).padStart(2, '0');
-  const mm   = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
   const yyyy = date.getFullYear();
   return `${dd}/${mm}/${yyyy}`;
 }

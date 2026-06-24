@@ -6,8 +6,9 @@ import { PrivateRoute } from '../components/auth/ProtectedRoute';
 import { NutritionistStatusGuard } from './NutritionistStatusGuard';
 import { AuthProvider, useAuth, AuthUser } from '../hooks/useAuth';
 
-const LoginPage         = lazy(() => import('../pages/Login/LoginPage'));
-const RegisterPage      = lazy(() => import('../pages/Register/RegisterPage'));
+const LoginPage = lazy(() => import('../pages/Login/LoginPage'));
+const RegisterPage = lazy(() => import('../pages/Register/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('../components/auth/ForgotPasswordPage'));
 
 //NUTRIONIST
 const MainView          = lazy(() => import('../pages/MainView/MainView'));
@@ -20,14 +21,14 @@ const PlansPage         = lazy(() => import('../pages/MainView/PlansPage'));
 const MessagesPage      = lazy(() => import('../pages/MainView/MessagesPage'));
 
 //ADMIN
-const AdminDashboard    = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
+const AdminDashboard = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
 const NutritionistsPage = lazy(() => import('../pages/AdminDashboard/NutritionistsPage'));
-const ContentPage       = lazy(() => import('../pages/AdminDashboard/ContentPage'));
-const ClientPage        = lazy(() => import('../pages/AdminDashboard/ClientPage'));
-const SettingsPage      = lazy(() => import('../pages/AdminDashboard/SettingsPage'));
-const AdminReportsPage  = lazy(() => import('../pages/AdminDashboard/ReportsPage'));
-const DatabasesPage     = lazy(() => import('../pages/AdminDashboard/DatabasesPage'));
-const ProfilePage       = lazy(() => import('../pages/AdminDashboard/ProfilePage'));
+const ContentPage = lazy(() => import('../pages/AdminDashboard/ContentPage'));
+const ClientPage = lazy(() => import('../pages/AdminDashboard/ClientPage'));
+const SettingsPage = lazy(() => import('../pages/AdminDashboard/SettingsPage'));
+const AdminReportsPage = lazy(() => import('../pages/AdminDashboard/ReportsPage'));
+const DatabasesPage = lazy(() => import('../pages/AdminDashboard/DatabasesPage'));
+const ProfilePage = lazy(() => import('../pages/AdminDashboard/ProfilePage'));
 
 function PageLoader() {
   return (
@@ -46,7 +47,12 @@ function LoginWrapper() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleLogin = (userData: { userId: string; email: string; role: string; token: string }) => {
+  const handleLogin = (userData: {
+    userId: string;
+    email: string;
+    role: string;
+    token: string;
+  }) => {
     login(userData as AuthUser, userData.token);
     if (userData.role === 'admin') {
       navigate(ROUTES.ADMIN, { replace: true });
@@ -59,24 +65,33 @@ function LoginWrapper() {
     <LoginPage
       onLogin={handleLogin}
       onGoToRegister={() => navigate(ROUTES.REGISTER)}
+      onGoToChangePassword={() => navigate(ROUTES.FORGOT_PASSWORD)}
     />
   );
+}
+
+function ForgotPasswordWrapper() {
+  const navigate = useNavigate();
+
+  return <ForgotPasswordPage onGoToLogin={() => navigate(ROUTES.LOGIN)} />;
 }
 
 function RegisterWrapper() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleRegistered = (userData: { userId: string; email: string; role: string; token?: string }) => {
+  const handleRegistered = (userData: {
+    userId: string;
+    email: string;
+    role: string;
+    token?: string;
+  }) => {
     login(userData as AuthUser, userData.token ?? '');
     navigate(ROUTES.DASHBOARD, { replace: true });
   };
 
   return (
-    <RegisterPage
-      onGoToLogin={() => navigate(ROUTES.LOGIN)}
-      onRegistered={handleRegistered}
-    />
+    <RegisterPage onGoToLogin={() => navigate(ROUTES.LOGIN)} onRegistered={handleRegistered} />
   );
 }
 
@@ -84,42 +99,62 @@ function AppRoutes() {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-
         {/* ── Públicas ── */}
-        <Route path={ROUTES.LOGIN}    element={<PublicRoute><LoginWrapper /></PublicRoute>} />
-        <Route path={ROUTES.REGISTER} element={<PublicRoute><RegisterWrapper /></PublicRoute>} />
+        <Route
+          path={ROUTES.LOGIN}
+          element={
+            <PublicRoute>
+              <LoginWrapper />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path={ROUTES.REGISTER}
+          element={
+            <PublicRoute>
+              <RegisterWrapper />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path={ROUTES.FORGOT_PASSWORD}
+          element={
+            <PublicRoute>
+              <ForgotPasswordWrapper />
+            </PublicRoute>
+          }
+        />
 
         {/* ── Nutricionista (requiere rol + guard de estado) ── */}
         <Route element={<PrivateRoute allowedRoles={['nutritionist']} />}>
           <Route element={<NutritionistStatusGuard />}>
             {/* pending → MainView (pantalla de verificación) */}
-            <Route path={ROUTES.DASHBOARD}  element={<MainView />} />
+            <Route path={ROUTES.DASHBOARD} element={<MainView />} />
             {/* verified → acceso completo */}
-            <Route path={ROUTES.HOME}       element={<HomePage />} />
+            <Route path={ROUTES.HOME} element={<HomePage />} />
             <Route path={ROUTES.PATIENTS} element={<PatientsPage />} />
-            <Route path={ROUTES.AGENDA}     element={<AgendaPage />} />
-            <Route path={ROUTES.REPORTS}    element={<ReportsPage />} />
-            <Route path={ROUTES.RESOURCES}  element={<ResourcesPage />} />
-            <Route path={ROUTES.PLANS}      element={<PlansPage />} />
-            <Route path={ROUTES.MESSAGES}   element={<MessagesPage />} />
+            <Route path={ROUTES.AGENDA} element={<AgendaPage />} />
+            <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
+            <Route path={ROUTES.RESOURCES} element={<ResourcesPage />} />
+            <Route path={ROUTES.PLANS} element={<PlansPage />} />
+            <Route path={ROUTES.MESSAGES} element={<MessagesPage />} />
           </Route>
         </Route>
 
         {/* ── Admin ── */}
         <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-          <Route path={ROUTES.ADMIN}               element={<AdminDashboard />} />
+          <Route path={ROUTES.ADMIN} element={<AdminDashboard />} />
           <Route path={ROUTES.ADMIN_NUTRITIONISTS} element={<NutritionistsPage />} />
-          <Route path={ROUTES.ADMIN_CONTENT}       element={<ContentPage />} />
-          <Route path={ROUTES.ADMIN_CLIENTS}       element={<ClientPage />} />
-          <Route path={ROUTES.ADMIN_SETTINGS}      element={<SettingsPage />} />
-          <Route path={ROUTES.ADMIN_REPORTS}       element={<AdminReportsPage />} />
-          <Route path={ROUTES.ADMIN_DATABASES}     element={<DatabasesPage />} />
-          <Route path={ROUTES.ADMIN_PROFILE}       element={<ProfilePage />} />
+          <Route path={ROUTES.ADMIN_CONTENT} element={<ContentPage />} />
+          <Route path={ROUTES.ADMIN_CLIENTS} element={<ClientPage />} />
+          <Route path={ROUTES.ADMIN_SETTINGS} element={<SettingsPage />} />
+          <Route path={ROUTES.ADMIN_REPORTS} element={<AdminReportsPage />} />
+          <Route path={ROUTES.ADMIN_DATABASES} element={<DatabasesPage />} />
+          <Route path={ROUTES.ADMIN_PROFILE} element={<ProfilePage />} />
         </Route>
 
         {/* ── Fallback ── */}
         <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
-
       </Routes>
     </Suspense>
   );

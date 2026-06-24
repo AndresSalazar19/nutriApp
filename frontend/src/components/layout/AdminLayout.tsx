@@ -11,9 +11,7 @@ export function AdminLayout({ activeNav, onNavChange, children }: AdminLayoutPro
   return (
     <div className="flex h-screen bg-admin-bg font-sans">
       <AdminSidebar activeNav={activeNav} onNavChange={onNavChange} />
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
+      <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   );
 }

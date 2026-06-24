@@ -1,9 +1,11 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from app.db.models.user import User, Person, UserRole
-from app.db.models.patient import PatientProfile, PatientHistory, PatientStatus
-from typing import Optional
 import uuid
+from typing import Optional
+
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
+from app.db.models.patient import PatientHistory, PatientProfile, PatientStatus
+from app.db.models.user import Person, User, UserRole
 
 
 class PatientService:
@@ -19,7 +21,12 @@ class PatientService:
         return profile
 
     @staticmethod
-    def get_patients(db: Session, name: Optional[str] = None, status: Optional[str] = None, priority: Optional[bool] = None):
+    def get_patients(
+        db: Session,
+        name: Optional[str] = None,
+        status: Optional[str] = None,
+        priority: Optional[bool] = None,
+    ):
         query = db.query(User).filter(User.role == UserRole.patient)
         query = query.join(Person, Person.user_id == User.id)
 
@@ -46,15 +53,17 @@ class PatientService:
             if priority is not None and patient_flag != priority:
                 continue
 
-            results.append({
-                "user_id": str(user.id),
-                "email": user.email,
-                "first_name": user.person.first_name if user.person else "",
-                "last_name": user.person.last_name if user.person else "",
-                "phone": user.person.phone if user.person else None,
-                "status": patient_status,
-                "priority_flag": patient_flag,
-            })
+            results.append(
+                {
+                    "user_id": str(user.id),
+                    "email": user.email,
+                    "first_name": user.person.first_name if user.person else "",
+                    "last_name": user.person.last_name if user.person else "",
+                    "phone": user.person.phone if user.person else None,
+                    "status": patient_status,
+                    "priority_flag": patient_flag,
+                }
+            )
 
         return results
 
@@ -75,15 +84,17 @@ class PatientService:
         results = []
         for user in users:
             profile = db.query(PatientProfile).filter(PatientProfile.user_id == user.id).first()
-            results.append({
-                "user_id": str(user.id),
-                "email": user.email,
-                "first_name": user.person.first_name if user.person else "",
-                "last_name": user.person.last_name if user.person else "",
-                "phone": user.person.phone if user.person else None,
-                "status": profile.status if profile else "active",
-                "priority_flag": profile.priority_flag if profile else False,
-            })
+            results.append(
+                {
+                    "user_id": str(user.id),
+                    "email": user.email,
+                    "first_name": user.person.first_name if user.person else "",
+                    "last_name": user.person.last_name if user.person else "",
+                    "phone": user.person.phone if user.person else None,
+                    "status": profile.status if profile else "active",
+                    "priority_flag": profile.priority_flag if profile else False,
+                }
+            )
         return results
 
     @staticmethod
@@ -108,9 +119,12 @@ class PatientService:
         profile = db.query(PatientProfile).filter(PatientProfile.user_id == user_id).first()
         if not profile:
             return []
-        return db.query(PatientHistory).filter(
-            PatientHistory.patient_profile_id == profile.id
-        ).order_by(PatientHistory.created_at.desc()).all()
+        return (
+            db.query(PatientHistory)
+            .filter(PatientHistory.patient_profile_id == profile.id)
+            .order_by(PatientHistory.created_at.desc())
+            .all()
+        )
 
     @staticmethod
     def update_notes(db: Session, user_id: uuid.UUID, notes: str):

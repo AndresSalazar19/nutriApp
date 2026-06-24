@@ -30,9 +30,7 @@ export function EmptyState({
       <div className="text-5xl mb-4">{icon}</div>
       <h3 className="text-base font-semibold text-gray-700 mb-2">{title}</h3>
       {description && (
-        <p className="text-sm text-gray-400 max-w-xs leading-relaxed mb-6">
-          {description}
-        </p>
+        <p className="text-sm text-gray-400 max-w-xs leading-relaxed mb-6">{description}</p>
       )}
       {action && (
         <button

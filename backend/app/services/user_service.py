@@ -1,9 +1,10 @@
-from sqlalchemy.orm import Session
-from app.db.models.user import User, Person, UserRole
-from app.schemas.user import UserCreate, UserResponse
 import uuid
+
 from passlib.context import CryptContext
-from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
+from app.db.models.user import Person, User, UserRole
+from app.schemas.user import UserCreate
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -79,7 +80,7 @@ class UserService:
         db.refresh(user)
 
         return user
-        
+
     @staticmethod
     def is_admin(user: User) -> bool:
         return user.role == UserRole.admin

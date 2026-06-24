@@ -1,20 +1,30 @@
-from sqlalchemy.orm import Session
-from app.db.models.appointment import Appointment, AppointmentStatus, AvailabilityNutritionist, AvailabilityRuleType
-from datetime import datetime
-from typing import List
-from app.schemas.appointment import AppointmentRequest, AppointmentResponse, AppointmentUpdateRequest
 import uuid
-from datetime import datetime, timedelta, timezone, date
-from passlib.context import CryptContext
-from sqlalchemy import text
-from fastapi import HTTPException
+from datetime import date, datetime, timedelta, timezone
+from typing import List
 from zoneinfo import ZoneInfo
+
+from fastapi import HTTPException
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+from app.db.models.appointment import (
+    Appointment,
+    AppointmentStatus,
+    AvailabilityNutritionist,
+    AvailabilityRuleType,
+)
+from app.schemas.appointment import (
+    AppointmentRequest,
+    AppointmentResponse,
+    AppointmentUpdateRequest,
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 LOCAL_TZ = ZoneInfo("America/Guayaquil")
 
+
 class AppointmentService:
-    
+
     @staticmethod
     def _is_slot_available(db: Session, nutritionist_id, start: datetime, duration: int):
 
@@ -22,13 +32,14 @@ class AppointmentService:
             start = start.replace(tzinfo=timezone.utc)
         end = start + timedelta(minutes=duration)
 
-        appointments = db.query(Appointment).filter(
-            Appointment.nutritionist_id == nutritionist_id,
-            Appointment.status.in_([
-                AppointmentStatus.scheduled,
-                AppointmentStatus.confirmed
-            ])
-        ).all()
+        appointments = (
+            db.query(Appointment)
+            .filter(
+                Appointment.nutritionist_id == nutritionist_id,
+                Appointment.status.in_([AppointmentStatus.scheduled, AppointmentStatus.confirmed]),
+            )
+            .all()
+        )
 
         for appt in appointments:
             appt_start = appt.scheduled_at
@@ -45,7 +56,6 @@ class AppointmentService:
     @staticmethod
     def is_within_availability(db: Session, nutritionist_id, start: datetime, duration: int):
 
-        tz = ZoneInfo("America/Guayaquil")
         if start.tzinfo is None:
             start = start.replace(tzinfo=timezone.utc)
 
@@ -55,22 +65,30 @@ class AppointmentService:
 
         day_of_week = start_local.weekday()
 
-        rules = db.query(AvailabilityNutritionist).filter(
-            AvailabilityNutritionist.nutritionist_id == nutritionist_id,
-            AvailabilityNutritionist.rule_type == AvailabilityRuleType.recurring,
-            AvailabilityNutritionist.day_of_week == day_of_week,
-            AvailabilityNutritionist.is_available == True
-        ).all()
+        rules = (
+            db.query(AvailabilityNutritionist)
+            .filter(
+                AvailabilityNutritionist.nutritionist_id == nutritionist_id,
+                AvailabilityNutritionist.rule_type == AvailabilityRuleType.recurring,
+                AvailabilityNutritionist.day_of_week == day_of_week,
+                AvailabilityNutritionist.is_available == True,
+            )
+            .all()
+        )
 
         if not rules:
             return False
 
-        exception = db.query(AvailabilityNutritionist).filter(
-            AvailabilityNutritionist.nutritionist_id == nutritionist_id,
-            AvailabilityNutritionist.rule_type == AvailabilityRuleType.exception,
-            AvailabilityNutritionist.specific_date == start_local.date(),
-            AvailabilityNutritionist.is_available == False
-        ).first()
+        exception = (
+            db.query(AvailabilityNutritionist)
+            .filter(
+                AvailabilityNutritionist.nutritionist_id == nutritionist_id,
+                AvailabilityNutritionist.rule_type == AvailabilityRuleType.exception,
+                AvailabilityNutritionist.specific_date == start_local.date(),
+                AvailabilityNutritionist.is_available == False,
+            )
+            .first()
+        )
 
         if exception:
             return False
@@ -84,20 +102,25 @@ class AppointmentService:
 
         return False
 
-
     @staticmethod
     def create(db: Session, data: AppointmentRequest) -> AppointmentResponse:
         scheduled_at = data.scheduled_at
 
         if scheduled_at.tzinfo is None:
             scheduled_at = scheduled_at.replace(tzinfo=LOCAL_TZ)
-        
+
         scheduled_at = scheduled_at.astimezone(timezone.utc)
-        if not AppointmentService._is_slot_available(db, data.nutritionist_id, scheduled_at, data.duration_min):
+        if not AppointmentService._is_slot_available(
+            db, data.nutritionist_id, scheduled_at, data.duration_min
+        ):
             raise HTTPException(status_code=400, detail="El horario no está disponible")
-        
-        if not AppointmentService.is_within_availability(db, data.nutritionist_id, scheduled_at, data.duration_min):
-            raise HTTPException(status_code=400, detail="El horario no está dentro de la disponibilidad")
+
+        if not AppointmentService.is_within_availability(
+            db, data.nutritionist_id, scheduled_at, data.duration_min
+        ):
+            raise HTTPException(
+                status_code=400, detail="El horario no está dentro de la disponibilidad"
+            )
 
         appointment = Appointment(
             patient_id=data.patient_id,
@@ -105,7 +128,7 @@ class AppointmentService:
             scheduled_at=scheduled_at,
             duration_min=data.duration_min,
             modality=data.modality,
-            notes=data.notes
+            notes=data.notes,
         )
 
         db.add(appointment)
@@ -144,11 +167,17 @@ class AppointmentService:
 
             duration = data.duration_min or appointment.duration_min
 
-            if not AppointmentService._is_slot_available(db, appointment.nutritionist_id, new_date, duration):
+            if not AppointmentService._is_slot_available(
+                db, appointment.nutritionist_id, new_date, duration
+            ):
                 raise HTTPException(status_code=400, detail="Nuevo horario no disponible")
-            
-            if not AppointmentService.is_within_availability(db, appointment.nutritionist_id, new_date, duration    ):
-                raise HTTPException(status_code=400, detail="El horario no está dentro de la disponibilidad")
+
+            if not AppointmentService.is_within_availability(
+                db, appointment.nutritionist_id, new_date, duration
+            ):
+                raise HTTPException(
+                    status_code=400, detail="El horario no está dentro de la disponibilidad"
+                )
 
             appointment.scheduled_at = new_date
 
@@ -183,19 +212,22 @@ class AppointmentService:
         db.refresh(appointment)
 
         return appointment
-    
 
     @staticmethod
     def get_available_slots(db: Session, nutritionist_id: uuid.UUID, date: date) -> List[datetime]:
 
         day_of_week = date.weekday()
 
-        rules = db.query(AvailabilityNutritionist).filter(
-            AvailabilityNutritionist.nutritionist_id == nutritionist_id,
-            AvailabilityNutritionist.rule_type == AvailabilityRuleType.recurring,
-            AvailabilityNutritionist.day_of_week == day_of_week,
-            AvailabilityNutritionist.is_available == True
-        ).all()
+        rules = (
+            db.query(AvailabilityNutritionist)
+            .filter(
+                AvailabilityNutritionist.nutritionist_id == nutritionist_id,
+                AvailabilityNutritionist.rule_type == AvailabilityRuleType.recurring,
+                AvailabilityNutritionist.day_of_week == day_of_week,
+                AvailabilityNutritionist.is_available == True,
+            )
+            .all()
+        )
 
         slots = []
 
@@ -215,5 +247,3 @@ class AppointmentService:
                 current += timedelta(minutes=45)
 
         return slots
-
-    

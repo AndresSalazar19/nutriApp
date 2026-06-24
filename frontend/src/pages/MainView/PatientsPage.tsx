@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
-import { Avatar }             from '../../components/ui/Avatar';
-import { Badge }              from '../../components/ui/Badge';
-import { Button }             from '../../components/ui/Button';
-import { SearchInput }        from '../../components/ui/SearchInput';
-import { FilterTabs }         from '../../components/ui/FilterTabs';
-import { Pagination }         from '../../components/ui/Pagination';
-import { EmptyState }         from '../../components/ui/EmptyState';
-import { PatientProfile }     from '../../components/ui/PatientProfile';
+import { Avatar } from '../../components/ui/Avatar';
+import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
+import { SearchInput } from '../../components/ui/SearchInput';
+import { FilterTabs } from '../../components/ui/FilterTabs';
+import { Pagination } from '../../components/ui/Pagination';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { PatientProfile } from '../../components/ui/PatientProfile';
 import { MOCK_PATIENTS, Patient, PatientStatus } from '../../components/mock/patientsMock';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -22,35 +22,34 @@ const STATUS_TABS = [
 ];
 
 const STATUS_MAP: Record<string, PatientStatus | undefined> = {
-  Activos:    'active',
+  Activos: 'active',
   Pendientes: 'pending',
-  Inactivos:  'inactive',
+  Inactivos: 'inactive',
 };
 
 // ─── Row component ────────────────────────────────────────────────────────────
 
-function PatientRow({
-  patient,
-  onView,
-}: {
-  patient: Patient;
-  onView: (p: Patient) => void;
-}) {
+function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient) => void }) {
   const statusVariant =
-    patient.status === 'active'   ? 'active'   :
-    patient.status === 'inactive' ? 'inactive'  : 'pending';
+    patient.status === 'active' ? 'active' : patient.status === 'inactive' ? 'inactive' : 'pending';
 
   const adherenceColor =
-    patient.adherence >= 80 ? 'text-nutri-dark' :
-    patient.adherence >= 60 ? 'text-nutri-medium' : 'text-admin-accent';
+    patient.adherence >= 80
+      ? 'text-nutri-dark'
+      : patient.adherence >= 60
+        ? 'text-nutri-medium'
+        : 'text-admin-accent';
 
   return (
     <tr className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition group">
-
       {/* Paciente */}
       <td className="py-3.5 px-4">
         <div className="flex items-center gap-3">
-          <Avatar initials={patient.initials} color="bg-nutri-light text-nutri-dark font-bold" size="md" />
+          <Avatar
+            initials={patient.initials}
+            color="bg-nutri-light text-nutri-dark font-bold"
+            size="md"
+          />
           <div>
             <p className="text-sm font-semibold text-gray-800 group-hover:text-nutri-medium transition">
               {patient.firstName} {patient.lastName}
@@ -69,17 +68,19 @@ function PatientRow({
       <td className="py-3.5 px-4">
         <Badge
           variant={statusVariant}
-          label={patient.status === 'active' ? 'Activo' :
-                 patient.status === 'inactive' ? 'Inactivo' : 'Pendiente'}
+          label={
+            patient.status === 'active'
+              ? 'Activo'
+              : patient.status === 'inactive'
+                ? 'Inactivo'
+                : 'Pendiente'
+          }
         />
       </td>
 
       {/* Plan */}
       <td className="py-3.5 px-4">
-        <Badge
-          variant={patient.plan === 'Premium' ? 'premium' : 'basic'}
-          label={patient.plan}
-        />
+        <Badge variant={patient.plan === 'Premium' ? 'premium' : 'basic'} label={patient.plan} />
       </td>
 
       {/* Adherencia */}
@@ -88,8 +89,11 @@ function PatientRow({
           <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full ${
-                patient.adherence >= 80 ? 'bg-nutri-dark' :
-                patient.adherence >= 60 ? 'bg-nutri-medium' : 'bg-admin-accent'
+                patient.adherence >= 80
+                  ? 'bg-nutri-dark'
+                  : patient.adherence >= 60
+                    ? 'bg-nutri-medium'
+                    : 'bg-admin-accent'
               }`}
               style={{ width: `${patient.adherence}%` }}
             />
@@ -118,8 +122,10 @@ function PatientRow({
           >
             Ver perfil
           </button>
-          <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100
-            text-gray-400 hover:text-gray-600 transition text-base">
+          <button
+            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100
+            text-gray-400 hover:text-gray-600 transition text-base"
+          >
             ⋮
           </button>
         </div>
@@ -131,15 +137,15 @@ function PatientRow({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function PatientsPage() {
-  const [search,          setSearch]          = useState('');
-  const [activeFilter,    setActiveFilter]    = useState('Todos');
-  const [currentPage,     setCurrentPage]     = useState(1);
+  const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState('Todos');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   // Filter + search
   const filtered = useMemo(() => {
     const statusFilter = STATUS_MAP[activeFilter];
-    return MOCK_PATIENTS.filter(p => {
+    return MOCK_PATIENTS.filter((p) => {
       const matchesStatus = !statusFilter || p.status === statusFilter;
       const q = search.toLowerCase();
       const matchesSearch =
@@ -152,14 +158,15 @@ export default function PatientsPage() {
   }, [search, activeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // Tab counts
-  const tabs = STATUS_TABS.map(t => ({
+  const tabs = STATUS_TABS.map((t) => ({
     ...t,
-    count: t.label === 'Todos'
-      ? MOCK_PATIENTS.length
-      : MOCK_PATIENTS.filter(p => p.status === STATUS_MAP[t.label]).length,
+    count:
+      t.label === 'Todos'
+        ? MOCK_PATIENTS.length
+        : MOCK_PATIENTS.filter((p) => p.status === STATUS_MAP[t.label]).length,
   }));
 
   // Handle filter change → reset page
@@ -172,10 +179,7 @@ export default function PatientsPage() {
   if (selectedPatient) {
     return (
       <NutritionistLayout>
-        <PatientProfile
-          patient={selectedPatient}
-          onBack={() => setSelectedPatient(null)}
-        />
+        <PatientProfile patient={selectedPatient} onBack={() => setSelectedPatient(null)} />
       </NutritionistLayout>
     );
   }
@@ -183,7 +187,6 @@ export default function PatientsPage() {
   // ── Patients list ──
   return (
     <NutritionistLayout>
-
       {/* Top bar */}
       <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
         <h1 className="text-xl font-bold text-gray-800">Mis Pacientes</h1>
@@ -191,7 +194,10 @@ export default function PatientsPage() {
           <SearchInput
             placeholder="Buscar paciente..."
             value={search}
-            onChange={v => { setSearch(v); setCurrentPage(1); }}
+            onChange={(v) => {
+              setSearch(v);
+              setCurrentPage(1);
+            }}
             className="w-64"
           />
           <Button variant="primary" icon={<span className="text-sm">+</span>}>
@@ -201,19 +207,41 @@ export default function PatientsPage() {
       </div>
 
       <div className="px-8 py-6">
-
         {/* Summary cards */}
         <div className="grid grid-cols-4 gap-4 mb-6">
           {[
-            { label: 'Total Pacientes', value: MOCK_PATIENTS.length, icon: '👥', color: 'bg-nutri-light text-nutri-dark' },
-            { label: 'Activos',         value: MOCK_PATIENTS.filter(p => p.status === 'active').length,   icon: '✅', color: 'bg-nutri-light text-nutri-dark' },
-            { label: 'Pendientes',      value: MOCK_PATIENTS.filter(p => p.status === 'pending').length,  icon: '⏳', color: 'bg-nutri-light text-nutri-dark' },
-            { label: 'Adherencia Media',
+            {
+              label: 'Total Pacientes',
+              value: MOCK_PATIENTS.length,
+              icon: '👥',
+              color: 'bg-nutri-light text-nutri-dark',
+            },
+            {
+              label: 'Activos',
+              value: MOCK_PATIENTS.filter((p) => p.status === 'active').length,
+              icon: '✅',
+              color: 'bg-nutri-light text-nutri-dark',
+            },
+            {
+              label: 'Pendientes',
+              value: MOCK_PATIENTS.filter((p) => p.status === 'pending').length,
+              icon: '⏳',
+              color: 'bg-nutri-light text-nutri-dark',
+            },
+            {
+              label: 'Adherencia Media',
               value: `${Math.round(MOCK_PATIENTS.reduce((s, p) => s + p.adherence, 0) / MOCK_PATIENTS.length)}%`,
-              icon: '📊', color: 'bg-nutri-light text-nutri-dark' },
-          ].map(card => (
-            <div key={card.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${card.color}`}>
+              icon: '📊',
+              color: 'bg-nutri-light text-nutri-dark',
+            },
+          ].map((card) => (
+            <div
+              key={card.label}
+              className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3"
+            >
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${card.color}`}
+              >
                 {card.icon}
               </div>
               <div>
@@ -226,11 +254,12 @@ export default function PatientsPage() {
 
         {/* Table card */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-
           {/* Table header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <FilterTabs tabs={tabs} active={activeFilter} onChange={handleFilter} />
-            <span className="text-xs text-gray-500">{filtered.length} paciente{filtered.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-500">
+              {filtered.length} paciente{filtered.length !== 1 ? 's' : ''}
+            </span>
           </div>
 
           {/* Table */}
@@ -238,8 +267,19 @@ export default function PatientsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-gray-500 text-xs uppercase border-b border-gray-50">
-                  {['Paciente', 'ID', 'Estado', 'Plan', 'Adherencia', 'Última Consulta', 'Próxima Cita', ''].map(h => (
-                    <th key={h} className="text-left pb-3 pt-3 px-4 font-semibold">{h}</th>
+                  {[
+                    'Paciente',
+                    'ID',
+                    'Estado',
+                    'Plan',
+                    'Adherencia',
+                    'Última Consulta',
+                    'Próxima Cita',
+                    '',
+                  ].map((h) => (
+                    <th key={h} className="text-left pb-3 pt-3 px-4 font-semibold">
+                      {h}
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -255,7 +295,7 @@ export default function PatientsPage() {
                     </td>
                   </tr>
                 ) : (
-                  paginated.map(p => (
+                  paginated.map((p) => (
                     <PatientRow key={p.id} patient={p} onView={setSelectedPatient} />
                   ))
                 )}
@@ -267,7 +307,8 @@ export default function PatientsPage() {
           {totalPages > 1 && (
             <div className="flex justify-between items-center px-5 py-4 border-t border-gray-100">
               <p className="text-xs text-gray-500">
-                Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} de {filtered.length}
+                Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–
+                {Math.min(currentPage * PAGE_SIZE, filtered.length)} de {filtered.length}
               </p>
               <Pagination current={currentPage} total={totalPages} onChange={setCurrentPage} />
             </div>

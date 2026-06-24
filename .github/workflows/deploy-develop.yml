@@ -4,18 +4,13 @@ on:
   push:
     branches:
       - develop
-  pull_request:
-    branches:
-      - develop
 
 jobs:
   deploy:
     name: Deploy Backend + Frontend
     runs-on: ubuntu-latest
-
     steps:
       - name: Deploy via SSH
-        if: github.event_name == 'push'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -24,58 +19,50 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             set -e
-
             PROJECT_DIR="/home/nutria/front/nutriApp"
             BACKEND_DIR="$PROJECT_DIR/backend"
             VENV_PATH="$PROJECT_DIR/venv"
             FRONTEND_DIR="$PROJECT_DIR/frontend"
             SERVICE_NAME="nutriapp.service"
-
             cd $PROJECT_DIR
-
             echo "[1/6] Preparando repositorio..."
             rm -f .git/index.lock
             git checkout -- .
             find . -name "*.pyc" -delete
             find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-
             echo "[2/6] Trayendo cambios de develop..."
             git fetch origin develop
             git checkout develop
             git pull origin develop
-
             echo "[3/6] Actualizando dependencias Python..."
-            source $VENV_PATH/bin/activate
-            pip install -r $BACKEND_DIR/requirements.txt --quiet
+            if [ ! -x "$VENV_PATH/bin/python" ]; then
+              echo "Creating server virtual environment..."
+              python3 -m venv "$VENV_PATH"
+            fi
 
+            source "$VENV_PATH/bin/activate"
+            python -m pip install --upgrade pip --quiet
+            python -m pip install -r "$BACKEND_DIR/requirements.txt" --quiet
             echo "[4/6] Reiniciando backend..."
             sudo systemctl daemon-reload
             sudo systemctl restart $SERVICE_NAME
             sleep 3
             STATUS=$(systemctl is-active $SERVICE_NAME)
             if [ "$STATUS" = "active" ]; then
-              echo "✅ Backend activo en :8083"
+              echo "Backend activo en :8083"
             else
-              echo "❌ Backend no arrancó"
+              echo "Backend no arrancó"
               sudo systemctl status $SERVICE_NAME --no-pager
               exit 1
             fi
-
             echo "[5/6] Construyendo frontend..."
             cd $FRONTEND_DIR
             npm install --legacy-peer-deps --silent
             npm run build
-
             echo "[6/6] Ajustando permisos Nginx..."
             sudo chown -R nutria:nutria $FRONTEND_DIR/build
             sudo chmod -R 755 $FRONTEND_DIR/build
-
             echo ""
             echo "Deploy completo"
             echo "   API: http://147.93.176.210:8083"
             echo "   Web: http://147.93.176.210:82"
-
-      - name: Verificar build del PR (sin deploy)
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "✅ PR validado - listo para merge a develop"

@@ -1,14 +1,19 @@
-from sqlalchemy.orm import Session
-from app.db.models.user import User, Person
-from app.schemas.user import UserResponse, UserCreate
-from app.services.user_service import UserService
-from app.db.models.user import UserRole
-from app.db.models.nutritionist import NutritionistProfile, NutritionistStatus, Specialty
-from datetime import datetime, timezone
-from fastapi import HTTPException
-from app.schemas.nutritionist import NutritionistProfileResponse
 import uuid
+from datetime import datetime, timezone
+
+from fastapi import HTTPException
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+from app.db.models.nutritionist import (
+    DocumentType,
+    NutritionistDocument,
+    NutritionistProfile,
+    NutritionistStatus,
+)
+from app.db.models.user import UserRole
+from app.schemas.user import UserCreate
+from app.services.user_service import UserService
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -20,19 +25,16 @@ class NutritionistService:
         query = db.query(NutritionistProfile)
 
         if status:
-            query = query.filter(
-                NutritionistProfile.status == status.value
-            )
+            query = query.filter(NutritionistProfile.status == status.value)
         else:
             query = query.filter(
-                NutritionistProfile.status.notin_([
-                    NutritionistStatus.rejected.value,
-                    NutritionistStatus.suspended.value
-                ])
+                NutritionistProfile.status.notin_(
+                    [NutritionistStatus.rejected.value, NutritionistStatus.suspended.value]
+                )
             )
 
         return query.all()
-    
+
     @staticmethod
     def get_by_user_id(db: Session, user_id: uuid.UUID):
         return db.query(NutritionistProfile).filter(NutritionistProfile.user_id == user_id).first()
@@ -52,7 +54,10 @@ class NutritionistService:
             raise HTTPException(status_code=400, detail="Perfil de nutricionista no encontrado")
 
         if profile.status != NutritionistStatus.pending:
-            raise HTTPException(status_code=400, detail=f"Solo se pueden revisar perfiles pendientes. Estado actual: {profile.status}" )
+            raise HTTPException(
+                status_code=400,
+                detail=f"Solo se pueden revisar perfiles pendientes. Estado actual: {profile.status}",
+            )
 
         profile.status = status
         profile.verified_by = admin_id
@@ -97,4 +102,25 @@ class NutritionistService:
         db.refresh(profile)
         return profile
 
-    
+    @staticmethod
+    def add_document(
+        db: Session,
+        nutritionist_id: uuid.UUID,
+        document_type: DocumentType,
+        file_path: str,
+        file_name: str,
+        file_size: int,
+        mime_type: str = "application/pdf",
+    ) -> NutritionistDocument:
+        document = NutritionistDocument(
+            nutritionist_id=nutritionist_id,
+            document_type=document_type,
+            file_path=file_path,
+            file_name=file_name,
+            file_size=file_size,
+            mime_type=mime_type,
+        )
+        db.add(document)
+        db.commit()
+        db.refresh(document)
+        return document

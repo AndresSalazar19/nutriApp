@@ -1,8 +1,10 @@
-from pydantic import BaseModel
-from datetime import date, datetime
-from typing import Optional
-from app.schemas.user import PersonResponse
 import uuid
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
+
+from app.schemas.user import PersonResponse
 
 
 class PatientListItem(BaseModel):

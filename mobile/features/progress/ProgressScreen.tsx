@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  StatusBar,
-} from 'react-native';
+import { ScrollView, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ProgressHeader from './components/ProgressHeader';
-import HealthMetricsCard from './components/HealthMetricsCard'; 
+import HealthMetricsCard from './components/HealthMetricsCard';
 import PeriodStats from './components/PeriodStats';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { COLORS } from '@/constants/colors';
@@ -87,7 +83,7 @@ const MOCK_DATA = {
 
 type Period = 'Semana' | 'Mes' | 'Año' | 'Todo';
 
-export default function ProgressScreen({ navigation } : ProgressScreenProps) {
+export default function ProgressScreen({ navigation }: ProgressScreenProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('Semana');
   const data = MOCK_DATA[selectedPeriod];
 
@@ -96,10 +92,7 @@ export default function ProgressScreen({ navigation } : ProgressScreenProps) {
       {/* Estilo de la barra de estado adaptado al header verde */}
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
-      <ProgressHeader 
-        selectedPeriod={selectedPeriod} 
-        onPeriodChange={setSelectedPeriod} 
-      />
+      <ProgressHeader selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} />
 
       <ScrollView
         style={styles.scroll}
@@ -123,7 +116,7 @@ export default function ProgressScreen({ navigation } : ProgressScreenProps) {
         />
       </ScrollView>
 
-      <BottomTabBar activeTab="progreso"/>
+      <BottomTabBar activeTab="progreso" />
     </SafeAreaView>
   );
 }

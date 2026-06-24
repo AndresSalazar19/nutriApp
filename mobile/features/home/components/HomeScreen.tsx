@@ -32,11 +32,7 @@ function StatCard({
 }) {
   return (
     <View style={styles.statCard}>
-      <MaterialCommunityIcons
-        name={icon}
-        size={22}
-        color={color}
-      />
+      <MaterialCommunityIcons name={icon} size={22} color={color} />
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={styles.statUnit}>{unit}</Text>
     </View>
@@ -62,11 +58,7 @@ function ActionCard({
     <TouchableOpacity style={styles.actionCard} activeOpacity={0.8}>
       <View style={[styles.actionAccent, { backgroundColor: accentColor }]} />
       <View style={styles.actionIconWrap}>
-        <MaterialCommunityIcons
-          name={icon}
-          size={24}
-          color={accentColor}
-        />
+        <MaterialCommunityIcons name={icon} size={24} color={accentColor} />
       </View>
       <Text style={styles.actionTitle}>{title}</Text>
       <Text style={styles.actionSubtitle}>{subtitle}</Text>
@@ -84,11 +76,7 @@ function ActionCard({
 function ReminderCard() {
   return (
     <View style={styles.reminderCard}>
-      <MaterialCommunityIcons
-        name="lightbulb-on-outline"
-        size={22}
-        color="#f57f17"
-      />
+      <MaterialCommunityIcons name="lightbulb-on-outline" size={22} color="#f57f17" />
       <View style={styles.reminderBody}>
         <Text style={styles.reminderTitle}>Recordatorio del día</Text>
         <Text style={styles.reminderText}>
@@ -102,11 +90,7 @@ function ReminderCard() {
 // ── FAB de Nutricionista ──────────────────────────────────────────────────────
 function NutritionistFloatingButton({ onPress }: { onPress: () => void }) {
   return (
-    <TouchableOpacity
-      style={styles.nutritionistFab}
-      activeOpacity={0.85}
-      onPress={onPress}
-    >
+    <TouchableOpacity style={styles.nutritionistFab} activeOpacity={0.85} onPress={onPress}>
       <View style={styles.fabInner}>
         <MaterialCommunityIcons name="chat" size={28} color="#fff" />
       </View>
@@ -124,9 +108,7 @@ export default function HomeScreen() {
       {/* ── Green Header ── */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerGreeting}>
-            Hola, Juan
-          </Text>
+          <Text style={styles.headerGreeting}>Hola, Juan</Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
@@ -153,7 +135,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <ReminderCard />
-        
+
         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
 
         <View style={styles.actionsGrid}>
@@ -189,7 +171,7 @@ export default function HomeScreen() {
             <Text style={styles.resourceEmptyText}>No hay recursos disponibles aún.</Text>
           </View>
         ) : (
-          previewItems.map(item => (
+          previewItems.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.resourceRow}
@@ -199,15 +181,18 @@ export default function HomeScreen() {
               <View style={styles.resourceIconWrap}>
                 <MaterialCommunityIcons
                   name={
-                    (CATEGORY_ICON[item.category] as keyof typeof MaterialCommunityIcons.glyphMap)
-                    ?? 'book-open-page-variant'
+                    (CATEGORY_ICON[
+                      item.category
+                    ] as keyof typeof MaterialCommunityIcons.glyphMap) ?? 'book-open-page-variant'
                   }
                   size={24}
                   color={COLORS.primary}
                 />
               </View>
               <View style={styles.resourceBody}>
-                <Text style={styles.resourceTitle} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.resourceTitle} numberOfLines={1}>
+                  {item.title}
+                </Text>
                 <Text style={styles.resourceSubtitle}>
                   {CATEGORY_LABEL[item.category] ?? item.category}
                   {item.tags && item.tags.length > 0 ? ` · ${item.tags[0]}` : ''}
@@ -223,10 +208,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       <NutritionistFloatingButton onPress={() => {}} />
-      <AIFloatingButton
-        onPress={() => {}}
-        style={{ bottom: 100, right: 90 }}
-      />
+      <AIFloatingButton onPress={() => {}} style={{ bottom: 100, right: 90 }} />
 
       {/* ── Bottom Tab Bar ── */}
       <BottomTabBar activeTab="inicio" />
