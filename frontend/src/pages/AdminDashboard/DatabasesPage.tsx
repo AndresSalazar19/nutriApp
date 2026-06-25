@@ -334,9 +334,7 @@ export default function DatabasesPage() {
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
               Composición de Alimentos (100g)
             </h3>
-            <p className="text-xs text-gray-500 mt-1">
-              Datos nutricionales base consumidos desde tu API.
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Datos nutricionales base.</p>
           </div>
           <Button variant="danger" onClick={() => setFoodToEdit(undefined)}>
             + Nuevo Alimento

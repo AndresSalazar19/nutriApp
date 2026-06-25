@@ -2,9 +2,10 @@ import uuid
 from typing import Optional
 
 from sqlalchemy import or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from app.db.models.patient import PatientHistory, PatientProfile, PatientStatus
+from app.db.models.patient_nutritionist import PatientNutritionist
 from app.db.models.user import Person, User, UserRole
 
 
@@ -27,8 +28,20 @@ class PatientService:
         status: Optional[str] = None,
         priority: Optional[bool] = None,
     ):
-        query = db.query(User).filter(User.role == UserRole.patient)
-        query = query.join(Person, Person.user_id == User.id)
+        nutri_person = aliased(Person)
+
+        query = (
+            db.query(User, Person, PatientProfile, PatientNutritionist, nutri_person)
+            .join(Person, Person.user_id == User.id)
+            .outerjoin(
+                PatientNutritionist,
+                (PatientNutritionist.patient_id == User.id)
+                & (PatientNutritionist.is_active == True),
+            )
+            .outerjoin(nutri_person, nutri_person.user_id == PatientNutritionist.nutritionist_id)
+            .outerjoin(PatientProfile, PatientProfile.user_id == User.id)
+            .filter(User.role == UserRole.patient)
+        )
 
         if name:
             search = f"%{name}%"
@@ -39,15 +52,13 @@ class PatientService:
                 )
             )
 
-        users = query.all()
+        records = query.all()
 
         results = []
-        for user in users:
-            profile = db.query(PatientProfile).filter(PatientProfile.user_id == user.id).first()
+        for user, person, profile, relation, nutri_person_data in records:
             patient_status = profile.status if profile else "active"
             patient_flag = profile.priority_flag if profile else False
 
-            # Aplicar filtros de status y priority
             if status and patient_status != status:
                 continue
             if priority is not None and patient_flag != priority:
@@ -57,9 +68,19 @@ class PatientService:
                 {
                     "user_id": str(user.id),
                     "email": user.email,
-                    "first_name": user.person.first_name if user.person else "",
-                    "last_name": user.person.last_name if user.person else "",
-                    "phone": user.person.phone if user.person else None,
+                    "first_name": person.first_name if person else "",
+                    "last_name": person.last_name if person else "",
+                    "phone": person.phone if person else None,
+                    "nutritionist_name": (
+                        f"{nutri_person_data.first_name} {nutri_person_data.last_name}"
+                        if nutri_person_data
+                        else None
+                    ),
+                    "nutritionist_initials": (
+                        f"{nutri_person_data.first_name[0]}{nutri_person_data.last_name[0]}"
+                        if nutri_person_data
+                        else None
+                    ),
                     "status": patient_status,
                     "priority_flag": patient_flag,
                 }
@@ -70,27 +91,31 @@ class PatientService:
     @staticmethod
     def search_patients(db: Session, q: str):
         search = f"%{q}%"
-        query = db.query(User).filter(User.role == UserRole.patient)
-        query = query.join(Person, Person.user_id == User.id)
-        query = query.filter(
-            or_(
-                Person.first_name.ilike(search),
-                Person.last_name.ilike(search),
-                User.email.ilike(search),
+        query = (
+            db.query(User, Person, PatientProfile)
+            .join(Person, Person.user_id == User.id)
+            .outerjoin(PatientProfile, PatientProfile.user_id == User.id)
+            .filter(User.role == UserRole.patient)
+            .filter(
+                or_(
+                    Person.first_name.ilike(search),
+                    Person.last_name.ilike(search),
+                    User.email.ilike(search),
+                )
             )
         )
-        users = query.all()
+
+        records = query.all()
 
         results = []
-        for user in users:
-            profile = db.query(PatientProfile).filter(PatientProfile.user_id == user.id).first()
+        for user, person, profile in records:
             results.append(
                 {
                     "user_id": str(user.id),
                     "email": user.email,
-                    "first_name": user.person.first_name if user.person else "",
-                    "last_name": user.person.last_name if user.person else "",
-                    "phone": user.person.phone if user.person else None,
+                    "first_name": person.first_name if person else "",
+                    "last_name": person.last_name if person else "",
+                    "phone": person.phone if person else None,
                     "status": profile.status if profile else "active",
                     "priority_flag": profile.priority_flag if profile else False,
                 }
