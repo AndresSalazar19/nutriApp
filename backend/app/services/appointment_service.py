@@ -17,6 +17,7 @@ from app.schemas.appointment import (
     AppointmentRequest,
     AppointmentResponse,
     AppointmentUpdateRequest,
+    AvailabilityNutritionistRequest,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -113,13 +114,16 @@ class AppointmentService:
         if not AppointmentService._is_slot_available(
             db, data.nutritionist_id, scheduled_at, data.duration_min
         ):
-            raise HTTPException(status_code=400, detail="El horario no está disponible")
+            raise HTTPException(
+                status_code=400, detail="Este horario ya está ocupado por otra cita"
+            )
 
         if not AppointmentService.is_within_availability(
             db, data.nutritionist_id, scheduled_at, data.duration_min
         ):
             raise HTTPException(
-                status_code=400, detail="El horario no está dentro de la disponibilidad"
+                status_code=400,
+                detail="El horario no está dentro de la disponibilidad del nutricionista",
             )
 
         appointment = Appointment(
@@ -155,7 +159,7 @@ class AppointmentService:
 
         appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
         if not appointment:
-            raise Exception("Cita no encontrada")
+            raise HTTPException(status_code=404, detail="Cita no encontrada")
 
         if data.scheduled_at:
             new_date = data.scheduled_at
@@ -201,7 +205,7 @@ class AppointmentService:
         appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
 
         if not appointment:
-            raise Exception("Cita no encontrada")
+            raise HTTPException(status_code=404, detail="Cita no encontrada")
 
         appointment.status = AppointmentStatus.cancelled
         appointment.cancelled_by = user_id
@@ -247,3 +251,56 @@ class AppointmentService:
                 current += timedelta(minutes=45)
 
         return slots
+
+    @staticmethod
+    def create_availability(
+        db: Session, nutritionist_id: uuid.UUID, data: AvailabilityNutritionistRequest
+    ):
+
+        existing = (
+            db.query(AvailabilityNutritionist)
+            .filter(
+                AvailabilityNutritionist.nutritionist_id == nutritionist_id,
+                AvailabilityNutritionist.rule_type == AvailabilityRuleType.recurring,
+                AvailabilityNutritionist.day_of_week == data.day_of_week,
+            )
+            .first()
+        )
+
+        if existing:
+            raise HTTPException(
+                status_code=400, detail="Ya existe una disponibilidad para este día"
+            )
+
+        overlap = (
+            db.query(AvailabilityNutritionist)
+            .filter(
+                AvailabilityNutritionist.nutritionist_id == nutritionist_id,
+                AvailabilityNutritionist.rule_type == data.rule_type,
+                AvailabilityNutritionist.day_of_week == data.day_of_week,
+                AvailabilityNutritionist.start_time < data.end_time,
+                AvailabilityNutritionist.end_time > data.start_time,
+            )
+            .first()
+        )
+
+        if overlap:
+            raise HTTPException(
+                status_code=400, detail="Existe un horario que se traslapa con el rango indicado"
+            )
+
+        availability = AvailabilityNutritionist(
+            nutritionist_id=nutritionist_id,
+            rule_type=data.rule_type,
+            day_of_week=data.day_of_week,
+            specific_date=data.specific_date,
+            start_time=data.start_time,
+            end_time=data.end_time,
+            is_available=data.is_available,
+        )
+
+        db.add(availability)
+        db.commit()
+        db.refresh(availability)
+
+        return availability

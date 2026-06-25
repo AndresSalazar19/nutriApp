@@ -12,6 +12,8 @@ from app.schemas.appointment import (
     AppointmentRequest,
     AppointmentResponse,
     AppointmentUpdateRequest,
+    AvailabilityNutritionistRequest,
+    AvailabilityNutritionistResponse,
 )
 from app.services.appointment_service import AppointmentService
 
@@ -67,3 +69,24 @@ def get_available_slots(nutritionist_id: uuid.UUID, date: date, db: Session = De
     except Exception as e:
         resp = error_response([str(e)], status_code=400)
         return JSONResponse(status_code=400, content=resp.model_dump())
+
+
+@router.post("/availability/{nutritionist_id}", response_model=AvailabilityNutritionistResponse)
+def create_availability(
+    nutritionist_id: uuid.UUID,
+    data: AvailabilityNutritionistRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        return AppointmentService.create_availability(
+            db,
+            nutritionist_id,
+            data,
+        )
+
+    except Exception as e:
+        resp = error_response([str(e)], status_code=400)
+        return JSONResponse(
+            status_code=400,
+            content=resp.model_dump(),
+        )
