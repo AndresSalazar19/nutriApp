@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { AdminTopBar } from '../../components/layout/AdminTopBar';
 import { StatCard } from '../../components/ui/StatCard';
@@ -8,6 +8,12 @@ import { SearchInput } from '../../components/ui/SearchInput';
 import { FilterTabs } from '../../components/ui/FilterTabs';
 import { DataTable, Column } from '../../components/ui/DataTable';
 import { Pagination } from '../../components/ui/Pagination';
+import { AssignNutritionistModal } from '../../components/admin/AssignNutritionistModal';
+import { Toast } from '../../components/ui/Toast';
+import {
+  PatientResponse,
+  PatientService,
+} from '../../services/PatientNutritionist/patientNutritionistService';
 import {
   MdVisibility,
   MdEdit,
@@ -36,78 +42,30 @@ interface Client {
   registrationDate: string;
 }
 
-const clientsMock: Client[] = [
-  {
-    id: '1',
-    initials: 'MR',
+function mapPatientToClient(p: PatientResponse): Client {
+  const firstName = p.first_name?.trim() ?? '';
+  const lastName = p.last_name?.trim() ?? '';
+  const fullName = `${firstName} ${lastName}`.trim();
+  const initials = `${firstName.charAt(0) ?? ''}${lastName.charAt(0) ?? ''}`.toUpperCase() || 'P';
+  const nutritionistName = p.nutritionist_name?.trim();
+
+  return {
+    id: p.user_id,
+    initials,
     color: 'bg-admin-light',
-    name: 'María Rodríguez',
-    email: 'maria.r@email.com',
-    nutritionist: { initials: 'AS', color: 'bg-admin-light', name: 'Dr. Alfonso Silva' },
-    subscription: 'premium',
-    registrationDate: '05 Mar 2025',
-  },
-  {
-    id: '2',
-    initials: 'JG',
-    color: 'bg-admin-light',
-    name: 'Jorge Gutiérrez',
-    email: 'jorge.g@email.com',
-    nutritionist: { initials: 'AS', color: 'bg-admin-light', name: 'Dr. Alfonso Silva' },
+    name: fullName || p.email,
+    email: p.email,
+    nutritionist: nutritionistName
+      ? {
+          name: nutritionistName,
+          initials: p.nutritionist_initials?.trim() || '??',
+          color: 'bg-admin-light',
+        }
+      : null,
     subscription: 'basic',
-    registrationDate: '12 Feb 2025',
-  },
-  {
-    id: '3',
-    initials: 'LC',
-    color: 'bg-admin-light',
-    name: 'Lucía Castro',
-    email: 'lucia.c@email.com',
-    nutritionist: { initials: 'MG', color: 'bg-admin-light', name: 'Dra. María García' },
-    subscription: 'premium',
-    registrationDate: '28 Ene 2025',
-  },
-  {
-    id: '4',
-    initials: 'AP',
-    color: 'bg-admin-light',
-    name: 'Ana Pérez',
-    email: 'ana.p@email.com',
-    nutritionist: null,
-    subscription: 'basic',
-    registrationDate: '08 Nov 2025',
-  },
-  {
-    id: '5',
-    initials: 'RM',
-    color: 'bg-admin-light',
-    name: 'Roberto Morales',
-    email: 'roberto.m@email.com',
-    nutritionist: { initials: 'JR', color: 'bg-admin-light', name: 'Dr. Juan Rodríguez' },
-    subscription: 'premium',
-    registrationDate: '15 Oct 2024',
-  },
-  {
-    id: '6',
-    initials: 'PS',
-    color: 'bg-admin-light',
-    name: 'Patricia Sánchez',
-    email: 'patricia.s@email.com',
-    nutritionist: { initials: 'PM', color: 'bg-admin-light', name: 'Dr. Pedro Morales' },
-    subscription: 'basic',
-    registrationDate: '22 Sep 2024',
-  },
-  {
-    id: '7',
-    initials: 'CF',
-    color: 'bg-admin-light',
-    name: 'Carlos Fernández',
-    email: 'carlos.f@email.com',
-    nutritionist: { initials: 'ST', color: 'bg-admin-light', name: 'Dra. Sara Torres' },
-    subscription: 'premium',
-    registrationDate: '07 Ago 2024',
-  },
-];
+    registrationDate: 'N/A',
+  };
+}
 
 const statsCards = [
   {
@@ -170,7 +128,7 @@ function NutritionistCell({ nutritionist }: { nutritionist: Client['nutritionist
   );
 }
 
-function ActionButtons({ client }: { client: Client }) {
+function ActionButtons({ client, onAssign }: { client: Client; onAssign?: () => void }) {
   return (
     <div className="flex items-center gap-1">
       {/* View */}
@@ -184,6 +142,7 @@ function ActionButtons({ client }: { client: Client }) {
       {/* Assign / Edit */}
       {client.nutritionist === null ? (
         <button
+          onClick={onAssign}
           className="w-7 h-7 flex items-center justify-center rounded-full bg-admin-dark hover:bg-admin-medium text-white transition"
           title="Asignar nutricionista"
         >
@@ -214,26 +173,72 @@ function ClientsPage() {
   const [activeTab, setActiveTab] = useState('Todos');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-
-  const filtered = clientsMock.filter((c) => {
-    const matchesTab =
-      activeTab === 'Todos'
-        ? true
-        : activeTab === 'Activos'
-          ? c.nutritionist !== null
-          : activeTab === 'Sin asignar'
-            ? c.nutritionist === null
-            : true;
-
-    const q = search.toLowerCase();
-    const matchesSearch =
-      search === '' ||
-      c.name.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q) ||
-      (c.nutritionist?.name.toLowerCase().includes(q) ?? false);
-
-    return matchesTab && matchesSearch;
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [patientToAssign, setPatientToAssign] = useState<{ id: string; name: string } | null>(null);
+  const [toastConfig, setToastConfig] = useState({
+    isVisible: false,
+    message: '',
+    type: 'success' as const,
   });
+
+  const loadClients = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const patients = await PatientService.getAll();
+      setClients(patients.map(mapPatientToClient));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudieron cargar los clientes.');
+      setClients([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchClients = async () => {
+      if (!isMounted) return;
+      await loadClients();
+    };
+
+    fetchClients();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filtered = clients
+    .filter((c) => {
+      const matchesTab =
+        activeTab === 'Todos'
+          ? true
+          : activeTab === 'Activos'
+            ? c.nutritionist !== null
+            : activeTab === 'Sin asignar'
+              ? c.nutritionist === null
+              : true;
+
+      const q = search.toLowerCase();
+      const matchesSearch =
+        search === '' ||
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        (c.nutritionist?.name.toLowerCase().includes(q) ?? false);
+
+      return matchesTab && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (a.nutritionist && !b.nutritionist) return -1;
+      if (!a.nutritionist && b.nutritionist) return 1;
+      return 0;
+    });
 
   const columns: Column<Client>[] = [
     {
@@ -267,7 +272,15 @@ function ClientsPage() {
     {
       key: 'acciones',
       header: 'Acciones',
-      render: (row) => <ActionButtons client={row} />,
+      render: (row) => (
+        <ActionButtons
+          client={row}
+          onAssign={() => {
+            setPatientToAssign({ id: row.id, name: row.name });
+            setIsAssignModalOpen(true);
+          }}
+        />
+      ),
     },
   ];
 
@@ -330,6 +343,12 @@ function ClientsPage() {
             </button>
           </div>
 
+          {error ? (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </div>
+          ) : null}
+
           <DataTable
             columns={columns}
             data={filtered}
@@ -337,14 +356,39 @@ function ClientsPage() {
             emptyIcon="👥"
             emptyTitle="No hay clientes"
             emptyDescription="No se encontraron resultados para tu búsqueda."
+            isLoading={isLoading}
           />
 
           <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-50">
-            <p className="text-xs text-gray-400">Mostrando 1-{filtered.length} de 347 clientes</p>
+            <p className="text-xs text-gray-400">
+              Mostrando {filtered.length > 0 ? 1 : 0}-{filtered.length} de {clients.length} clientes
+            </p>
             <Pagination current={currentPage} total={3} onChange={setCurrentPage} />
           </div>
         </div>
       </div>
+      {patientToAssign && (
+        <AssignNutritionistModal
+          isOpen={isAssignModalOpen}
+          patientId={patientToAssign.id}
+          patientName={patientToAssign.name}
+          onClose={() => setIsAssignModalOpen(false)}
+          onSuccess={() => {
+            setToastConfig({
+              isVisible: true,
+              message: '¡Nutricionista asignado con éxito!',
+              type: 'success',
+            });
+            loadClients();
+          }}
+        />
+      )}
+      <Toast
+        isVisible={toastConfig.isVisible}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onClose={() => setToastConfig((prev) => ({ ...prev, isVisible: false }))}
+      />
     </AdminLayout>
   );
 }
