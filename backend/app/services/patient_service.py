@@ -55,7 +55,7 @@ class PatientService:
         records = query.all()
 
         results = []
-        for user, person, profile, relation, nutri_person_data in records:
+        for user, person, profile, _relation, nutri_person_data in records:
             patient_status = profile.status if profile else "active"
             patient_flag = profile.priority_flag if profile else False
 
