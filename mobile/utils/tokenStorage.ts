@@ -4,6 +4,15 @@ import { Platform } from 'react-native';
 
 const TOKEN_KEY = 'auth_token';
 
+function decodePayload(token: string): Record<string, unknown> | null {
+  try {
+    const base64 = token.split('.')[1].replaceAll('-', '+').replaceAll('_', '/');
+    return JSON.parse(atob(base64));
+  } catch {
+    return null;
+  }
+}
+
 export const tokenStorage = {
   async get(): Promise<string | null> {
     try {
@@ -31,5 +40,18 @@ export const tokenStorage = {
     }
 
     await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
+  },
+  async isExpired(): Promise<boolean> {
+    const token = await this.get();
+    if (!token) return true;
+    const payload = decodePayload(token);
+    if (!payload || typeof payload.exp !== 'number') return true;
+    const bufferMs = 30 * 1000;
+    return payload.exp * 1000 - bufferMs < Date.now();
+  },
+  async getPayload(): Promise<Record<string, unknown> | null> {
+    const token = await this.get();
+    if (!token) return null;
+    return decodePayload(token);
   },
 };

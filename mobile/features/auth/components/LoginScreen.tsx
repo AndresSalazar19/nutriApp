@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useLogin } from '@/features/auth/hooks/useAuth';
+import { AuthService } from '@/features/auth/services/authService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PasswordField } from '@/components/ui/PasswordField';
 
@@ -26,8 +27,11 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
 
   const handleLogin = async () => {
+    setRoleError(null);
+
     if (!email.trim() || !password.trim()) {
       Alert.alert('Campos requeridos', 'Por favor ingresa tu correo y contraseña.');
       return;
@@ -36,6 +40,11 @@ export default function LoginScreen() {
     const result = await login({ email: email.trim(), password });
 
     if (result) {
+      if (result.user.role !== 'patient') {
+        await AuthService.logout();
+        setRoleError('Acceso restringido. Esta aplicación está disponible solo para pacientes.');
+        return;
+      }
       router.replace('/(tabs)');
     }
   };
@@ -70,7 +79,7 @@ export default function LoginScreen() {
 
           <View style={styles.bottomPanel}>
 
-            {error ? (
+            {(error || roleError) ? (
               <View style={styles.errorBox}>
                 <View style={styles.errorRow}>
                   <MaterialCommunityIcons
@@ -78,7 +87,7 @@ export default function LoginScreen() {
                     size={18}
                     color={COLORS.error}
                   />
-                  <Text style={styles.errorText}>{error}</Text>
+                  <Text style={styles.errorText}>{roleError ?? error}</Text>
                 </View>
               </View>
             ) : null}

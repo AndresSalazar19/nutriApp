@@ -56,3 +56,27 @@ export function useCurrentUser() {
 
   return { user, loading };
 }
+
+export function useSession() {
+  const [ready, setReady] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  useEffect(() => {
+    AuthService.isAuthenticated()
+      .then(setAuthenticated)
+      .finally(() => setReady(true));
+  }, []);
+
+  return { ready, authenticated };
+}
+
+export function useRole() {
+  const { user, loading } = useCurrentUser();
+
+  return {
+    role: user?.role ?? null,
+    isPatient: user?.role === 'patient',
+    loading,
+    user,
+  };
+}

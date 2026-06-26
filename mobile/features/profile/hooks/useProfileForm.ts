@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PersonalInfo, HealthInfo, UserProfile } from '../types';
 import { UserService, UserAccount } from '@/services/userservice';
+import { AuthService } from '@/features/auth/services/authService';
 
 const EMPTY_PROFILE: UserProfile = {
   name: '',
@@ -72,11 +73,24 @@ export function useProfileForm(userId: string) {
     if (!userId) return;
     setLoading(true);
     setError(null);
+
+    let hasCachedData = false;
+    try {
+      const cached = await AuthService.getUserAccount();
+      if (cached?.id === userId) {
+        setProfile(mapUserToProfile(cached));
+        hasCachedData = true;
+      }
+    } catch { /* ignore cache errors */ }
+
     try {
       const user = await UserService.getById(userId);
       setProfile(mapUserToProfile(user));
+      await AuthService.setUserAccount(user);
     } catch {
-      setError('No se pudo cargar el perfil. Verifica tu conexión.');
+      if (!hasCachedData) {
+        setError('No se pudo cargar el perfil. Verifica tu conexión.');
+      }
     } finally {
       setLoading(false);
     }
@@ -86,11 +100,13 @@ export function useProfileForm(userId: string) {
     load();
   }, [load]);
 
-  const activeValue = activeModal
-    ? activeModal.section === 'personal'
-      ? profile.personalInfo[activeModal.field as keyof PersonalInfo]
-      : profile.healthInfo[activeModal.field as keyof HealthInfo]
-    : '';
+  const activeValue = (() => {
+    if (!activeModal) return '';
+    if (activeModal.section === 'personal') {
+      return profile.personalInfo[activeModal.field as keyof PersonalInfo];
+    }
+    return profile.healthInfo[activeModal.field as keyof HealthInfo];
+  })();
 
   function openModal(
     field: keyof PersonalInfo | keyof HealthInfo,
