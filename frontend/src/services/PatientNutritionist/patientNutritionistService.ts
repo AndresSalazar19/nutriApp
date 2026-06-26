@@ -11,6 +11,7 @@ export interface PatientResponse {
   priority_flag: boolean;
   nutritionist_name?: string | null;
   nutritionist_initials?: string | null;
+  registered_at?: string;
 }
 
 export interface PatientNutritionistRequest {

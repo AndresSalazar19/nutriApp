@@ -84,6 +84,7 @@ class PatientService:
                     ),
                     "status": patient_status,
                     "priority_flag": patient_flag,
+                    "registered_at": user.created_at.isoformat() if user.created_at else None,
                 }
             )
 
