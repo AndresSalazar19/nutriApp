@@ -1,6 +1,7 @@
+import os
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -81,6 +82,28 @@ def delete_user(user_id: uuid.UUID, db: Session = Depends(get_db)):
     UserService.delete(db, user)
 
     resp = success_response(data={"message": "Usuario eliminado correctamente"})
+    return JSONResponse(status_code=200, content=resp.model_dump())
+
+
+@router.post("/{user_id}/avatar", response_model=None)
+def upload_avatar(user_id: uuid.UUID, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    user = UserService.get_by_id(db, user_id)
+
+    if not user:
+        resp = error_response(["Usuario no encontrado"], status_code=404)
+        return JSONResponse(status_code=404, content=resp.model_dump())
+
+    if not file.content_type or not file.content_type.startswith("image/"):
+        resp = error_response(["Solo se permiten imágenes JPG/PNG/GIF"], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
+
+    try:
+        avatar_url = UserService.upload_avatar(db, user_id, file)
+    except Exception as exc:
+        resp = error_response([str(exc)], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
+
+    resp = success_response(data={"avatar_url": avatar_url})
     return JSONResponse(status_code=200, content=resp.model_dump())
 
 

@@ -28,7 +28,6 @@ class PersonResponse(BaseModel):
     last_name: str
     date_of_birth: date | None = None
     phone: str | None = None
-    avatar_url: str | None = None
     cedula: str | None = None
     gender: str | None = None
 
@@ -42,6 +41,7 @@ class UserResponse(BaseModel):
     role: UserRole
     is_active: bool
     email_verified: bool
+    avatar_url: str | None = None
     person: PersonResponse | None = None
 
     class Config:

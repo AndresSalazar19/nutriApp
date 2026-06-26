@@ -11,6 +11,7 @@ import { NutritionistReviewPanel } from '../../components/admin/NutritionistRevi
 import { RejectNutritionistModal } from '../../components/admin/RejectNutritionistModal';
 import { NutritionistService, NutritionistProfile } from '../../services/NutritionistService';
 import { useAuth } from '../../hooks/useAuth';
+import { API_URL } from '../../config/api';
 
 // ─── View model ───────────────────────────────────────────────────────────────
 
@@ -32,6 +33,7 @@ interface NutritionistRow {
   phone: string;
   yearsExperience: string;
   education: string;
+  avatarUrl?: string | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -55,6 +57,9 @@ function mapProfileToRow(p: NutritionistProfile): NutritionistRow {
   const rowStatus: RowStatus =
     p.status === 'verified' ? 'active' : p.status === 'rejected' ? 'rejected' : 'pending';
 
+  // Lógica clave para limpiar la URL
+  const BASE_URL = API_URL.replace('/api/v1', '');
+
   return {
     id: p.id,
     profileId: p.id,
@@ -71,6 +76,8 @@ function mapProfileToRow(p: NutritionistProfile): NutritionistRow {
     phone: p.user?.person?.phone ?? '—',
     yearsExperience: p.years_experience != null ? `${p.years_experience} años` : '—',
     education: p.education ?? '—',
+    // Usamos el BASE_URL limpio
+    avatarUrl: p.user?.avatar_url ? `${BASE_URL}/${p.user.avatar_url}` : null,
   };
 }
 
@@ -317,7 +324,7 @@ function NutritionistsPage() {
       header: 'Nutricionista',
       render: (r) => (
         <div className="flex items-center gap-2.5">
-          <Avatar initials={r.initials} color={r.color} size="md" />
+          <Avatar src={r.avatarUrl} initials={r.initials} color={r.color} size="md" />
           <div>
             <p className="font-semibold text-gray-900 text-xs leading-tight">{r.name}</p>
             <p className="text-gray-500 text-xs">{r.email}</p>

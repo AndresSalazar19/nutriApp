@@ -71,6 +71,7 @@ class PatientService:
                     "first_name": person.first_name if person else "",
                     "last_name": person.last_name if person else "",
                     "phone": person.phone if person else None,
+                    "avatar_url": user.avatar_url,
                     "nutritionist_name": (
                         f"{nutri_person_data.first_name} {nutri_person_data.last_name}"
                         if nutri_person_data
