@@ -13,7 +13,6 @@ export interface NutritionistPerson {
   last_name: string;
   date_of_birth: string | null;
   phone: string | null;
-  avatar_url: string | null;
   cedula: string | null;
   gender: string | null;
 }
@@ -23,6 +22,7 @@ export interface NutritionistUser {
   email: string;
   role: string;
   is_active: boolean;
+  avatar_url: string | null;
   person: NutritionistPerson;
 }
 
