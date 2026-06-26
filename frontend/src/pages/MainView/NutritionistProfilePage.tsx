@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { useAuth } from '../../hooks/useAuth';
+import { tokenStorage } from '../../utils/tokenStorage';
 import {
   NutritionistService,
   NutritionistProfileDetail,
@@ -28,7 +29,7 @@ const DEFAULT_FORM: AvailabilityFormState = {
 };
 
 export default function NutritionistProfilePage() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<NutritionistProfileDetail | null>(null);
@@ -40,6 +41,11 @@ export default function NutritionistProfilePage() {
   const [editorError, setEditorError] = useState<string | null>(null);
   const [editorLoading, setEditorLoading] = useState(false);
   const [formState, setFormState] = useState<AvailabilityFormState>(DEFAULT_FORM);
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const loadProfile = useCallback(() => {
     if (!user) return;
@@ -56,6 +62,69 @@ export default function NutritionistProfilePage() {
       .catch((e) => setError(e.message ?? 'Error al cargar perfil'))
       .finally(() => setLoading(false));
   }, [user]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadError(null);
+    const file = event.target.files?.[0] ?? null;
+    if (!file) {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('El archivo debe ser una imagen');
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadError('La imagen debe pesar menos de 2MB');
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleCancelUpload = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setUploadError(null);
+  };
+
+  const handleConfirmUpload = async () => {
+    if (!profile || !selectedFile || !user) return;
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const response = await NutritionistService.uploadAvatar(profile.user.id, selectedFile);
+      login(
+        {
+          ...user,
+          avatar_url: response.avatar_url ?? response.data?.avatar_url ?? user.avatar_url,
+        },
+        tokenStorage.get()!,
+      );
+      handleCancelUpload();
+      loadProfile();
+    } catch (err: any) {
+      setUploadError(err.message ?? 'Error al subir imagen');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   useEffect(() => {
     loadProfile();
@@ -196,7 +265,16 @@ export default function NutritionistProfilePage() {
   return (
     <NutritionistLayout>
       <div className="px-8 py-6 space-y-4">
-        <NutritionistProfileCards profile={profile} />
+        <NutritionistProfileCards
+          profile={profile}
+          previewUrl={previewUrl}
+          selectedFile={selectedFile}
+          uploadError={uploadError}
+          onFileChange={handleFileChange}
+          onConfirmUpload={handleConfirmUpload}
+          onCancelUpload={handleCancelUpload}
+          isUploading={isUploading}
+        />
 
         <AvailabilitySection
           calendar={calendar}

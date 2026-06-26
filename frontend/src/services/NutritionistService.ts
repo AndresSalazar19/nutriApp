@@ -205,4 +205,18 @@ export const NutritionistService = {
 
     return handleResponse<{ message: string }>(response);
   },
+
+  async uploadAvatar(userId: string, file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_URL}/users/${userId}/avatar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tokenStorage.get()}` },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('Error al subir imagen');
+    return response.json();
+  },
 };

@@ -53,6 +53,7 @@ function LoginWrapper() {
     email: string;
     role: string;
     token: string;
+    avatar_url?: string | null;
   }) => {
     login(userData as AuthUser, userData.token);
     if (userData.role === 'admin') {
@@ -86,6 +87,7 @@ function RegisterWrapper() {
     email: string;
     role: string;
     token?: string;
+    avatar_url?: string | null;
   }) => {
     login(userData as AuthUser, userData.token ?? '');
     navigate(ROUTES.DASHBOARD, { replace: true });

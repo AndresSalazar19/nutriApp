@@ -4,7 +4,13 @@ import { FaLeaf } from 'react-icons/fa';
 import { PasswordVisibilityToggle } from '../../components/PasswordVisibilityToggle';
 
 interface LoginPageProps {
-  onLogin: (userData: { userId: string; email: string; role: string; token: string }) => void;
+  onLogin: (userData: {
+    userId: string;
+    email: string;
+    role: string;
+    token: string;
+    avatar_url?: string | null;
+  }) => void;
   onGoToRegister: () => void;
   onGoToChangePassword: () => void;
 }
@@ -48,6 +54,7 @@ function LoginPage({ onLogin, onGoToRegister, onGoToChangePassword }: LoginPageP
             email: result.data.user.email,
             role: result.data.user.role,
             token: result.data.access_token,
+            avatar_url: result.data.user.avatar_url ?? null,
           });
       } else {
         // Si la API responde con un 200 pero isSuccessfully es false, o si es un 400/500
