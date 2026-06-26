@@ -11,6 +11,8 @@ import { NutritionistReviewPanel } from '../../components/admin/NutritionistRevi
 import { RejectNutritionistModal } from '../../components/admin/RejectNutritionistModal';
 import { NutritionistService, NutritionistProfile } from '../../services/NutritionistService';
 import { useAuth } from '../../hooks/useAuth';
+import { API_URL } from '../../config/api';
+import { MdCheckCircle, MdHourglassEmpty, MdLocalHospital, MdVisibility } from 'react-icons/md';
 
 // ─── View model ───────────────────────────────────────────────────────────────
 
@@ -32,6 +34,7 @@ interface NutritionistRow {
   phone: string;
   yearsExperience: string;
   education: string;
+  avatarUrl?: string | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -55,6 +58,9 @@ function mapProfileToRow(p: NutritionistProfile): NutritionistRow {
   const rowStatus: RowStatus =
     p.status === 'verified' ? 'active' : p.status === 'rejected' ? 'rejected' : 'pending';
 
+  // Lógica clave para limpiar la URL
+  const BASE_URL = API_URL.replace('/api/v1', '');
+
   return {
     id: p.id,
     profileId: p.id,
@@ -71,6 +77,8 @@ function mapProfileToRow(p: NutritionistProfile): NutritionistRow {
     phone: p.user?.person?.phone ?? '—',
     yearsExperience: p.years_experience != null ? `${p.years_experience} años` : '—',
     education: p.education ?? '—',
+    // Usamos el BASE_URL limpio
+    avatarUrl: p.user?.avatar_url ? `${BASE_URL}/${p.user.avatar_url}` : null,
   };
 }
 
@@ -81,9 +89,11 @@ const PAGE_SIZE = 10;
 function CredentialCell({ status, text }: { status: 'verified' | 'pending'; text: string }) {
   return (
     <div className="flex items-start gap-1">
-      <span className={status === 'verified' ? 'text-nutri-medium' : 'text-gray-400'}>
-        {status === 'verified' ? '✓' : '⏳'}
-      </span>
+      {status === 'verified' ? (
+        <MdCheckCircle className="w-4 h-4 text-nutri-medium" />
+      ) : (
+        <MdHourglassEmpty className="w-4 h-4 text-gray-400" />
+      )}
       <div>
         <p
           className={`text-xs font-medium ${status === 'verified' ? 'text-nutri-dark' : 'text-gray-600'}`}
@@ -114,14 +124,7 @@ function ActionButtons({ row, onView }: { row: NutritionistRow; onView: (id: str
         className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
         title="Ver detalles"
       >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-          <path
-            fillRule="evenodd"
-            d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <MdVisibility className="w-4 h-4" />
       </button>
     </div>
   );
@@ -317,7 +320,7 @@ function NutritionistsPage() {
       header: 'Nutricionista',
       render: (r) => (
         <div className="flex items-center gap-2.5">
-          <Avatar initials={r.initials} color={r.color} size="md" />
+          <Avatar src={r.avatarUrl} initials={r.initials} color={r.color} size="md" />
           <div>
             <p className="font-semibold text-gray-900 text-xs leading-tight">{r.name}</p>
             <p className="text-gray-500 text-xs">{r.email}</p>
@@ -410,7 +413,7 @@ function NutritionistsPage() {
             data={paginated}
             keyExtractor={(r) => r.id}
             isLoading={loading}
-            emptyIcon="🏥"
+            emptyIcon={<MdLocalHospital className="w-12 h-12" />}
             emptyTitle="No hay nutricionistas"
             emptyDescription="No se encontraron resultados para tu búsqueda."
           />

@@ -13,6 +13,7 @@ class PatientListItem(BaseModel):
     first_name: str
     last_name: str
     phone: Optional[str] = None
+    avatar_url: Optional[str] = None
     status: str = "active"
     priority_flag: bool = False
 

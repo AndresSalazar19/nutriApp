@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MdAttachFile, MdBiotech, MdNotes, MdSave, MdStraighten, MdTune } from 'react-icons/md';
 import { Button } from './Button';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -78,7 +79,7 @@ function Field({
   );
 }
 
-function SectionTitle({ icon, children }: { icon: string; children: React.ReactNode }) {
+function SectionTitle({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <h4 className="font-bold text-gray-800 text-sm mb-3 flex items-center gap-2">
       <span>{icon}</span> {children}
@@ -148,7 +149,7 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
 
       {/* ── Medidas básicas ── */}
       <div>
-        <SectionTitle icon="📏">Medidas Básicas</SectionTitle>
+        <SectionTitle icon={<MdStraighten className="w-4 h-4" />}>Medidas Básicas</SectionTitle>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Fecha" value={date} onChange={setDate} type="date" />
           <Field label="Peso" value={weight} onChange={setWeight} unit="kg" placeholder="72.5" />
@@ -158,10 +159,12 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
 
       {/* ── Bioimpedancia ── */}
       <div>
-        <SectionTitle icon="⚡">Resultado de Bioimpedancia</SectionTitle>
+        <SectionTitle icon={<MdBiotech className="w-4 h-4" />}>
+          Resultado de Bioimpedancia
+        </SectionTitle>
         <div className="bg-gray-50 rounded-xl p-4">
           <label className="flex flex-col items-center justify-center gap-2 cursor-pointer py-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-green-400 transition">
-            <span className="text-3xl">📎</span>
+            <MdAttachFile className="w-8 h-8 text-gray-400" />
             <span className="text-sm text-gray-500">
               {bioFile ? bioFile.name : 'Adjuntar archivo (PDF o imagen)'}
             </span>
@@ -195,7 +198,7 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
 
       {/* ── Pliegues cutáneos ── */}
       <div>
-        <SectionTitle icon="🤏">Pliegues Cutáneos</SectionTitle>
+        <SectionTitle icon={<MdTune className="w-4 h-4" />}>Pliegues Cutáneos</SectionTitle>
         <div className="grid grid-cols-3 gap-3">
           <Field
             label="Tríceps"
@@ -232,7 +235,7 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
 
       {/* ── Circunferencias ── */}
       <div>
-        <SectionTitle icon="⭕">Circunferencias</SectionTitle>
+        <SectionTitle icon={<MdStraighten className="w-4 h-4" />}>Circunferencias</SectionTitle>
         <div className="grid grid-cols-3 gap-3">
           <Field
             label="Cintura"
@@ -275,7 +278,7 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
 
       {/* ── Notas ── */}
       <div>
-        <SectionTitle icon="📝">Notas</SectionTitle>
+        <SectionTitle icon={<MdNotes className="w-4 h-4" />}>Notas</SectionTitle>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -290,7 +293,7 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
         <Button variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button variant="primary" icon={<span>💾</span>} onClick={handleSubmit}>
+        <Button variant="primary" icon={<MdSave className="w-4 h-4" />} onClick={handleSubmit}>
           Guardar Medición
         </Button>
       </div>

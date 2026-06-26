@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MdDelete, MdEdit, MdRestaurant } from 'react-icons/md';
 
 // Componentes de tu Sistema UI
 import { AdminLayout } from '../../components/layout/AdminLayout';
@@ -310,14 +311,14 @@ export default function DatabasesPage() {
             className="p-1.5 text-gray-500 hover:text-admin-dark hover:bg-admin-light rounded transition"
             title="Editar"
           >
-            ✎
+            <MdEdit className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDelete(r.id, r.name)}
             className="p-1.5 text-admin-accent hover:text-admin-dark hover:bg-admin-light rounded transition"
             title="Eliminar"
           >
-            🗑
+            <MdDelete className="w-4 h-4" />
           </button>
         </div>
       ),
@@ -334,9 +335,7 @@ export default function DatabasesPage() {
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
               Composición de Alimentos (100g)
             </h3>
-            <p className="text-xs text-gray-500 mt-1">
-              Datos nutricionales base consumidos desde tu API.
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Datos nutricionales base.</p>
           </div>
           <Button variant="danger" onClick={() => setFoodToEdit(undefined)}>
             + Nuevo Alimento
@@ -386,7 +385,7 @@ export default function DatabasesPage() {
                   columns={columns}
                   data={paginatedFoods}
                   keyExtractor={(r) => r.id}
-                  emptyIcon="🥗"
+                  emptyIcon={<MdRestaurant className="w-12 h-12" />}
                   emptyTitle="Sin resultados"
                   emptyDescription={
                     search

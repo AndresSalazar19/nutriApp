@@ -38,7 +38,13 @@ async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const msg = data?.errors?.[0] ?? data?.detail ?? `Error ${response.status}`;
+    const raw =
+      data?.status?.messages?.[0] ??
+      data?.detail ??
+      data?.errors?.[0] ??
+      `Error ${response.status}`;
+
+    const msg = raw.replace(/^\d+:\s*/, '');
     throw new Error(msg);
   }
 

@@ -1,4 +1,12 @@
 import React, { useState } from 'react';
+import {
+  MdCalendarMonth,
+  MdDirectionsRun,
+  MdFavorite,
+  MdFileDownload,
+  MdMonitorWeight,
+  MdPlaylistAddCheck,
+} from 'react-icons/md';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { Avatar } from '../../components/ui/Avatar';
 import { LineChart } from '../../components/charts/LineChart';
@@ -21,7 +29,7 @@ function StatCard({
   sub,
   subColor = 'text-gray-500',
 }: {
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   value: string;
   sub?: string;
@@ -30,7 +38,7 @@ function StatCard({
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-2xl">{icon}</span>
+        <span className="text-nutri-dark">{icon}</span>
         <p className="text-xs text-gray-500 font-medium">{label}</p>
       </div>
       <p className="text-3xl font-bold text-gray-900 leading-none mb-1">{value}</p>
@@ -185,7 +193,8 @@ export default function ReportsPage() {
               className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg
                 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
             >
-              📅 {range}
+              <MdCalendarMonth className="w-4 h-4 text-gray-500" />
+              {range}
               <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
@@ -216,7 +225,8 @@ export default function ReportsPage() {
 
           {/* Export */}
           <button className="flex items-center gap-2 px-4 py-2 bg-nutri-medium hover:bg-nutri-dark text-white text-sm font-semibold rounded-lg transition shadow-sm">
-            ↗ Exportar
+            <MdFileDownload className="w-4 h-4" />
+            Exportar
           </button>
         </div>
       </div>
@@ -236,28 +246,28 @@ export default function ReportsPage() {
         {/* ── Stat cards ── */}
         <div className="grid grid-cols-4 gap-4">
           <StatCard
-            icon="⚖️"
+            icon={<MdMonitorWeight className="w-6 h-6" />}
             label="Pérdida de Peso"
             value={`-${data.weightLost} kg`}
             sub={`↓ ${data.weightLostPct}% del peso inicial`}
             subColor="text-green-500"
           />
           <StatCard
-            icon="❤️"
+            icon={<MdFavorite className="w-6 h-6" />}
             label="Presión Arterial Actual"
             value={`${data.bloodPressureSys}/${data.bloodPressureDia}`}
             sub={data.bloodPressureNote}
             subColor={data.bloodPressureSys < 130 ? 'text-green-500' : 'text-orange-500'}
           />
           <StatCard
-            icon="📋"
+            icon={<MdPlaylistAddCheck className="w-6 h-6" />}
             label="Adherencia al Plan"
             value={`${data.adherence}%`}
             sub={`${data.adherenceChange >= 0 ? '↑' : '↓'} ${Math.abs(data.adherenceChange)}% vs mes anterior`}
             subColor={adherenceChangeColor}
           />
           <StatCard
-            icon="🏃"
+            icon={<MdDirectionsRun className="w-6 h-6" />}
             label="Actividad Física"
             value={`${data.activityDays} días/semana`}
             sub={`→ ${data.activityNote} · Meta: ${data.activityGoal} días/sem`}

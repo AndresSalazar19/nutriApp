@@ -1,4 +1,12 @@
 import React, { useState, useMemo } from 'react';
+import {
+  MdBarChart,
+  MdCheckCircle,
+  MdGroup,
+  MdHourglassEmpty,
+  MdMoreVert,
+  MdSearch,
+} from 'react-icons/md';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
@@ -126,7 +134,7 @@ function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient
             className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100
             text-gray-400 hover:text-gray-600 transition text-base"
           >
-            ⋮
+            <MdMoreVert className="w-4 h-4" />
           </button>
         </div>
       </td>
@@ -213,25 +221,25 @@ export default function PatientsPage() {
             {
               label: 'Total Pacientes',
               value: MOCK_PATIENTS.length,
-              icon: '👥',
+              icon: <MdGroup className="w-5 h-5" />,
               color: 'bg-nutri-light text-nutri-dark',
             },
             {
               label: 'Activos',
               value: MOCK_PATIENTS.filter((p) => p.status === 'active').length,
-              icon: '✅',
+              icon: <MdCheckCircle className="w-5 h-5" />,
               color: 'bg-nutri-light text-nutri-dark',
             },
             {
               label: 'Pendientes',
               value: MOCK_PATIENTS.filter((p) => p.status === 'pending').length,
-              icon: '⏳',
+              icon: <MdHourglassEmpty className="w-5 h-5" />,
               color: 'bg-nutri-light text-nutri-dark',
             },
             {
               label: 'Adherencia Media',
               value: `${Math.round(MOCK_PATIENTS.reduce((s, p) => s + p.adherence, 0) / MOCK_PATIENTS.length)}%`,
-              icon: '📊',
+              icon: <MdBarChart className="w-5 h-5" />,
               color: 'bg-nutri-light text-nutri-dark',
             },
           ].map((card) => (
@@ -288,7 +296,7 @@ export default function PatientsPage() {
                   <tr>
                     <td colSpan={8}>
                       <EmptyState
-                        icon="🔍"
+                        icon={<MdSearch className="w-12 h-12" />}
                         title="Sin resultados"
                         description="No se encontraron pacientes con los filtros aplicados."
                       />

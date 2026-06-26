@@ -1,4 +1,15 @@
 import React, { useState } from 'react';
+import {
+  MdCalendarMonth,
+  MdConstruction,
+  MdAdd,
+  MdEdit,
+  MdEmail,
+  MdMoreVert,
+  MdNotifications,
+  MdPhone,
+  MdSms,
+} from 'react-icons/md';
 import { Patient } from '../../components/mock/patientsMock';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
@@ -63,7 +74,8 @@ function InfoTab({
         <div className="flex items-center justify-between mb-3">
           <h4 className="font-bold text-gray-800 text-sm">Información Médica</h4>
           <button className="text-green-600 text-xs hover:underline flex items-center gap-1">
-            ✏️ Editar
+            <MdEdit className="w-3.5 h-3.5" />
+            Editar
           </button>
         </div>
         <div className="space-y-3 text-sm">
@@ -121,7 +133,8 @@ function InfoTab({
             onClick={onAddMeasurement}
             className="text-green-600 text-xs hover:underline flex items-center gap-1"
           >
-            ➕ Registrar medición
+            <MdAdd className="w-3.5 h-3.5" />
+            Registrar medición
           </button>
         </div>
         <div className="grid grid-cols-6 gap-3">
@@ -180,7 +193,7 @@ function InfoTab({
 function PlaceholderTab({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-gray-300">
-      <span className="text-5xl mb-3">🚧</span>
+      <MdConstruction className="w-12 h-12 mb-3" />
       <p className="text-sm font-medium">Sección {label} en desarrollo</p>
     </div>
   );
@@ -226,14 +239,14 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
           Perfil del Paciente
         </button>
         <div className="flex items-center gap-2">
-          <Button variant="outline" icon={<span>💬</span>}>
+          <Button variant="outline" icon={<MdSms className="w-4 h-4" />}>
             Mensaje
           </Button>
-          <Button variant="primary" icon={<span>📅</span>}>
+          <Button variant="primary" icon={<MdCalendarMonth className="w-4 h-4" />}>
             Agendar
           </Button>
           <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 transition text-lg">
-            ⋮
+            <MdMoreVert className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -261,8 +274,14 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
                     ID: #{patient.id} · {patient.age} años · {patient.gender}
                   </p>
                   <div className="flex items-center gap-3 text-sm text-gray-500 mb-3">
-                    <span>📧 {patient.email}</span>
-                    <span>📱 {patient.phone}</span>
+                    <span className="inline-flex items-center gap-1">
+                      <MdEmail className="w-4 h-4" />
+                      {patient.email}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <MdPhone className="w-4 h-4" />
+                      {patient.phone}
+                    </span>
                   </div>
                   <Badge
                     variant={statusVariant}
@@ -339,7 +358,7 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
                 </button>
               ))}
             </div>
-            <Button variant="primary" icon={<span>🔔</span>}>
+            <Button variant="primary" icon={<MdNotifications className="w-4 h-4" />}>
               Enviar Recordatorio
             </Button>
           </div>

@@ -1,5 +1,8 @@
+import os
+import shutil
 import uuid
 
+from fastapi import UploadFile
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
@@ -30,6 +33,58 @@ class UserService:
     @staticmethod
     def get_by_email(db: Session, email: str):
         return db.query(User).filter(User.email == email).first()
+
+    @staticmethod
+    def upload_avatar(db: Session, user_id: uuid.UUID, file: UploadFile) -> str:
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise ValueError("Usuario no encontrado")
+
+        if not file.content_type or not file.content_type.startswith("image/"):
+            raise ValueError("Solo se permiten imágenes JPG/PNG/GIF")
+
+        if user.avatar_url:
+            if os.path.exists(user.avatar_url):
+                try:
+                    os.remove(user.avatar_url)
+                except Exception as e:
+                    print(f"Error al eliminar archivo físico antiguo: {e}")
+
+        upload_dir = "uploads/avatars"
+        os.makedirs(upload_dir, exist_ok=True)
+
+        _, file_extension = os.path.splitext(file.filename)
+        if not file_extension:
+            extension_by_content_type = {
+                "image/jpeg": ".jpg",
+                "image/jpg": ".jpg",
+                "image/png": ".png",
+                "image/gif": ".gif",
+                "image/webp": ".webp",
+                "image/bmp": ".bmp",
+                "image/svg+xml": ".svg",
+            }
+            file_extension = extension_by_content_type.get(file.content_type)
+
+        if not file_extension:
+            raise ValueError("Tipo de imagen no soportado")
+
+        file_id = str(uuid.uuid4())
+        avatar_filename = f"{file_id}{file_extension}"
+        avatar_path = os.path.join(upload_dir, avatar_filename)
+
+        file.file.seek(0)
+        with open(avatar_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        avatar_url = f"uploads/avatars/{avatar_filename}"
+        user.avatar_url = avatar_url
+
+        db.commit()
+        db.refresh(user)
+
+        return avatar_url
 
     @staticmethod
     def create(db: Session, data: UserCreate) -> User:

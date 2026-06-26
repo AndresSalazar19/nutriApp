@@ -57,11 +57,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "08c2fd39-9880-417d-b9f9-652870e331ff"
-      }
-    },
-    "owner": "randyrivera0"
+      "router": {}
+    }
   }
 }

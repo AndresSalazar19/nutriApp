@@ -1,8 +1,11 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { MdRestaurant } from 'react-icons/md';
 import { ROUTES } from '../../routes/routes';
 import { useAuth } from '../../hooks/useAuth';
 import { UserMenuPopover } from '../ui/UserMenuPopover';
+import { Avatar } from '../ui/Avatar';
+import { API_URL } from '../../config/api';
 
 // ─── Ítem de navegación ───────────────────────────────────────────────────────
 
@@ -110,6 +113,9 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
 
   const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : 'NT';
   const display = user?.email ?? 'Nutricionista';
+  const avatarUrl = user?.avatar_url
+    ? `${API_URL.replace('/api/v1', '')}/${user.avatar_url}`
+    : null;
 
   // En modo locked, solo el primer ítem (Panel Principal) es navegable
   const isItemLocked = (index: number) => locked && index !== 0;
@@ -123,7 +129,7 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
           className="flex items-center gap-2 px-2 mb-7 cursor-pointer select-none hover:opacity-80 transition-opacity"
         >
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-base">🥗</span>
+            <MdRestaurant className="w-4 h-4 text-nutri-dark" />
           </div>
           <span className="text-white font-bold text-base leading-none">NutrIA</span>
         </div>
@@ -176,9 +182,7 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
           align="left"
           trigger={
             <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-nutri-medium transition select-none text-left">
-              <div className="w-8 h-8 bg-nutri-medium rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                {initials}
-              </div>
+              <Avatar src={avatarUrl} initials={initials} color="bg-nutri-medium" size="sm" />
               {/* Añadimos flex-1 para que el texto empuje el botón hasta el borde derecho */}
               <div className="min-w-0 flex-1">
                 <p className="text-white text-xs font-semibold leading-tight truncate">{display}</p>
