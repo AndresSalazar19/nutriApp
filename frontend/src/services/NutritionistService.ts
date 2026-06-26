@@ -56,6 +56,23 @@ function authHeaders(): Record<string, string> {
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 }
 
+async function handleResponse<T>(response: Response): Promise<T> {
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const raw =
+      data?.status?.messages?.[0] ??
+      data?.detail ??
+      data?.errors?.[0] ??
+      `Error ${response.status}`;
+
+    const msg = raw.replace(/^\d+:\s*/, '');
+    throw new Error(msg);
+  }
+
+  return data.data ?? data;
+}
+
 export const NutritionistService = {
   async getStatus(userId: string): Promise<ApiResponse<NutritionistStatusData>> {
     const response = await fetch(`${API_URL}/nutritionists/status/${userId}`, {

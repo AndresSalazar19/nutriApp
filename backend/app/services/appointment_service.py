@@ -27,20 +27,25 @@ LOCAL_TZ = ZoneInfo("America/Guayaquil")
 class AppointmentService:
 
     @staticmethod
-    def _is_slot_available(db: Session, nutritionist_id, start: datetime, duration: int):
-
+    def _is_slot_available(db: Session, nutritionist_id, start: datetime, duration: int, exclude_appointment_id: uuid.UUID = None) -> bool:
         if start.tzinfo is None:
             start = start.replace(tzinfo=timezone.utc)
         end = start + timedelta(minutes=duration)
 
-        appointments = (
+        query = (
             db.query(Appointment)
             .filter(
                 Appointment.nutritionist_id == nutritionist_id,
-                Appointment.status.in_([AppointmentStatus.scheduled, AppointmentStatus.confirmed]),
+                Appointment.status.in_(
+                    [AppointmentStatus.scheduled, AppointmentStatus.confirmed]
+                ),
             )
-            .all()
         )
+
+        if exclude_appointment_id is not None:
+            query = query.filter(Appointment.id != exclude_appointment_id)
+
+        appointments = query.all()
 
         for appt in appointments:
             appt_start = appt.scheduled_at
@@ -172,7 +177,7 @@ class AppointmentService:
             duration = data.duration_min or appointment.duration_min
 
             if not AppointmentService._is_slot_available(
-                db, appointment.nutritionist_id, new_date, duration
+                db, appointment.nutritionist_id, new_date, duration, appointment.id
             ):
                 raise HTTPException(status_code=400, detail="Nuevo horario no disponible")
 
@@ -200,8 +205,7 @@ class AppointmentService:
         return appointment
 
     @staticmethod
-    def cancel(db: Session, appointment_id: uuid.UUID, user_id: uuid.UUID, reason: str | None):
-
+    def cancel(db: Session, appointment_id: uuid.UUID, user_id: uuid.UUID):
         appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
 
         if not appointment:
@@ -210,7 +214,6 @@ class AppointmentService:
         appointment.status = AppointmentStatus.cancelled
         appointment.cancelled_by = user_id
         appointment.cancelled_at = datetime.now(timezone.utc)
-        appointment.notes = reason
 
         db.commit()
         db.refresh(appointment)
