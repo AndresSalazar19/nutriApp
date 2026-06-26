@@ -1,5 +1,4 @@
 import React from 'react';
-import { MdPerson } from 'react-icons/md';
 import { StepProps, FormErrors } from './types';
 import { SectionTitle } from './SectionTitle';
 import { InputField } from './InputField';
