@@ -120,6 +120,17 @@ export const NutritionistService = {
     return Array.isArray(data) ? data : (data.data ?? []);
   },
 
+  async getAssignedPatients(nutritionistId: string): Promise<any> {
+    const response = await fetch(
+      `${API_URL}/patient_nutritionists?nutritionist_id=${nutritionistId}`,
+      {
+        headers: authHeaders(),
+      },
+    );
+
+    return response.json();
+  },
+
   async review(
     profileId: string,
     status: 'verified' | 'rejected',

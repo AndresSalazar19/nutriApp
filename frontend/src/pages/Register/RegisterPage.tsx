@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormState, FormErrors, RegisterPageProps } from './types';
 import { PersonalInfoStep } from './PersonalInfoStep';
 import { ProfessionalInfoStep } from './ProfessionalInfoStep';
@@ -13,6 +13,8 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [senescytFile, setSenescytFile] = useState<File | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [touched, setTouched] = useState<Set<keyof FormState>>(new Set());
   const [form, setForm] = useState<FormState>({
     fullName: '',
@@ -28,6 +30,14 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
   });
 
   const { errors, isStepValid } = useFormValidation(form, step, acceptTerms, cvFile, senescytFile);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
 
   // Marks field as touched and updates state
   const update = (field: keyof FormState, value: string) => {
@@ -87,6 +97,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
       // Archivos (si existen)
       if (cvFile) formData.append('cv_file', cvFile);
       if (senescytFile) formData.append('senescyt_file', senescytFile);
+      if (avatarFile) formData.append('avatar_file', avatarFile);
 
       console.log('[send] Enviando registro de nutricionista (FormData)');
 
@@ -152,7 +163,17 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
         {/* Formulario */}
         <form onSubmit={handleSubmit}>
-          {step === 1 && <PersonalInfoStep form={form} update={update} errors={displayErrors} />}
+          {step === 1 && (
+            <PersonalInfoStep
+              form={form}
+              update={update}
+              errors={displayErrors}
+              avatarFile={avatarFile}
+              setAvatarFile={setAvatarFile}
+              avatarPreview={avatarPreview}
+              setAvatarPreview={setAvatarPreview}
+            />
+          )}
 
           {step === 2 && (
             <ProfessionalInfoStep

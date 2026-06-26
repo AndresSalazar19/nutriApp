@@ -124,6 +124,7 @@ def create_nutritionist(
     license_number: str | None = Form(None),
     cv_file: UploadFile = File(...),
     senescyt_file: UploadFile = File(...),
+    avatar_file: UploadFile | None = File(None),
     db: Session = Depends(get_db),
 ):
     if UserService.email_exists(db, email):
@@ -148,6 +149,9 @@ def create_nutritionist(
     try:
         # Crear perfil de nutricionista
         profile = NutritionistService.create(db, payload)
+
+        if avatar_file:
+            UserService.upload_avatar(db, profile.user_id, avatar_file)
 
         # Guardar archivos PDF
         cv_data = save_pdf(cv_file)
