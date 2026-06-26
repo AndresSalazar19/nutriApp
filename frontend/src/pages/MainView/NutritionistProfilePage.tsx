@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -16,7 +16,6 @@ import {
   DeleteAvailabilityModal,
   AvailabilityFormState,
 } from '../../components/ui/AvailabilityModals';
-import { Spinner } from '../../components/ui/Spinner';
 
 const DEFAULT_FORM: AvailabilityFormState = {
   rule_type: 'recurring',
@@ -41,7 +40,7 @@ export default function NutritionistProfilePage() {
   const [editorLoading, setEditorLoading] = useState(false);
   const [formState, setFormState] = useState<AvailabilityFormState>(DEFAULT_FORM);
 
-  const loadProfile = () => {
+  const loadProfile = useCallback(() => {
     if (!user) return;
     setLoading(true);
     setError(null);
@@ -55,11 +54,11 @@ export default function NutritionistProfilePage() {
       })
       .catch((e) => setError(e.message ?? 'Error al cargar perfil'))
       .finally(() => setLoading(false));
-  };
+  }, [user]);
 
   useEffect(() => {
     loadProfile();
-  }, [user]);
+  }, [loadProfile]);
 
   const openEditor = (
     availability?: AvailabilityRule,
@@ -169,8 +168,8 @@ export default function NutritionistProfilePage() {
   if (loading) {
     return (
       <NutritionistLayout>
-        <div className="absolute inset-0 z-20 bg-white/50 backdrop-blur-[2px] flex items-center justify-center">
-          <Spinner size="lg" color="text-nutri-medium" text="Actualizando perfil..." />
+        <div className="px-8 py-6">
+          <p className="text-sm text-gray-500">Cargando perfil de nutricionista...</p>
         </div>
       </NutritionistLayout>
     );
