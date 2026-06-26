@@ -53,6 +53,11 @@ class NutritionistProfile(Base):
     documents = relationship(
         "NutritionistDocument", back_populates="nutritionist", cascade="all, delete-orphan"
     )
+    availability_rules = relationship(
+        "AvailabilityNutritionist",
+        primaryjoin="NutritionistProfile.user_id == foreign(AvailabilityNutritionist.nutritionist_id)",
+        viewonly=True,
+    )
 
 
 class NutritionistDocument(Base):

@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from app.db.models.nutritionist import NutritionistStatus
 from app.db.models.user import GenderEnum
+from app.schemas.appointment import AvailabilityNutritionistResponse
 from app.schemas.catalog import SpecialistResponse
 from app.schemas.user import UserResponse
 
@@ -56,6 +57,40 @@ class NutritionistDocumentCreate(BaseModel):
 class NutritionistDocumentsResponse(BaseModel):
     cv_url: str | None = None
     senescyt_url: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class NutritionistDocumentResponse(BaseModel):
+    id: uuid.UUID
+    document_type: str
+    file_path: str
+    file_name: str | None = None
+    file_size: int | None = None
+    mime_type: str | None = None
+    is_verified: bool
+
+    class Config:
+        from_attributes = True
+
+
+class NutritionistProfileDetailResponse(BaseModel):
+    id: uuid.UUID
+    license_number: str
+    bio: str | None = None
+    specialty_id: int
+    years_experience: int | None = None
+    education: str | None = None
+    consultation_fee: float | None = None
+    max_patients: int | None = None
+    status: str
+
+    user: UserResponse | None = None
+    specialty: SpecialistResponse | None = None
+
+    documents: list[NutritionistDocumentResponse] = []
+    availabilities: list[AvailabilityNutritionistResponse] = []
 
     class Config:
         from_attributes = True
