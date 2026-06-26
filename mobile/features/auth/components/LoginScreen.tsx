@@ -144,28 +144,11 @@ export default function LoginScreen() {
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>o</Text>
-              <View style={styles.dividerLine} />
             </View>
 
-            <TouchableOpacity style={styles.btnSecondary}>
-              <View style={styles.biometricContent}>
-                <MaterialCommunityIcons
-                  name="fingerprint"
-                  size={20}
-                  color={COLORS.textSecondary}
-                />
-                <Text style={styles.btnSecondaryText}>
-                  Usar biometría
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => router.push('/register')}>
-              <Text style={styles.registerText}>
-                ¿No tienes cuenta?{' '}
-                <Text style={styles.registerLink}>Regístrate aquí</Text>
-              </Text>
+            <TouchableOpacity style={styles.registerRow} onPress={() => router.push('/register')}>
+              <Text style={styles.registerText}>¿No tienes cuenta? </Text>
+              <Text style={styles.registerLink}>Regístrate aquí</Text>
             </TouchableOpacity>
 
           </View>
@@ -328,16 +311,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 20,
-    gap: 10,
   },
   dividerLine: {
     flex: 1,
     height: 1,
     backgroundColor: COLORS.border,
-  },
-  dividerText: {
-    color: COLORS.textMuted,
-    fontSize: 13,
   },
   btnSecondary: {
     borderWidth: 1.5,
@@ -352,12 +330,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
+  registerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
   registerText: {
-    textAlign: 'center',
     fontSize: 13,
     color: COLORS.textMuted,
   },
   registerLink: {
+    fontSize: 13,
     color: COLORS.primary,
     fontWeight: 'bold',
   },
