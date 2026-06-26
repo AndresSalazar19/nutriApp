@@ -13,6 +13,7 @@ from app.db.models.user import GenderEnum
 from app.schemas.nutritionist import (
     NutritionistCreateRequest,
     NutritionistDocumentsResponse,
+    NutritionistProfileDetailResponse,
     NutritionistProfileResponse,
     NutritionistStatusUpdate,
 )
@@ -187,3 +188,14 @@ def create_nutritionist(
         data=NutritionistProfileResponse.model_validate(profile).model_dump(mode="json")
     )
     return JSONResponse(status_code=201, content=resp.model_dump())
+
+
+@router.get("/profile/{user_id}", response_model=NutritionistProfileDetailResponse)
+def get_profile(
+    user_id: uuid.UUID,
+    db: Session = Depends(get_db),
+):
+    return NutritionistService.get_nutritionist_profile(
+        db,
+        user_id,
+    )

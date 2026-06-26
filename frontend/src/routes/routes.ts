@@ -24,6 +24,7 @@ export const ROUTES = {
   ADMIN_REPORTS: '/admin/reports',
   ADMIN_SETTINGS: '/admin/settings',
   ADMIN_PROFILE: '/admin/profile',
+  NUTRITIONIST_PROFILE: '/nutritionists/profile',
 } as const;
 
 export function buildRoute(route: string, params: Record<string, string> = {}): string {

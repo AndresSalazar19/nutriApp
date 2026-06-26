@@ -12,6 +12,7 @@ from app.schemas.appointment import (
     AppointmentRequest,
     AppointmentResponse,
     AppointmentUpdateRequest,
+    AvailabilityCalendarResponse,
     AvailabilityNutritionistRequest,
     AvailabilityNutritionistResponse,
 )
@@ -21,8 +22,12 @@ router = APIRouter(prefix="/appointment", tags=["appointments"])
 
 
 @router.post("", response_model=AppointmentResponse)
-def create_appointment(db: Session = Depends(get_db), data: AppointmentRequest = None):
-    return AppointmentService.create(db, data)
+def create_appointment(data: AppointmentRequest, db: Session = Depends(get_db)):
+    try:
+        return AppointmentService.create(db, data)
+    except Exception as e:
+        resp = error_response([str(e)], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
 
 
 @router.get("", response_model=list[AppointmentResponse])
@@ -41,9 +46,13 @@ def list_appointments(
 
 @router.patch("/{appointment_id}", response_model=AppointmentResponse)
 def update_appointment(
-    appointment_id: uuid.UUID, db: Session = Depends(get_db), data: AppointmentUpdateRequest = None
+    appointment_id: uuid.UUID, data: AppointmentUpdateRequest, db: Session = Depends(get_db)
 ):
-    return AppointmentService.update(db, appointment_id, data)
+    try:
+        return AppointmentService.update(db, appointment_id, data)
+    except Exception as e:
+        resp = error_response([str(e)], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
 
 
 @router.delete("/{appointment_id}", response_model=None)
@@ -63,9 +72,14 @@ def cancel_appointment(
 
 
 @router.get("/slots/{nutritionist_id}", response_model=list[datetime])
-def get_available_slots(nutritionist_id: uuid.UUID, date: date, db: Session = Depends(get_db)):
+def get_available_slots(
+    nutritionist_id: uuid.UUID,
+    date: date,
+    duration_min: int = 45,
+    db: Session = Depends(get_db),
+):
     try:
-        return AppointmentService.get_available_slots(db, nutritionist_id, date)
+        return AppointmentService.get_available_slots(db, nutritionist_id, date, duration_min)
     except Exception as e:
         resp = error_response([str(e)], status_code=400)
         return JSONResponse(status_code=400, content=resp.model_dump())
@@ -78,15 +92,50 @@ def create_availability(
     db: Session = Depends(get_db),
 ):
     try:
-        return AppointmentService.create_availability(
-            db,
-            nutritionist_id,
-            data,
-        )
-
+        return AppointmentService.create_availability(db, nutritionist_id, data)
     except Exception as e:
         resp = error_response([str(e)], status_code=400)
-        return JSONResponse(
-            status_code=400,
-            content=resp.model_dump(),
-        )
+        return JSONResponse(status_code=400, content=resp.model_dump())
+
+
+@router.patch(
+    "/availability/{availability_id}",
+    response_model=AvailabilityNutritionistResponse,
+)
+def update_availability(
+    availability_id: uuid.UUID,
+    data: AvailabilityNutritionistRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        return AppointmentService.update_availability(db, availability_id, data)
+    except Exception as e:
+        resp = error_response([str(e)], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
+
+
+@router.delete("/availability/{availability_id}", response_model=None)
+def delete_availability(availability_id: uuid.UUID, db: Session = Depends(get_db)):
+    try:
+        AppointmentService.delete_availability(db, availability_id)
+        resp = success_response(data={"message": "Disponibilidad eliminada correctamente"})
+        return JSONResponse(status_code=200, content=resp.model_dump())
+    except Exception as e:
+        resp = error_response([str(e)], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
+
+
+@router.get(
+    "/availability/calendar/{nutritionist_id}",
+    response_model=AvailabilityCalendarResponse,
+)
+def get_availability_calendar(
+    nutritionist_id: uuid.UUID,
+    week_start: date | None = None,
+    db: Session = Depends(get_db),
+):
+    try:
+        return AppointmentService.get_availability_calendar(db, nutritionist_id, week_start)
+    except Exception as e:
+        resp = error_response([str(e)], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
