@@ -123,19 +123,6 @@ export function NutritionistProfileCards({
             <div>
               <strong>Años experiencia:</strong> {profile.years_experience ?? '—'}
             </div>
-            <div>
-              <strong>Biografía:</strong> {profile.bio ?? '—'}
-            </div>
-            <div>
-              <strong>Formación:</strong> {profile.education ?? '—'}
-            </div>
-            <div>
-              <strong>Tarifa:</strong>{' '}
-              {profile.consultation_fee != null ? `$ ${profile.consultation_fee}` : '—'}
-            </div>
-            <div>
-              <strong>Máx pacientes:</strong> {profile.max_patients ?? '—'}
-            </div>
           </div>
         </div>
       </div>

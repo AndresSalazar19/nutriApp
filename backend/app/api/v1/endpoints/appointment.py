@@ -60,10 +60,9 @@ def cancel_appointment(
     appointment_id: uuid.UUID,
     db: Session = Depends(get_db),
     user_id: uuid.UUID = None,
-    reason: str = None,
 ):
     try:
-        AppointmentService.cancel(db, appointment_id, user_id, reason)
+        AppointmentService.cancel(db, appointment_id, user_id)
         resp = success_response(messages=["Cita cancelada exitosamente"])
         return JSONResponse(status_code=200, content=resp.model_dump())
     except Exception as e:
