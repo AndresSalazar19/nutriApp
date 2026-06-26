@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { MdClose, MdDescription, MdOpenInNew, MdSchool } from 'react-icons/md';
 import {
   NutritionistProfile,
   NutritionistService,
@@ -61,7 +62,7 @@ export function NutritionistReviewPanel({
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 transition"
           >
-            ✕
+            <MdClose className="w-5 h-5" />
           </button>
         </div>
 
@@ -124,7 +125,7 @@ export function NutritionistReviewPanel({
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">📄</span>
+                  <MdDescription className="w-6 h-6 text-admin-dark" />
                   <div>
                     <p className="text-sm font-semibold text-gray-800">Curriculum Vitae</p>
                   </div>
@@ -138,7 +139,7 @@ export function NutritionistReviewPanel({
                     rel="noopener noreferrer"
                     className="text-xs font-bold text-admin-dark hover:text-admin-accent hover:underline"
                   >
-                    Ver PDF ↗
+                    Ver PDF <MdOpenInNew className="inline-block w-3 h-3" />
                   </a>
                 ) : (
                   <span className="text-xs text-gray-400">No disponible</span>
@@ -147,7 +148,7 @@ export function NutritionistReviewPanel({
 
               <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">🎓</span>
+                  <MdSchool className="w-6 h-6 text-admin-dark" />
                   <div>
                     <p className="text-sm font-semibold text-gray-800">Registro Senescyt</p>
                   </div>
@@ -161,7 +162,7 @@ export function NutritionistReviewPanel({
                     rel="noopener noreferrer"
                     className="text-xs font-bold text-admin-dark hover:text-admin-accent hover:underline"
                   >
-                    Ver Archivo ↗
+                    Ver Archivo <MdOpenInNew className="inline-block w-3 h-3" />
                   </a>
                 ) : (
                   <span className="text-xs text-gray-400">No disponible</span>

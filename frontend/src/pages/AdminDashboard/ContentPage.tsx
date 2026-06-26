@@ -1,4 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import {
+  MdCalendarMonth,
+  MdHourglassEmpty,
+  MdLabel,
+  MdNotes,
+  MdVisibility,
+  MdWorkspacePremium,
+} from 'react-icons/md';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { AdminTopBar } from '../../components/layout/AdminTopBar';
 import { SearchInput } from '../../components/ui/SearchInput';
@@ -54,7 +62,8 @@ function ViewModal({ item, onClose }: { item: ContentItem; onClose: () => void }
               <span className="text-xs text-gray-400">{typeLabel(item.content_type)}</span>
               {item.is_premium && (
                 <span className="text-xs font-bold bg-nutri-light text-nutri-dark px-2 py-0.5 rounded-full">
-                  ⭐ Premium
+                  <MdWorkspacePremium className="inline-block w-3.5 h-3.5 mr-1" />
+                  Premium
                 </span>
               )}
             </div>
@@ -70,10 +79,19 @@ function ViewModal({ item, onClose }: { item: ContentItem; onClose: () => void }
 
         {/* Meta */}
         <div className="flex items-center gap-4 px-6 py-3 text-xs text-gray-400 border-b border-gray-50">
-          <span>👁 {item.view_count} vistas</span>
-          {item.tags && item.tags.length > 0 && <span>🏷 {item.tags.join(', ')}</span>}
-          <span>
-            📅 {item.created_at ? new Date(item.created_at).toLocaleDateString('es-EC') : '—'}
+          <span className="inline-flex items-center gap-1">
+            <MdVisibility className="w-3.5 h-3.5" />
+            {item.view_count} vistas
+          </span>
+          {item.tags && item.tags.length > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <MdLabel className="w-3.5 h-3.5" />
+              {item.tags.join(', ')}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1">
+            <MdCalendarMonth className="w-3.5 h-3.5" />
+            {item.created_at ? new Date(item.created_at).toLocaleDateString('es-EC') : '—'}
           </span>
         </div>
 
@@ -195,7 +213,7 @@ function ContentPage() {
         {/* Alerta pendientes */}
         {pendingCount > 0 && (
           <div className="mb-5 flex items-center gap-3 bg-admin-light border border-admin-medium text-admin-dark text-sm rounded-xl px-4 py-3">
-            <span className="text-lg">⏳</span>
+            <MdHourglassEmpty className="w-5 h-5" />
             <span>
               Hay <strong>{pendingCount}</strong> contenido{pendingCount !== 1 ? 's' : ''} pendiente
               {pendingCount !== 1 ? 's' : ''} de aprobación.
@@ -260,7 +278,7 @@ function ContentPage() {
           </div>
         ) : articles.length === 0 ? (
           <EmptyState
-            icon="📝"
+            icon={<MdNotes className="w-12 h-12" />}
             title="No hay contenido"
             description="No se encontraron resultados para los filtros seleccionados."
             accentColor="admin"

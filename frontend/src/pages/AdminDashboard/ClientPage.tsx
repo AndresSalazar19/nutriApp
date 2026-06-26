@@ -23,6 +23,7 @@ import {
   MdDescription,
   MdNewReleases,
   MdEmojiEvents,
+  MdWarningAmber,
 } from 'react-icons/md';
 
 type SubscriptionType = 'premium' | 'basic';
@@ -112,7 +113,7 @@ function NutritionistCell({ nutritionist }: { nutritionist: Client['nutritionist
   if (!nutritionist) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-gray-500 text-sm">⚠</span>
+        <MdWarningAmber className="w-4 h-4 text-gray-500" />
         <span className="text-gray-500 text-xs font-medium">Sin asignar</span>
         <span className="w-5 h-5 flex items-center justify-center rounded-full bg-admin-accent text-white text-xs font-bold">
           !
@@ -353,7 +354,7 @@ function ClientsPage() {
             columns={columns}
             data={filtered}
             keyExtractor={(row) => row.id}
-            emptyIcon="👥"
+            emptyIcon={<MdPeople className="w-12 h-12" />}
             emptyTitle="No hay clientes"
             emptyDescription="No se encontraron resultados para tu búsqueda."
             isLoading={isLoading}

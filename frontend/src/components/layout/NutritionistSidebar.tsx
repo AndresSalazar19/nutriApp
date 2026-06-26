@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { MdRestaurant } from 'react-icons/md';
 import { ROUTES } from '../../routes/routes';
 import { useAuth } from '../../hooks/useAuth';
 import { UserMenuPopover } from '../ui/UserMenuPopover';
@@ -128,7 +129,7 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
           className="flex items-center gap-2 px-2 mb-7 cursor-pointer select-none hover:opacity-80 transition-opacity"
         >
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-base">🥗</span>
+            <MdRestaurant className="w-4 h-4 text-nutri-dark" />
           </div>
           <span className="text-white font-bold text-base leading-none">NutrIA</span>
         </div>

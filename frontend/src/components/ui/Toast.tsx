@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { MdCheck, MdClose } from 'react-icons/md';
 
 export type ToastType = 'success' | 'error';
 
@@ -38,11 +39,11 @@ export function Toast({ message, type = 'success', isVisible, onClose }: ToastPr
             isSuccess ? 'bg-nutri-light/30 text-nutri-dark' : 'bg-admin-bg text-admin-accent'
           }`}
         >
-          {isSuccess ? '✓' : '✕'}
+          {isSuccess ? <MdCheck className="w-4 h-4" /> : <MdClose className="w-4 h-4" />}
         </div>
         <p className="text-sm font-semibold">{message}</p>
         <button onClick={onClose} className="ml-4 text-gray-400 hover:text-gray-600 transition p-1">
-          ✕
+          <MdClose className="w-4 h-4" />
         </button>
       </div>
     </div>

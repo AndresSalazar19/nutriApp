@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MdWarningAmber } from 'react-icons/md';
 
 interface RejectModalProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ export function RejectNutritionistModal({
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-[fade-in_0.2s_ease-out]">
         <div className="p-6">
           <div className="w-12 h-12 rounded-full bg-admin-bg flex items-center justify-center mb-4 text-admin-accent text-xl">
-            ⚠️
+            <MdWarningAmber className="w-6 h-6" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">Rechazar Solicitud</h3>
           <p className="text-sm text-gray-500 mb-6">
