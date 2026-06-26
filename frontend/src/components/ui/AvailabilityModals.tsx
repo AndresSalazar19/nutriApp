@@ -12,7 +12,6 @@ export interface AvailabilityFormState {
   specific_date: string;
   start_time: string;
   end_time: string;
-  is_block: boolean;
 }
 
 // ─── Editor Modal ─────────────────────────────────────────────────────────────
@@ -88,47 +87,29 @@ export function AvailabilityEditorModal({
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               />
             </div>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formState.is_block}
-                  onChange={(e) => onChange('is_block', e.target.checked)}
-                  className="rounded border border-gray-300"
-                />
-                <span className="text-sm font-medium text-gray-700">Bloquear día completo</span>
-              </label>
-              <p className="text-xs text-gray-500">
-                {formState.is_block
-                  ? 'No disponible todo el día'
-                  : 'Disponible solo en los horarios especificados'}
-              </p>
-            </div>
           </>
         )}
 
-        {!(formState.rule_type === 'exception' && formState.is_block) && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Inicio</label>
-              <input
-                type="time"
-                value={formState.start_time}
-                onChange={(e) => onChange('start_time', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Fin</label>
-              <input
-                type="time"
-                value={formState.end_time}
-                onChange={(e) => onChange('end_time', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-              />
-            </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Inicio</label>
+            <input
+              type="time"
+              value={formState.start_time}
+              onChange={(e) => onChange('start_time', e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
           </div>
-        )}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Fin</label>
+            <input
+              type="time"
+              value={formState.end_time}
+              onChange={(e) => onChange('end_time', e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
