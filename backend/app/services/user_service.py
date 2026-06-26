@@ -44,6 +44,13 @@ class UserService:
         if not file.content_type or not file.content_type.startswith("image/"):
             raise ValueError("Solo se permiten imágenes JPG/PNG/GIF")
 
+        if user.avatar_url:
+            if os.path.exists(user.avatar_url):
+                try:
+                    os.remove(user.avatar_url)
+                except Exception as e:
+                    print(f"Error al eliminar archivo físico antiguo: {e}")
+
         upload_dir = "uploads/avatars"
         os.makedirs(upload_dir, exist_ok=True)
 
@@ -54,7 +61,7 @@ class UserService:
                 "image/jpg": ".jpg",
                 "image/png": ".png",
                 "image/gif": ".gif",
-                "image/webp": ".webb",
+                "image/webp": ".webp",
                 "image/bmp": ".bmp",
                 "image/svg+xml": ".svg",
             }
