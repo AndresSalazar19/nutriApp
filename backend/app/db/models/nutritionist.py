@@ -74,8 +74,5 @@ class NutritionistDocument(Base):
     file_name = Column(String(255), nullable=True)
     file_size = Column(Integer, nullable=True)
     mime_type = Column(String(100), default="application/pdf", nullable=True)
-    is_verified = Column(Boolean, default=False, nullable=False)
-    verified_at = Column(nullable=True)
-    verified_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     nutritionist = relationship("NutritionistProfile", back_populates="documents")

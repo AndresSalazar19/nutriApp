@@ -69,7 +69,6 @@ class NutritionistDocumentResponse(BaseModel):
     file_name: str | None = None
     file_size: int | None = None
     mime_type: str | None = None
-    is_verified: bool
 
     class Config:
         from_attributes = True
