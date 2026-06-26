@@ -9,7 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "validate": "npm run lint"
+    "validate": "npm run lint",
+    "build:android:preview": "npx eas-cli build --platform android --profile preview"
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.3",

@@ -5,6 +5,7 @@ import { ProfessionalInfoStep } from './ProfessionalInfoStep';
 import { SecurityStep } from './SecurityStep';
 import { useFormValidation } from './useFormValidation';
 import { RegistrerServices } from '../../services/Registrer/RegisterServices';
+import { MdRestaurant } from 'react-icons/md';
 
 function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
   const [step, setStep] = useState(1);
@@ -87,7 +88,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
       if (cvFile) formData.append('cv_file', cvFile);
       if (senescytFile) formData.append('senescyt_file', senescytFile);
 
-      console.log('📤 Enviando registro de nutricionista (FormData)');
+      console.log('[send] Enviando registro de nutricionista (FormData)');
 
       const response = await RegistrerServices.crearNutricionista(formData);
 
@@ -105,7 +106,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
         onGoToLogin();
       }
     } catch (error) {
-      console.error('❌ Error al registrar nutricionista:', error);
+      console.error('Error al registrar nutricionista:', error);
       const message = error instanceof Error ? error.message : 'Error desconocido';
       alert(`No se pudo completar el registro: ${message}`);
     } finally {
@@ -131,7 +132,7 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
         {/* Encabezado */}
         <div className="flex flex-col items-center mb-6">
           <div className="w-12 h-12 bg-nutri-medium rounded-full flex items-center justify-center mb-3 shadow">
-            <span className="text-xl">🥗</span>
+            <MdRestaurant className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-nutri-dark">Crear Cuenta</h1>
           <p className="text-gray-500 text-sm mt-1">Paso {step} de 3</p>
