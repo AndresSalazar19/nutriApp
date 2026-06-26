@@ -184,7 +184,7 @@ function LoginPage({ onLogin, onGoToRegister, onGoToChangePassword }: LoginPageP
               disabled={isLoading}
               className={`w-full text-white font-bold py-3 rounded-lg transition text-sm flex justify-center items-center ${
                 isLoading
-                  ? 'bg-nutri-light cursor-not-allowed'
+                  ? 'bg-nutri-dark cursor-not-allowed'
                   : 'bg-nutri-medium hover:bg-nutri-dark'
               }`}
             >
