@@ -101,7 +101,7 @@ export function AvailabilitySection({
                             <p className="text-xs text-gray-400">
                               {ruleTypeLabel(block.rule_type)}
                             </p>
-                            <div className="mt-1.5 flex items-center gap-3">
+                            <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
                               <button
                                 type="button"
                                 onClick={() => onEdit(block)}
@@ -138,10 +138,6 @@ export function AvailabilitySection({
               Días puntuales que rompen tu horario recurrente esta semana.
             </p>
           </div>
-          <Button variant="outline" onClick={onAddException}>
-            <TbPlus className="w-4 h-4" />
-            Agregar excepción
-          </Button>
         </div>
 
         {!calendar ? (

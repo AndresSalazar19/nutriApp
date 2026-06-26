@@ -79,9 +79,6 @@ class AppointmentService:
         )
 
         if exception:
-            if not exception.is_available:
-                return False
-
             if _is_all_day(exception.start_time, exception.end_time):
                 return True
 
@@ -91,7 +88,14 @@ class AppointmentService:
             start_exception = datetime.combine(current_date, exception.start_time, tzinfo=LOCAL_TZ)
             end_exception = datetime.combine(current_date, exception.end_time, tzinfo=LOCAL_TZ)
 
-            return start_local >= start_exception and end_local <= end_exception
+            in_exception = start_local >= start_exception and end_local <= end_exception
+
+            if exception.is_available:
+                if in_exception:
+                    return True
+            else:
+                if in_exception:
+                    return False
 
         rules = (
             db.query(AvailabilityNutritionist)

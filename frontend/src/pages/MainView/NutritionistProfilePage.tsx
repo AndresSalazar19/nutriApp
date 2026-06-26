@@ -17,6 +17,8 @@ import {
   DeleteAvailabilityModal,
   AvailabilityFormState,
 } from '../../components/ui/AvailabilityModals';
+import { Spinner } from '../../components/ui/Spinner';
+import { API_URL } from '../../config/api';
 
 const DEFAULT_FORM: AvailabilityFormState = {
   rule_type: 'recurring',
@@ -24,7 +26,6 @@ const DEFAULT_FORM: AvailabilityFormState = {
   specific_date: '',
   start_time: '08:00',
   end_time: '17:00',
-  is_block: false,
 };
 
 export default function NutritionistProfilePage() {
@@ -129,22 +130,21 @@ export default function NutritionistProfilePage() {
     loadProfile();
   }, [loadProfile]);
 
+  const getDocUrl = (path?: string | null) =>
+    path ? `${API_URL.replace('/api/v1', '')}/${path}` : '#';
+
   const openEditor = (
     availability?: AvailabilityRule,
     defaultRuleType: 'recurring' | 'exception' = 'recurring',
   ) => {
     setSelectedAvailability(availability ?? null);
     if (availability) {
-      const isBlock =
-        availability.rule_type === 'exception' &&
-        (availability.start_time == null || availability.end_time == null);
       setFormState({
         rule_type: availability.rule_type as 'recurring' | 'exception',
         day_of_week: availability.day_of_week ?? 0,
         specific_date: availability.specific_date ?? '',
         start_time: availability.start_time ?? '08:00',
         end_time: availability.end_time ?? '17:00',
-        is_block: isBlock,
       });
     } else {
       setFormState({ ...DEFAULT_FORM, rule_type: defaultRuleType });
@@ -194,14 +194,12 @@ export default function NutritionistProfilePage() {
       payload.day_of_week = Number(formState.day_of_week);
       payload.start_time = formState.start_time;
       payload.end_time = formState.end_time;
-      payload.is_available = !formState.is_block;
+      payload.is_available = true;
     } else {
       payload.specific_date = formState.specific_date || undefined;
-      if (!formState.is_block) {
-        payload.start_time = formState.start_time;
-        payload.end_time = formState.end_time;
-        payload.is_available = true;
-      }
+      payload.start_time = formState.start_time;
+      payload.end_time = formState.end_time;
+      payload.is_available = false;
     }
 
     try {
@@ -237,8 +235,8 @@ export default function NutritionistProfilePage() {
   if (loading) {
     return (
       <NutritionistLayout>
-        <div className="px-8 py-6">
-          <p className="text-sm text-gray-500">Cargando perfil de nutricionista...</p>
+        <div className="absolute inset-0 z-20 bg-white/50 backdrop-blur-[2px] flex items-center justify-center">
+          <Spinner size="lg" color="text-nutri-medium" text="Actualizando perfil..." />
         </div>
       </NutritionistLayout>
     );
@@ -305,7 +303,7 @@ export default function NutritionistProfilePage() {
                   <div className="flex items-center gap-3">
                     <div className="text-xs">{d.is_verified ? 'Verificado' : 'No verificado'}</div>
                     <a
-                      href={d.file_path.startsWith('http') ? d.file_path : d.file_path}
+                      href={getDocUrl(d.file_path)}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs text-nutri-medium underline"
