@@ -5,6 +5,7 @@ import {
   NutritionistDocuments,
 } from '../../services/NutritionistService';
 import { API_URL } from '../../config/api';
+import { Avatar } from '../../components/ui/Avatar';
 
 interface ReviewPanelProps {
   nutritionist: NutritionistProfile | null;
@@ -40,6 +41,8 @@ export function NutritionistReviewPanel({
   const getDocUrl = (path?: string | null) =>
     path ? `${API_URL.replace('/api/v1', '')}/${path}` : '#';
 
+  const avatarUrl = user.avatar_url ? `${API_URL.replace('/api/v1', '')}/${user.avatar_url}` : null;
+
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
       <div
@@ -64,10 +67,12 @@ export function NutritionistReviewPanel({
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-admin-light rounded-full flex items-center justify-center text-admin-dark font-bold text-xl">
-              {user.person.first_name[0]}
-              {user.person.last_name[0]}
-            </div>
+            <Avatar
+              src={avatarUrl}
+              initials={`${user.person.first_name[0]}${user.person.last_name[0]}`.toUpperCase()}
+              color="bg-admin-light"
+              size="lg"
+            />
             <div>
               <h3 className="font-bold text-gray-900 text-lg">
                 {user.person.first_name} {user.person.last_name}
