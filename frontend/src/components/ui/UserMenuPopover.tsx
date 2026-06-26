@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { ROUTES } from '../../routes/routes';
+import { ROUTES, buildRoute } from '../../routes/routes';
 
 // ─── Íconos inline ────────────────────────────────────────────────────────────
 
@@ -115,7 +115,15 @@ export function UserMenuPopover({
               <button
                 onClick={() => {
                   setOpen(false);
-                  navigate(ROUTES.ADMIN_PROFILE);
+                  if (user?.role === 'nutritionist') {
+                    navigate(ROUTES.NUTRITIONIST_PROFILE);
+                  } else if (user?.role === 'admin') {
+                    navigate(ROUTES.ADMIN_PROFILE);
+                  } else if (user) {
+                    navigate(buildRoute(ROUTES.PATIENT_PROFILE, { id: user.userId }));
+                  } else {
+                    navigate(ROUTES.LOGIN);
+                  }
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700
                   hover:bg-gray-50 transition text-left"
