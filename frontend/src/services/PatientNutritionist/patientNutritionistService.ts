@@ -1,6 +1,18 @@
 import { API_URL } from '../../config/api';
 import { tokenStorage } from '../../utils/tokenStorage';
 
+export interface PatientResponse {
+  user_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string | null;
+  status: string;
+  priority_flag: boolean;
+  nutritionist_name?: string | null;
+  nutritionist_initials?: string | null;
+}
+
 export interface PatientNutritionistRequest {
   patient_id: string;
   nutritionist_id: string;
@@ -50,6 +62,18 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
   return data;
 }
+
+export const PatientService = {
+  async getAll(): Promise<PatientResponse[]> {
+    const res = await fetch(`${API_URL}/patients`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+
+    const data = await handleResponse<{ listData?: PatientResponse[] }>(res);
+    return data.listData || [];
+  },
+};
 
 export const PatientNutritionistService = {
   async create(payload: PatientNutritionistRequest): Promise<PatientNutritionistResponse> {
