@@ -1,4 +1,4 @@
-# 🥑 NutriApp - Monorepo
+# NutriApp - Monorepo
 
 Este repositorio contiene todo el código fuente del sistema NutriApp, dividido en tres partes:
 * **Backend:** API REST con Python (FastAPI).
@@ -7,7 +7,7 @@ Este repositorio contiene todo el código fuente del sistema NutriApp, dividido 
 
 ---
 
-## 📋 Requisitos Previos
+## Requisitos Previos
 
 Antes de empezar, asegúrate de tener instalado:
 1.  **Git**
@@ -17,7 +17,7 @@ Antes de empezar, asegúrate de tener instalado:
 
 ---
 
-## 🚀 1. Configuración del Backend (FastAPI)
+## 1. Configuración del Backend (FastAPI)
 
 El servidor debe estar corriendo para que la web y la app móvil funcionen.
 
@@ -51,11 +51,11 @@ El servidor debe estar corriendo para que la web y la app móvil funcionen.
     ```bash
     uvicorn app.main:app --reload --host 0.0.0.0
     ```
-    ✅ *El backend estará disponible en:* `http://localhost:8000`
+    OK *El backend estará disponible en:* `http://localhost:8000`
 
 ---
 
-## 💻 2. Configuración del Frontend Web (React)
+## 2. Configuración del Frontend Web (React)
 
 1.  Abre una **nueva terminal** y entra a la carpeta frontend:
     ```bash
@@ -71,11 +71,11 @@ El servidor debe estar corriendo para que la web y la app móvil funcionen.
     ```bash
     npm start
     ```
-    ✅ *La web se abrirá automáticamente en:* `http://localhost:3000`
+    OK *La web se abrirá automáticamente en:* `http://localhost:3000`
 
 ---
 
-## 📱 3. Configuración de la App Móvil (Expo)
+## 3. Configuración de la App Móvil (Expo)
 
 1.  Abre una **tercera terminal** y entra a la carpeta mobile:
     ```bash
@@ -99,9 +99,9 @@ El servidor debe estar corriendo para que la web y la app móvil funcionen.
 
 ---
 
-## 🛠️ Solución de Problemas Comunes
+## Solución de Problemas Comunes
 
-### 🔴 Error: "La ejecución de scripts está deshabilitada en este sistema"
+### Error: "La ejecución de scripts está deshabilitada en este sistema"
 Si al activar el entorno de Python en Windows te sale error, ejecuta este comando en PowerShell como Administrador:
 ```powershell
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser

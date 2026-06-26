@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 import { DatePickerField } from '@/components/ui/DatePickerField';
 
@@ -68,14 +69,16 @@ export function EditFieldModal({
     const trimmed = draft.trim();
     if (validate) {
       const err = validate(trimmed);
-      if (err) { setError(err); return; }
+      if (err) {
+        setError(err);
+        return;
+      }
     }
     onSave(trimmed);
     onClose();
   }
 
-  const keyboardType =
-    type === 'phone' || type === 'numeric' ? 'number-pad' : 'default';
+  const keyboardType = type === 'phone' || type === 'numeric' ? 'number-pad' : 'default';
 
   const isDate = type === 'date';
 
@@ -102,11 +105,14 @@ export function EditFieldModal({
           {isDate ? (
             <DatePickerField
               value={draft}
-              onChange={(val) => { setDraft(val); setError(null); }}
+              onChange={(val) => {
+                setDraft(val);
+                setError(null);
+              }}
             />
           ) : type === 'select' ? (
             <View style={styles.optionList}>
-              {options.map(opt => (
+              {options.map((opt) => (
                 <TouchableOpacity
                   key={opt}
                   style={[styles.optionRow, draft === opt && styles.optionRowActive]}
@@ -116,7 +122,9 @@ export function EditFieldModal({
                   <Text style={[styles.optionText, draft === opt && styles.optionTextActive]}>
                     {opt}
                   </Text>
-                  {draft === opt && <Text style={styles.checkMark}>✓</Text>}
+                  {draft === opt && (
+                    <MaterialCommunityIcons name="check" size={18} color={COLORS.primary} />
+                  )}
                 </TouchableOpacity>
               ))}
             </View>
@@ -150,7 +158,10 @@ export function EditFieldModal({
               </View>
 
               {error ? (
-                <Text style={styles.errorText}>⚠ {error}</Text>
+                <View style={styles.errorRow}>
+                  <MaterialCommunityIcons name="alert-outline" size={14} color={COLORS.error} />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
               ) : hint ? (
                 <Text style={styles.hintText}>{hint}</Text>
               ) : null}
@@ -158,7 +169,10 @@ export function EditFieldModal({
           )}
 
           {isDate && error ? (
-            <Text style={styles.errorText}>⚠ {error}</Text>
+            <View style={styles.errorRow}>
+              <MaterialCommunityIcons name="alert-outline" size={14} color={COLORS.error} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
           ) : null}
 
           <View style={styles.actions}>
@@ -254,11 +268,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginLeft: 4,
   },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 16,
+    marginLeft: 4,
+  },
   errorText: {
     fontSize: 12,
     color: COLORS.error,
-    marginBottom: 16,
-    marginLeft: 4,
+    flex: 1,
   },
 
   optionList: {
@@ -289,12 +309,6 @@ const styles = StyleSheet.create({
     color: COLORS.primaryDark,
     fontWeight: '700',
   },
-  checkMark: {
-    fontSize: 16,
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
-
   actions: {
     flexDirection: 'row',
     gap: 12,
