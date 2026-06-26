@@ -83,7 +83,7 @@ export const RegistrerServices = {
 
     const result: ApiResponse<RegisteredNutritionist> = await response.json();
 
-    console.log('📥 Respuesta del backend:', result);
+    console.log('[pull] Respuesta del backend:', result);
 
     if (!response.ok || !result.status.isSuccessfully) {
       const messages = result.status?.messages ?? [];
@@ -100,7 +100,7 @@ export const RegistrerServices = {
    */
   async crearUsuario(userData: RegisterUserData): Promise<ApiResponse<RegisteredUser>> {
     console.warn('[RegisterServices] crearUsuario está deprecado. Usa crearNutricionista.');
-    console.log('📤 Enviando al backend:', userData);
+    console.log('[send] Enviando al backend:', userData);
 
     const response = await fetch(`${API_URL}/users/`, {
       method: 'POST',

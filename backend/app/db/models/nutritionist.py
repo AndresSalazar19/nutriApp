@@ -1,7 +1,7 @@
 import enum
 import uuid
 
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Column, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -53,6 +53,11 @@ class NutritionistProfile(Base):
     documents = relationship(
         "NutritionistDocument", back_populates="nutritionist", cascade="all, delete-orphan"
     )
+    availability_rules = relationship(
+        "AvailabilityNutritionist",
+        primaryjoin="NutritionistProfile.user_id == foreign(AvailabilityNutritionist.nutritionist_id)",
+        viewonly=True,
+    )
 
 
 class NutritionistDocument(Base):
@@ -69,8 +74,5 @@ class NutritionistDocument(Base):
     file_name = Column(String(255), nullable=True)
     file_size = Column(Integer, nullable=True)
     mime_type = Column(String(100), default="application/pdf", nullable=True)
-    is_verified = Column(Boolean, default=False, nullable=False)
-    verified_at = Column(nullable=True)
-    verified_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     nutritionist = relationship("NutritionistProfile", back_populates="documents")

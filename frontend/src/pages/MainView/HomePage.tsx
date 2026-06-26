@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MdBarChart, MdCalendarMonth, MdDescription, MdGroup, MdSms } from 'react-icons/md';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { NutritionistTopBar } from '../../components/layout/NutritionistTopBar';
 import { StatCard } from '../../components/ui/StatCard';
@@ -27,7 +28,7 @@ interface RecentPatient {
 
 const statsCards = [
   {
-    icon: <span className="text-nutri-dark">👥</span>,
+    icon: <MdGroup className="w-5 h-5 text-nutri-dark" />,
     iconBg: 'bg-nutri-light text-nutri-dark',
     label: 'Pacientes Activos',
     value: '24',
@@ -35,7 +36,7 @@ const statsCards = [
     changeType: 'positive' as const,
   },
   {
-    icon: <span className="text-nutri-dark">📅</span>,
+    icon: <MdCalendarMonth className="w-5 h-5 text-nutri-dark" />,
     iconBg: 'bg-nutri-light text-nutri-dark',
     label: 'Citas de Hoy',
     value: '5',
@@ -43,7 +44,7 @@ const statsCards = [
     changeType: 'neutral' as const,
   },
   {
-    icon: <span className="text-nutri-dark">💬</span>,
+    icon: <MdSms className="w-5 h-5 text-nutri-dark" />,
     iconBg: 'bg-nutri-light text-nutri-dark',
     label: 'Mensajes Nuevos',
     value: '8',
@@ -51,7 +52,7 @@ const statsCards = [
     changeType: 'neutral' as const,
   },
   {
-    icon: <span className="text-nutri-dark">📊</span>,
+    icon: <MdBarChart className="w-5 h-5 text-nutri-dark" />,
     iconBg: 'bg-nutri-light text-nutri-dark',
     label: 'Adherencia Media',
     value: '87%',
@@ -125,7 +126,7 @@ export default function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const greeting = user?.email ? `Bienvenido, ${user.email.split('@')[0]} 👋` : 'Bienvenido 👋';
+  const greeting = user?.email ? `Bienvenido, ${user.email.split('@')[0]}` : 'Bienvenido';
 
   const filteredPatients = recentPatients.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()),
@@ -198,14 +199,26 @@ export default function HomePage() {
             <Button variant="primary" onClick={() => navigate(ROUTES.PATIENTS)}>
               + Nuevo Paciente
             </Button>
-            <Button variant="outline" onClick={() => navigate(ROUTES.AGENDA)}>
-              📅 Agendar Cita
+            <Button
+              variant="outline"
+              icon={<MdCalendarMonth className="w-4 h-4" />}
+              onClick={() => navigate(ROUTES.AGENDA)}
+            >
+              Agendar Cita
             </Button>
-            <Button variant="outline" onClick={() => navigate(ROUTES.PLANS)}>
-              📋 Crear Plan
+            <Button
+              variant="outline"
+              icon={<MdDescription className="w-4 h-4" />}
+              onClick={() => navigate(ROUTES.PLANS)}
+            >
+              Crear Plan
             </Button>
-            <Button variant="outline" onClick={() => navigate(ROUTES.REPORTS)}>
-              📊 Ver Reportes
+            <Button
+              variant="outline"
+              icon={<MdBarChart className="w-4 h-4" />}
+              onClick={() => navigate(ROUTES.REPORTS)}
+            >
+              Ver Reportes
             </Button>
           </div>
         </div>

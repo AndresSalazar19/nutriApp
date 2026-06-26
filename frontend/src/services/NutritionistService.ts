@@ -13,7 +13,6 @@ export interface NutritionistPerson {
   last_name: string;
   date_of_birth: string | null;
   phone: string | null;
-  avatar_url: string | null;
   cedula: string | null;
   gender: string | null;
 }
@@ -23,6 +22,7 @@ export interface NutritionistUser {
   email: string;
   role: string;
   is_active: boolean;
+  avatar_url: string | null;
   person: NutritionistPerson;
 }
 
@@ -45,10 +45,40 @@ export interface NutritionistProfile {
   specialty: NutritionistSpecialty | null;
 }
 
-// NUEVO: Interfaz para los documentos del nutricionista
 export interface NutritionistDocuments {
   cv_url: string | null;
   senescyt_url: string | null;
+}
+
+export interface NutritionistDocumentResponse {
+  id: string;
+  document_type: 'cv' | 'senescyt' | string;
+  file_path: string;
+  file_name?: string | null;
+  file_size?: number | null;
+  mime_type?: string | null;
+}
+
+export interface AvailabilityRule {
+  id: string;
+  nutritionist_id: string;
+  rule_type: 'recurring' | 'exception' | string;
+  day_of_week?: number | null;
+  specific_date?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  is_available?: boolean | null;
+}
+
+export interface AvailabilityCalendar {
+  week_start: string;
+  days: Record<string, AvailabilityRule[]>;
+  exceptions: AvailabilityRule[];
+}
+
+export interface NutritionistProfileDetail extends NutritionistProfile {
+  documents: NutritionistDocumentResponse[];
+  availabilities: AvailabilityRule[];
 }
 
 function authHeaders(): Record<string, string> {
@@ -90,14 +120,12 @@ export const NutritionistService = {
     return Array.isArray(data) ? data : (data.data ?? []);
   },
 
-  // ACTUALIZADO: Se añade el parámetro opcional rejectionReason
   async review(
     profileId: string,
     status: 'verified' | 'rejected',
     verifiedBy: string,
     rejectionReason?: string,
   ): Promise<NutritionistProfile> {
-    // Armamos el payload dinámicamente. Si es verified, manda null, si es rejected, manda la razón.
     const payload = {
       status,
       verified_by: verifiedBy,
@@ -118,7 +146,6 @@ export const NutritionistService = {
     return data.data ?? data;
   },
 
-  // NUEVO: Método para obtener las rutas de los PDFs
   async getDocuments(profileId: string): Promise<NutritionistDocuments> {
     const response = await fetch(`${API_URL}/nutritionists/${profileId}/documents`, {
       headers: authHeaders(),
@@ -131,5 +158,70 @@ export const NutritionistService = {
     }
 
     return data;
+  },
+
+  async getNutritionistProfile(userId: string): Promise<NutritionistProfileDetail> {
+    const response = await fetch(`${API_URL}/nutritionists/profile/${userId}`, {
+      headers: authHeaders(),
+    });
+
+    return handleResponse<NutritionistProfileDetail>(response);
+  },
+
+  async getAvailabilityCalendar(userId: string): Promise<AvailabilityCalendar> {
+    const response = await fetch(`${API_URL}/appointment/availability/calendar/${userId}`, {
+      headers: authHeaders(),
+    });
+
+    return handleResponse<AvailabilityCalendar>(response);
+  },
+
+  async createAvailability(
+    nutritionistId: string,
+    payload: Omit<AvailabilityRule, 'id' | 'nutritionist_id' | 'nutritionist'>,
+  ): Promise<AvailabilityRule> {
+    const response = await fetch(`${API_URL}/appointment/availability/${nutritionistId}`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    return handleResponse<AvailabilityRule>(response);
+  },
+
+  async updateAvailability(
+    availabilityId: string,
+    payload: Omit<AvailabilityRule, 'id' | 'nutritionist_id' | 'nutritionist'>,
+  ): Promise<AvailabilityRule> {
+    const response = await fetch(`${API_URL}/appointment/availability/${availabilityId}`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    return handleResponse<AvailabilityRule>(response);
+  },
+
+  async deleteAvailability(availabilityId: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_URL}/appointment/availability/${availabilityId}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+
+    return handleResponse<{ message: string }>(response);
+  },
+
+  async uploadAvatar(userId: string, file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_URL}/users/${userId}/avatar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tokenStorage.get()}` },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('Error al subir imagen');
+    return response.json();
   },
 };

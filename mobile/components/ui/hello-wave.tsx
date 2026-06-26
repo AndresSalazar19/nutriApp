@@ -1,10 +1,15 @@
 import Animated from 'react-native-reanimated';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+const AnimatedIcon = Animated.createAnimatedComponent(MaterialCommunityIcons);
 
 export function HelloWave() {
   return (
-    <Animated.Text
+    <AnimatedIcon
+      name="hand-wave"
+      size={28}
+      color="#F59E0B"
       style={{
-        fontSize: 28,
         lineHeight: 32,
         marginTop: -6,
         animationName: {
@@ -12,8 +17,7 @@ export function HelloWave() {
         },
         animationIterationCount: 4,
         animationDuration: '300ms',
-      }}>
-      👋
-    </Animated.Text>
+      }}
+    />
   );
 }

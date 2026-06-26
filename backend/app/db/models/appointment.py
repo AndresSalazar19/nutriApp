@@ -61,10 +61,10 @@ class AvailabilityNutritionist(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     rule_type = Column(SQLEnum(AvailabilityRuleType), nullable=False)
-    day_of_week = Column(Integer, nullable=True)  # 0=Monday, 6=Sunday (for recurring rules)
-    specific_date = Column(Date, nullable=True)  # For exception rules
-    start_time = Column(Time, nullable=False)
-    end_time = Column(Time, nullable=False)
-    is_available = Column(Boolean, default=True, nullable=False)
+    day_of_week = Column(Integer, nullable=True)
+    specific_date = Column(Date, nullable=True)
+    start_time = Column(Time, nullable=True)
+    end_time = Column(Time, nullable=True)
+    is_available = Column(Boolean, nullable=True, default=None)
 
     nutritionist = relationship("User")

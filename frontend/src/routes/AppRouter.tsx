@@ -19,6 +19,7 @@ const ReportsPage = lazy(() => import('../pages/MainView/ReportsPage'));
 const ResourcesPage = lazy(() => import('../pages/MainView/ResourcesPage'));
 const PlansPage = lazy(() => import('../pages/MainView/PlansPage'));
 const MessagesPage = lazy(() => import('../pages/MainView/MessagesPage'));
+const NutritionistProfilePage = lazy(() => import('../pages/MainView/NutritionistProfilePage'));
 
 //ADMIN
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard/AdminDashboard'));
@@ -52,6 +53,7 @@ function LoginWrapper() {
     email: string;
     role: string;
     token: string;
+    avatar_url?: string | null;
   }) => {
     login(userData as AuthUser, userData.token);
     if (userData.role === 'admin') {
@@ -85,6 +87,7 @@ function RegisterWrapper() {
     email: string;
     role: string;
     token?: string;
+    avatar_url?: string | null;
   }) => {
     login(userData as AuthUser, userData.token ?? '');
     navigate(ROUTES.DASHBOARD, { replace: true });
@@ -133,6 +136,7 @@ function AppRoutes() {
             {/* verified → acceso completo */}
             <Route path={ROUTES.HOME} element={<HomePage />} />
             <Route path={ROUTES.PATIENTS} element={<PatientsPage />} />
+            <Route path={ROUTES.NUTRITIONIST_PROFILE} element={<NutritionistProfilePage />} />
             <Route path={ROUTES.AGENDA} element={<AgendaPage />} />
             <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
             <Route path={ROUTES.RESOURCES} element={<ResourcesPage />} />

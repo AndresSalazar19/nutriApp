@@ -14,6 +14,7 @@ import {
   MdGroup,
   MdLibraryBooks,
   MdBarChart,
+  MdLocalHospital,
 } from 'react-icons/md';
 
 const statsCards = [
@@ -233,7 +234,7 @@ function AdminDashboard() {
               data={nutritionists}
               keyExtractor={(row) => row.id}
               emptyTitle="No hay nutricionistas"
-              emptyIcon="🏥"
+              emptyIcon={<MdLocalHospital className="w-12 h-12" />}
             />
           </div>
 

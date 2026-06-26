@@ -4,7 +4,14 @@ import { Button } from '../../components/ui/Button';
 import { AppointmentViewModal, NewAppointmentModal } from '../../components/ui/AppointmentModal';
 import { Toast } from '../../components/ui/Toast';
 import { Spinner } from '../../components/ui/Spinner';
-import { CalendarAppointment, CalendarView, getWeekStart, getWeekDays, formatMonthYear, isSameDay } from './agendaUtils';
+import {
+  CalendarAppointment,
+  CalendarView,
+  getWeekStart,
+  getWeekDays,
+  formatMonthYear,
+  isSameDay,
+} from './agendaUtils';
 import { useAppointments } from '../../hooks/useAppointments';
 import { ToCalendarAppointment } from '../../services/Appointments/appointment.transform';
 import { CalendarViews } from './CalendarViews';
@@ -16,7 +23,9 @@ export default function AgendaPage() {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(today));
   const [view, setView] = useState<CalendarView>('Semana');
   const { appointments, refetch, loading } = useAppointments();
-  const [selectedAppt, setSelectedAppt] = useState<{ appt: CalendarAppointment; day: Date } | null>(null);
+  const [selectedAppt, setSelectedAppt] = useState<{ appt: CalendarAppointment; day: Date } | null>(
+    null,
+  );
   const [showNewModal, setShowNewModal] = useState(false);
   const [toastConfig, setToastConfig] = useState({
     isVisible: false,
@@ -27,7 +36,7 @@ export default function AgendaPage() {
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
 
   const calendarAppointments = useMemo(() => {
-     return appointments
+    return appointments
       .filter((a) => a.cancelled_at == null)
       .map((a) => {
         try {
@@ -83,7 +92,11 @@ export default function AgendaPage() {
   }
 
   const todayCount = calendarAppointments.filter((a) => {
-    try { return isSameDay(new Date(a.startDate!), today); } catch { return false; }
+    try {
+      return isSameDay(new Date(a.startDate!), today);
+    } catch {
+      return false;
+    }
   }).length;
 
   // Hide nav arrows in Lista view (no period to navigate)
@@ -92,7 +105,6 @@ export default function AgendaPage() {
   return (
     <NutritionistLayout>
       <div className="flex flex-col h-full overflow-hidden">
-
         {/* ── Top bar ── */}
         <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white">
           <div>
@@ -158,7 +170,6 @@ export default function AgendaPage() {
         {/* ── Calendar area ── */}
         <div className="flex-1 overflow-hidden px-8 pt-0 pb-4">
           <div className="h-full flex flex-col bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mt-4 relative">
-
             {/* Loading overlay */}
             {loading && (
               <div className="absolute inset-0 z-20 bg-white/50 backdrop-blur-[2px] flex items-center justify-center">

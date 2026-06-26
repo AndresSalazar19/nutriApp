@@ -1,12 +1,6 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { AppointmentCard } from '../../components/ui/AppointmentCard';
-import {
-  CalendarAppointment,
-  CalendarView,
-  DAYS_SHORT,
-  isSameDay,
-  pad,
-} from './agendaUtils';
+import { CalendarAppointment, CalendarView, DAYS_SHORT, isSameDay, pad } from './agendaUtils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -58,7 +52,6 @@ function DayHeaders({ weekDays, today }: { weekDays: Date[]; today: Date }) {
   );
 }
 
-
 interface WeekGridProps extends ViewProps {
   weekDays: Date[];
 }
@@ -77,7 +70,11 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
   });
 
   return (
-    <div ref={gridRef} className="overflow-auto flex-1" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+    <div
+      ref={gridRef}
+      className="overflow-auto flex-1"
+      style={{ maxHeight: 'calc(100vh - 200px)' }}
+    >
       <div className="flex" style={{ minWidth: 700 }}>
         {/* Time column */}
         <div style={{ width: TIME_COL_W, flexShrink: 0 }}>
@@ -99,7 +96,11 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
           const isToday = isSameDay(day, today);
           const dayAppts = appointments.filter((a) => {
             if (a.startDate) {
-              try { return isSameDay(new Date(a.startDate), day); } catch { return a.dayIndex === dayIdx; }
+              try {
+                return isSameDay(new Date(a.startDate), day);
+              } catch {
+                return a.dayIndex === dayIdx;
+              }
             }
             return a.dayIndex === dayIdx;
           });
@@ -130,21 +131,22 @@ function WeekGrid({ weekDays, appointments, today, onApptClick }: WeekGridProps)
                 );
               })}
 
-              {isToday && (() => {
-                const now = new Date();
-                const mins = now.getHours() * 60 + now.getMinutes() - HOUR_START * 60;
-                if (mins < 0 || mins > TOTAL_HOURS * 60) return null;
-                const topPx = (mins / 30) * SLOT_HEIGHT;
-                return (
-                  <div
-                    style={{ position: 'absolute', top: topPx, left: 0, right: 0 }}
-                    className="flex items-center pointer-events-none"
-                  >
-                    <div className="w-2 h-2 bg-admin-accent rounded-full -ml-1 flex-shrink-0" />
-                    <div className="flex-1 border-t-2 border-admin-accent" />
-                  </div>
-                );
-              })()}
+              {isToday &&
+                (() => {
+                  const now = new Date();
+                  const mins = now.getHours() * 60 + now.getMinutes() - HOUR_START * 60;
+                  if (mins < 0 || mins > TOTAL_HOURS * 60) return null;
+                  const topPx = (mins / 30) * SLOT_HEIGHT;
+                  return (
+                    <div
+                      style={{ position: 'absolute', top: topPx, left: 0, right: 0 }}
+                      className="flex items-center pointer-events-none"
+                    >
+                      <div className="w-2 h-2 bg-admin-accent rounded-full -ml-1 flex-shrink-0" />
+                      <div className="flex-1 border-t-2 border-admin-accent" />
+                    </div>
+                  );
+                })()}
             </div>
           );
         })}
@@ -175,7 +177,10 @@ function MonthGrid({ appointments, today, referenceDate, onApptClick }: MonthGri
       {/* Day name headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAYS_SHORT.map((d) => (
-          <div key={d} className="text-center text-xs font-semibold text-gray-400 py-1 uppercase tracking-wide">
+          <div
+            key={d}
+            className="text-center text-xs font-semibold text-gray-400 py-1 uppercase tracking-wide"
+          >
             {d}
           </div>
         ))}
@@ -189,7 +194,11 @@ function MonthGrid({ appointments, today, referenceDate, onApptClick }: MonthGri
           const isToday = isSameDay(day, today);
           const isCurrentMonth = day.getMonth() === month;
           const dayAppts = appointments.filter((a) => {
-            try { return isSameDay(new Date(a.startDate!), day); } catch { return false; }
+            try {
+              return isSameDay(new Date(a.startDate!), day);
+            } catch {
+              return false;
+            }
           });
 
           return (
@@ -216,9 +225,7 @@ function MonthGrid({ appointments, today, referenceDate, onApptClick }: MonthGri
                   </button>
                 ))}
                 {dayAppts.length > 2 && (
-                  <span className="text-[10px] text-gray-400 pl-1">
-                    +{dayAppts.length - 2} más
-                  </span>
+                  <span className="text-[10px] text-gray-400 pl-1">+{dayAppts.length - 2} más</span>
                 )}
               </div>
             </div>
@@ -367,11 +374,7 @@ export function CalendarViews({
       )}
 
       {view === 'Lista' && (
-        <ListView
-          appointments={appointments}
-          today={today}
-          onApptClick={onApptClick}
-        />
+        <ListView appointments={appointments} today={today} onApptClick={onApptClick} />
       )}
     </>
   );

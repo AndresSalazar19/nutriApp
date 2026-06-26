@@ -219,7 +219,13 @@ interface EditFormProps {
   onSaved: () => void;
 }
 
-function EditAppointmentForm({ appt, referenceDate, onClose, onCancelEdit, onSaved }: EditFormProps) {
+function EditAppointmentForm({
+  appt,
+  referenceDate,
+  onClose,
+  onCancelEdit,
+  onSaved,
+}: EditFormProps) {
   const [form, setForm] = useState({
     date: toLocalISODate(referenceDate),
     startTime: `${pad(appt.startHour)}:${pad(appt.startMin)}`,
@@ -341,7 +347,12 @@ function EditAppointmentForm({ appt, referenceDate, onClose, onCancelEdit, onSav
         )}
 
         <div className="flex gap-2 pt-1">
-          <Button variant="outline" onClick={onCancelEdit} className="flex-1" disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={onCancelEdit}
+            className="flex-1"
+            disabled={isSubmitting}
+          >
             Volver
           </Button>
           <Button variant="primary" onClick={handleSave} className="flex-1" disabled={isSubmitting}>
