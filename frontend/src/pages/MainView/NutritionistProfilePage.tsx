@@ -301,7 +301,6 @@ export default function NutritionistProfilePage() {
                     <div className="text-xs text-gray-500">{d.document_type}</div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="text-xs">{d.is_verified ? 'Verificado' : 'No verificado'}</div>
                     <a
                       href={getDocUrl(d.file_path)}
                       target="_blank"

@@ -57,7 +57,6 @@ export interface NutritionistDocumentResponse {
   file_name?: string | null;
   file_size?: number | null;
   mime_type?: string | null;
-  is_verified: boolean;
 }
 
 export interface AvailabilityRule {
