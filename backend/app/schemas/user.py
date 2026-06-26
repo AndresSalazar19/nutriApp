@@ -51,3 +51,8 @@ class UserResponse(BaseModel):
 class ChangePasswordRequest(BaseModel):
     email: str
     new_password: str
+
+
+class ValidateUserRequest(BaseModel):
+    email: EmailStr
+    cedula: str = ""

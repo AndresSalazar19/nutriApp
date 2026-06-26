@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.response import error_response, success_response
 from app.core.security import create_access_token
 from app.db.base import get_db
-from app.schemas.user import ChangePasswordRequest, UserCreate, UserRequest, UserResponse
+from app.schemas.user import ChangePasswordRequest, UserCreate, UserRequest, UserResponse, ValidateUserRequest
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -19,8 +19,23 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
         resp = error_response(["El email ya está registrado"], status_code=400)
         return JSONResponse(status_code=400, content=resp.model_dump())
 
+    if user_data.cedula and UserService.cedula_exists(db, user_data.cedula):
+        resp = error_response(["Ya existe una cuenta registrada con esa cédula"], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
+
     user = UserService.create(db, user_data)
     resp = success_response(data=UserResponse.model_validate(user).model_dump(mode="json"))
+    return JSONResponse(status_code=200, content=resp.model_dump())
+
+
+@router.post("/validate", response_model=None)
+def validate_user(obj: ValidateUserRequest, db: Session = Depends(get_db)):
+    field_errors = {}
+    if UserService.email_exists(db, obj.email):
+        field_errors["email"] = "Ya existe una cuenta registrada con este correo electrónico."
+    if obj.cedula and UserService.cedula_exists(db, obj.cedula):
+        field_errors["cedula"] = "Ya existe una cuenta registrada con esta cédula."
+    resp = success_response(data={"valid": len(field_errors) == 0, "field_errors": field_errors})
     return JSONResponse(status_code=200, content=resp.model_dump())
 
 
