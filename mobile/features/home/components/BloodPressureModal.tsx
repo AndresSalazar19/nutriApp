@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Modal,
@@ -17,13 +18,20 @@ import { COLORS } from '@/constants/colors';
 interface BloodPressureModalProps {
   visible: boolean;
   onClose: () => void;
+  onSave?: (payload: {
+    systolic: number;
+    diastolic: number;
+    pulse?: number | null;
+    notes?: string;
+  }) => Promise<void>;
 }
 
-export function BloodPressureModal({ visible, onClose }: BloodPressureModalProps) {
+export function BloodPressureModal({ visible, onClose, onSave }: BloodPressureModalProps) {
   const [systolic, setSystolic] = useState('');
   const [diastolic, setDiastolic] = useState('');
   const [pulse, setPulse] = useState('');
   const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const now = new Date();
   const dateStr = now.toLocaleDateString('es-EC', {
@@ -44,7 +52,7 @@ export function BloodPressureModal({ visible, onClose }: BloodPressureModalProps
     return { label: 'Hipertensión Etapa 2', color: COLORS.danger };
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!systolic.trim() || !diastolic.trim()) {
       Alert.alert('Campos requeridos', 'Ingresa al menos la presión sistólica y diastólica.');
       return;
@@ -56,11 +64,31 @@ export function BloodPressureModal({ visible, onClose }: BloodPressureModalProps
       return;
     }
 
-    Alert.alert(
-      'Registro guardado',
-      `Presión: ${sys}/${dia} mmHg${pulse ? `\nPulso: ${pulse} bpm` : ''}\nFecha: ${dateStr}`,
-      [{ text: 'OK', onPress: () => { resetAndClose(); } }],
-    );
+    const pulseValue = pulse.trim() ? parseInt(pulse, 10) : null;
+    if (pulse.trim() && (isNaN(pulseValue ?? NaN) || (pulseValue ?? 0) < 30 || (pulseValue ?? 0) > 220)) {
+      Alert.alert('Valor inválido', 'Verifica que el pulso sea correcto.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onSave?.({
+        systolic: sys,
+        diastolic: dia,
+        pulse: pulseValue,
+        notes: notes.trim() || undefined,
+      });
+
+      const message = `Presión: ${sys}/${dia} mmHg${pulse ? `\nPulso: ${pulse} bpm` : ''}\nFecha: ${dateStr}`;
+      resetAndClose();
+      setTimeout(() => {
+        Alert.alert('Registro guardado', message);
+      }, 0);
+    } catch (error: any) {
+      Alert.alert('No se pudo guardar', error?.message ?? 'Inténtalo nuevamente.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function resetAndClose() {
@@ -68,6 +96,7 @@ export function BloodPressureModal({ visible, onClose }: BloodPressureModalProps
     setDiastolic('');
     setPulse('');
     setNotes('');
+    setSaving(false);
     onClose();
   }
 
@@ -84,7 +113,7 @@ export function BloodPressureModal({ visible, onClose }: BloodPressureModalProps
             <View style={styles.header}>
               <MaterialCommunityIcons name="heart-pulse" size={24} color={COLORS.textOnPrimary} />
               <Text style={styles.headerTitle}>Registrar Presión Arterial</Text>
-              <TouchableOpacity onPress={resetAndClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <TouchableOpacity onPress={resetAndClose} disabled={saving} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                 <MaterialCommunityIcons name="close" size={24} color={COLORS.textOnPrimary} />
               </TouchableOpacity>
             </View>
@@ -179,12 +208,18 @@ export function BloodPressureModal({ visible, onClose }: BloodPressureModalProps
             </ScrollView>
 
             <View style={styles.footer}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={resetAndClose}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={resetAndClose} disabled={saving}>
                 <Text style={styles.cancelBtnText}>Cancelar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                <MaterialCommunityIcons name="check" size={18} color={COLORS.textOnPrimary} />
-                <Text style={styles.saveBtnText}>Guardar</Text>
+              <TouchableOpacity style={[styles.saveBtn, saving && styles.saveBtnDisabled]} onPress={handleSave} disabled={saving}>
+                {saving ? (
+                  <ActivityIndicator color={COLORS.textOnPrimary} />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="check" size={18} color={COLORS.textOnPrimary} />
+                    <Text style={styles.saveBtnText}>Guardar</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -369,6 +404,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+  },
+  saveBtnDisabled: {
+    opacity: 0.65,
   },
   saveBtnText: {
     fontSize: 15,
