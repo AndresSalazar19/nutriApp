@@ -85,25 +85,19 @@ describe('Step 1 – Personal Information', () => {
   });
 
   test('TC-FE-05b: shows required error when cédula is empty', () => {
-    const { result } = renderHook(() =>
-      useFormValidation(makeStep1({ cedula: '' }), 1),
-    );
+    const { result } = renderHook(() => useFormValidation(makeStep1({ cedula: '' }), 1));
 
     expect(result.current.errors.cedula).toBe('La cédula es requerida.');
   });
 
   test('TC-FE-05c: shows required error when birthDate is empty', () => {
-    const { result } = renderHook(() =>
-      useFormValidation(makeStep1({ birthDate: '' }), 1),
-    );
+    const { result } = renderHook(() => useFormValidation(makeStep1({ birthDate: '' }), 1));
 
     expect(result.current.errors.birthDate).toBe('La fecha de nacimiento es requerida.');
   });
 
   test('TC-FE-05d: shows required error when phone is empty', () => {
-    const { result } = renderHook(() =>
-      useFormValidation(makeStep1({ phone: '' }), 1),
-    );
+    const { result } = renderHook(() => useFormValidation(makeStep1({ phone: '' }), 1));
 
     expect(result.current.errors.phone).toBe('El teléfono es requerido.');
   });
@@ -176,9 +170,7 @@ describe('Step 2 – Professional Information', () => {
       ),
     );
 
-    expect(result.current.errors.yearsExperience).toBe(
-      'Los años de experiencia son requeridos.',
-    );
+    expect(result.current.errors.yearsExperience).toBe('Los años de experiencia son requeridos.');
   });
 
   test('TC-FE-08c: shows required error when yearsExperience is whitespace only', () => {
@@ -192,9 +184,7 @@ describe('Step 2 – Professional Information', () => {
       ),
     );
 
-    expect(result.current.errors.yearsExperience).toBe(
-      'Los años de experiencia son requeridos.',
-    );
+    expect(result.current.errors.yearsExperience).toBe('Los años de experiencia son requeridos.');
   });
 
   test('TC-FE-08d: shows required error when cvFile is null', () => {
@@ -301,9 +291,7 @@ describe('Step 3 – Security Credentials', () => {
   });
 
   test('TC-FE-10b: shows required error when email is empty', () => {
-    const { result } = renderHook(() =>
-      useFormValidation(makeStep3({ email: '' }), 3, true),
-    );
+    const { result } = renderHook(() => useFormValidation(makeStep3({ email: '' }), 3, true));
 
     expect(result.current.errors.email).toBe('El correo electrónico es requerido.');
   });
@@ -335,9 +323,7 @@ describe('Step 3 – Security Credentials', () => {
   });
 
   test('TC-FE-10f: shows error when terms are not accepted', () => {
-    const { result } = renderHook(() =>
-      useFormValidation(makeStep3(), 3, false),
-    );
+    const { result } = renderHook(() => useFormValidation(makeStep3(), 3, false));
 
     expect(result.current.errors.acceptTerms).toBe(
       'Debes aceptar los Términos de Servicio y Política de Privacidad.',
@@ -345,9 +331,7 @@ describe('Step 3 – Security Credentials', () => {
   });
 
   test('TC-FE-10g: step 3 is valid with strong password, matching confirm, and terms accepted', () => {
-    const { result } = renderHook(() =>
-      useFormValidation(makeStep3(), 3, true),
-    );
+    const { result } = renderHook(() => useFormValidation(makeStep3(), 3, true));
 
     expect(result.current.isStepValid).toBe(true);
   });
@@ -356,7 +340,6 @@ describe('Step 3 – Security Credentials', () => {
 // useFormValidation – step fallback
 
 describe('useFormValidation – step fallback', () => {
-
   test('TC-FE-10h: returns empty errors and isStepValid true for unknown step', () => {
     const { result } = renderHook(() => useFormValidation(baseForm, 99));
 
