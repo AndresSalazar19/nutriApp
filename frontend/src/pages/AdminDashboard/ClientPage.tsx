@@ -72,7 +72,7 @@ const statsCards = [
   {
     icon: MdPeople,
     iconBg: 'bg-admin-light',
-    label: 'Total Clientes',
+    label: 'Total Pacientes',
     value: '347',
     change: '↑ 23 este mes',
     changeType: 'positive' as const,
@@ -170,7 +170,7 @@ function ActionButtons({ client, onAssign }: { client: Client; onAssign?: () => 
 }
 
 function ClientsPage() {
-  const [activeNav, setActiveNav] = useState('Clientes');
+  const [activeNav, setActiveNav] = useState('Pacientes');
   const [activeTab, setActiveTab] = useState('Todos');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -193,7 +193,7 @@ function ClientsPage() {
       const patients = await PatientService.getAll();
       setClients(patients.map(mapPatientToClient));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron cargar los clientes.');
+      setError(err instanceof Error ? err.message : 'No se pudieron cargar los pacientes.');
       setClients([]);
     } finally {
       setIsLoading(false);
@@ -287,7 +287,7 @@ function ClientsPage() {
 
   return (
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
-      <AdminTopBar title="Gestión de Clientes" />
+      <AdminTopBar title="Gestión de Pacientes" />
 
       <div className="px-8 pb-8 pt-4 bg-admin-bg">
         <div className="grid grid-cols-4 gap-4 mb-6">
@@ -355,14 +355,14 @@ function ClientsPage() {
             data={filtered}
             keyExtractor={(row) => row.id}
             emptyIcon={<MdPeople className="w-12 h-12" />}
-            emptyTitle="No hay clientes"
+            emptyTitle="No hay pacientes"
             emptyDescription="No se encontraron resultados para tu búsqueda."
             isLoading={isLoading}
           />
 
           <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-50">
             <p className="text-xs text-gray-400">
-              Mostrando {filtered.length > 0 ? 1 : 0}-{filtered.length} de {clients.length} clientes
+              Mostrando {filtered.length > 0 ? 1 : 0}-{filtered.length} de {clients.length} pacientes
             </p>
             <Pagination current={currentPage} total={3} onChange={setCurrentPage} />
           </div>
