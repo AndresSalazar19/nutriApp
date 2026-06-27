@@ -40,7 +40,7 @@ interface Client {
     name: string;
   } | null;
   subscription: SubscriptionType;
-  registrationDate: string;
+  registered_at: string;
 }
 
 function mapPatientToClient(p: PatientResponse): Client {
@@ -64,7 +64,14 @@ function mapPatientToClient(p: PatientResponse): Client {
         }
       : null,
     subscription: 'basic',
-    registrationDate: 'N/A',
+    registered_at: p.registered_at
+      ? `${new Date(p.registered_at).toLocaleDateString('es-EC')} ${new Date(
+          p.registered_at,
+        ).toLocaleTimeString('es-EC', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })}`
+      : 'N/A',
   };
 }
 
@@ -268,7 +275,7 @@ function ClientsPage() {
     {
       key: 'registro',
       header: 'Registro',
-      render: (row) => <span className="text-gray-500 text-xs">{row.registrationDate}</span>,
+      render: (row) => <span className="text-gray-500 text-xs">{row.registered_at}</span>,
     },
     {
       key: 'acciones',

@@ -10,6 +10,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "validate": "npm run lint",
+    "test": "jest --watchAll=false",
     "build:android:preview": "npx eas-cli build --platform android --profile preview"
   },
   "dependencies": {
@@ -51,10 +52,21 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "jest": "^29.7.0",
+    "jest-expo": "~54.0.17",
+    "ts-jest": "^29.4.11",
     "typescript": "~5.9.2"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "testEnvironment": "node",
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*)"
+    ]
   },
   "private": true
 }

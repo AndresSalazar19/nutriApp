@@ -25,6 +25,7 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     email_verified = Column(Boolean, default=False, nullable=False)
     avatar_url = Column(String(500), nullable=True)
+    created_at = Column(Date, nullable=False)
 
     person = relationship(
         "Person", back_populates="user", uselist=False, cascade="all, delete-orphan"
