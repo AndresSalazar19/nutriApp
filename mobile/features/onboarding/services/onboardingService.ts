@@ -1,13 +1,45 @@
 import { HealthData, PaymentData } from '../types';
+import { AuthService } from '@/features/auth/services/authService';
+import { ProgressService } from '@/features/progress/services/progressService';
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 /**
  * Submit health profile data to the backend.
  * Replace with real API call when backend is ready.
  */
 export async function submitHealthProfile(data: HealthData): Promise<void> {
-  // TODO: POST /api/onboarding/health
-  console.log('[onboardingService] submitHealthProfile', data);
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  const user = await AuthService.getUser();
+  if (!user?.id) {
+    throw new Error('No hay sesion activa para guardar los datos de salud.');
+  }
+
+  const logDate = todayISO();
+  const weight = Number(data.weight);
+  const systolic = Number(data.systolic);
+  const diastolic = Number(data.diastolic);
+
+  await Promise.all([
+    Number.isFinite(weight) && weight > 0
+      ? ProgressService.createWeightLog({
+          user_id: user.id,
+          weight_kg: weight,
+          log_date: logDate,
+          notes: 'Registro inicial de salud',
+        })
+      : Promise.resolve(),
+    Number.isFinite(systolic) && Number.isFinite(diastolic) && systolic > 0 && diastolic > 0
+      ? ProgressService.createBloodPressureLog({
+          user_id: user.id,
+          systolic,
+          diastolic,
+          log_date: logDate,
+          notes: 'Registro inicial de salud',
+        })
+      : Promise.resolve(),
+  ]);
 }
 
 /**

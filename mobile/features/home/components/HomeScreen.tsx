@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +18,8 @@ import { BloodPressureModal } from './BloodPressureModal';
 import { AppointmentsModal } from './AppointmentsModal';
 import { useContent } from '@/features/content/hooks/useContent';
 import { CATEGORY_ICON, CATEGORY_LABEL } from '@/features/content/services/contentService';
+import { AuthService, AuthUser } from '@/features/auth/services/authService';
+import { BloodPressureLog, ProgressService, WeightLog } from '@/features/progress/services/progressService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
@@ -78,6 +80,20 @@ function ActionCard({
   );
 }
 
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatWeight(log?: WeightLog | null) {
+  if (!log) return '--';
+  return Number(log.weight_kg).toFixed(1);
+}
+
+function formatPressure(log?: BloodPressureLog | null) {
+  if (!log) return '--/--';
+  return `${log.systolic}/${log.diastolic}`;
+}
+
 function ReminderCard() {
   return (
     <View style={styles.reminderCard}>
@@ -113,15 +129,56 @@ function NutritionistFloatingButton({ onPress }: { onPress: () => void }) {
 export default function HomeScreen() {
   const router = useRouter();
   const { items: contentItems, loading: contentLoading } = useContent();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [latestWeight, setLatestWeight] = useState<WeightLog | null>(null);
+  const [latestPressure, setLatestPressure] = useState<BloodPressureLog | null>(null);
   const previewItems = contentItems.slice(0, 3);
   const [bpModalVisible, setBpModalVisible] = useState(false);
   const [aptModalVisible, setAptModalVisible] = useState(false);
+
+  async function loadDashboardData() {
+    const currentUser = await AuthService.getUser();
+    setUser(currentUser);
+    if (!currentUser?.id) return;
+
+    const [weightHistory, pressureHistory] = await Promise.all([
+      ProgressService.getWeightHistory(currentUser.id, 1).catch(() => []),
+      ProgressService.getBloodPressureHistory(currentUser.id, 1).catch(() => []),
+    ]);
+    setLatestWeight(weightHistory[0] ?? null);
+    setLatestPressure(pressureHistory[0] ?? null);
+  }
+
+  useEffect(() => {
+    void loadDashboardData();
+  }, []);
+
+  async function handleSavePressure(payload: {
+    systolic: number;
+    diastolic: number;
+    pulse?: number | null;
+    notes?: string;
+  }) {
+    if (!user?.id) {
+      throw new Error('Inicia sesion para registrar tu presion.');
+    }
+
+    const saved = await ProgressService.createBloodPressureLog({
+      user_id: user.id,
+      systolic: payload.systolic,
+      diastolic: payload.diastolic,
+      pulse: payload.pulse ?? null,
+      notes: payload.notes,
+      log_date: todayISO(),
+    });
+    setLatestPressure(saved);
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerGreeting}>Hola!</Text>
+          <Text style={styles.headerGreeting}>Hola, {user?.first_name ?? 'Paciente'}</Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
@@ -131,13 +188,13 @@ export default function HomeScreen() {
 
       <View style={styles.statsCardWrapper}>
         <View style={styles.statsCard}>
-          <StatCard icon="scale-bathroom" value="72.5" unit="kg" iconColor={COLORS.primaryMedium} />
+          <StatCard icon="scale-bathroom" value={formatWeight(latestWeight)} unit="kg" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard icon="heart-pulse" value="120/80" unit="mmHg" iconColor={COLORS.primaryMedium} />
+          <StatCard icon="heart-pulse" value={formatPressure(latestPressure)} unit="mmHg" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard icon="water" value="1.5" unit="L hoy" iconColor={COLORS.primaryMedium} />
+          <StatCard icon="water" value="0" unit="L hoy" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard icon="fire" value="1,450" unit="kcal" iconColor={COLORS.primaryMedium} />
+          <StatCard icon="fire" value="0" unit="kcal" iconColor={COLORS.primaryMedium} />
         </View>
       </View>
 
@@ -234,7 +291,11 @@ export default function HomeScreen() {
         style={{ bottom: 100, right: 90 }}
       />
 
-      <BloodPressureModal visible={bpModalVisible} onClose={() => setBpModalVisible(false)} />
+      <BloodPressureModal
+        visible={bpModalVisible}
+        onClose={() => setBpModalVisible(false)}
+        onSave={handleSavePressure}
+      />
       <AppointmentsModal visible={aptModalVisible} onClose={() => setAptModalVisible(false)} />
 
       <BottomTabBar activeTab="inicio" />
