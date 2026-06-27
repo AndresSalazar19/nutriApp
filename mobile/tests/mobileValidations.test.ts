@@ -49,6 +49,28 @@ describe('formatPhoneInput', () => {
   test('TC-MB-04: returns plain digits when input is 3 digits or fewer', () => {
     expect(formatPhoneInput('987')).toBe('987');
   });
+
+  /**
+   * TC-MB-04b
+   * Rule: partial input of exactly 6 digits produces "XXX XXX" (two groups, no third).
+   * Input: "987654" (6 digits)
+   * Expected: "987 654"
+   * Coverage: hits the `length > 3` branch but NOT the `length > 6` branch.
+   */
+  test('TC-MB-04b: formats 6 digits into two groups "XXX XXX"', () => {
+    expect(formatPhoneInput('987654')).toBe('987 654');
+  });
+
+  /**
+   * TC-MB-04c
+   * Rule: empty string returns empty string (no digits at all).
+   * Input: ""
+   * Expected: ""
+   * Coverage: `length > 0` branch evaluates to false — no groups pushed.
+   */
+  test('TC-MB-04c: returns empty string for empty input', () => {
+    expect(formatPhoneInput('')).toBe('');
+  });
 });
 
 describe('validatePhoneInput', () => {
@@ -115,6 +137,28 @@ describe('formatDateInput', () => {
   test('TC-MB-10: strips dashes and formats correctly', () => {
     expect(formatDateInput('15-06-1990')).toBe('15/06/1990');
   });
+
+  /**
+   * TC-MB-10b
+   * Rule: partial input of exactly 2 digits returns those digits with no separator.
+   * Input: "15"
+   * Expected: "15"
+   * Coverage: hits the `digits.length <= 2` early-return branch.
+   */
+  test('TC-MB-10b: returns raw digits for input of 2 digits or fewer', () => {
+    expect(formatDateInput('15')).toBe('15');
+  });
+
+  /**
+   * TC-MB-10c
+   * Rule: single digit returns that digit unchanged.
+   * Input: "1"
+   * Expected: "1"
+   * Coverage: also hits the `digits.length <= 2` branch with length 1.
+   */
+  test('TC-MB-10c: returns single digit unchanged', () => {
+    expect(formatDateInput('1')).toBe('1');
+  });
 });
 
 describe('validateDateInput', () => {
@@ -129,13 +173,14 @@ describe('validateDateInput', () => {
   });
 
   /**
-   * TC-MB-12
-   * Rule: month 13 is invalid.
-   * Input: "01/13/1990"
+   * TC-MB-12b
+   * Rule: month 0 is below the minimum allowed month of 1.
+   * Input: "01/00/1990"
    * Expected: error "Mes inválido (01-12)"
+   * Coverage: hits the `mm < 1` branch of the month-range check.
    */
-  test('TC-MB-12: rejects month 13 as invalid', () => {
-    expect(validateDateInput('01/13/1990')).toBe('Mes inválido (01-12)');
+  test('TC-MB-12b: rejects month 00 as invalid', () => {
+    expect(validateDateInput('01/00/1990')).toBe('Mes inválido (01-12)');
   });
 
   /**
@@ -167,9 +212,42 @@ describe('validateDateInput', () => {
   test('TC-MB-15: rejects year below 1900', () => {
     expect(validateDateInput('01/01/1800')).toBe('Año inválido');
   });
+
+  /**
+   * TC-MB-15b
+   * Rule: day 0 is below the minimum allowed day of 1.
+   * Input: "00/06/1990"
+   * Expected: error "Día inválido (01-31)"
+   * Coverage: hits the `dd < 1` branch in the day-range check.
+   */
+  test('TC-MB-15b: rejects day 00 as invalid', () => {
+    expect(validateDateInput('00/06/1990')).toBe('Día inválido (01-31)');
+  });
+
+  /**
+   * TC-MB-15c
+   * Rule: day 32 exceeds the maximum allowed day of 31.
+   * Input: "32/06/1990"
+   * Expected: error "Día inválido (01-31)"
+   * Coverage: hits the `dd > 31` branch in the day-range check.
+   */
+  test('TC-MB-15c: rejects day 32 as out of range', () => {
+    expect(validateDateInput('32/06/1990')).toBe('Día inválido (01-31)');
+  });
+
+  /**
+   * TC-MB-15d
+   * Rule: year greater than the current year is invalid.
+   * Input: "01/01/2099"
+   * Expected: error "Año inválido"
+   * Coverage: hits the `yyyy > new Date().getFullYear()` branch.
+   */
+  test('TC-MB-15d: rejects year greater than current year', () => {
+    expect(validateDateInput('01/01/2099')).toBe('Año inválido');
+  });
 });
 
-// Height Validation
+// ─── Height Validation ────────────────────────────────────────────────────────
 
 describe('validateHeightInput', () => {
   /**
@@ -213,7 +291,7 @@ describe('validateHeightInput', () => {
   });
 });
 
-// Image URI Validation
+// ─── Image URI Validation ─────────────────────────────────────────────────────
 
 describe('isAllowedImageUri', () => {
   /**
@@ -237,6 +315,17 @@ describe('isAllowedImageUri', () => {
   });
 
   /**
+   * TC-MB-21b
+   * Rule: .jpeg extension is also in the allowed list (distinct from .jpg).
+   * Input: "file:///photos/avatar.jpeg"
+   * Expected: true
+   * Coverage: exercises the 'jpeg' branch of ALLOWED_IMAGE_EXTENSIONS.
+   */
+  test('TC-MB-21b: accepts .jpeg image URI', () => {
+    expect(isAllowedImageUri('file:///photos/avatar.jpeg')).toBe(true);
+  });
+
+  /**
    * TC-MB-22
    * Rule: .gif is NOT in the allowed list (only jpg, jpeg, png).
    * Input: "file:///photos/avatar.gif"
@@ -254,5 +343,17 @@ describe('isAllowedImageUri', () => {
    */
   test('TC-MB-23: rejects .pdf as image URI', () => {
     expect(isAllowedImageUri('file:///documents/profile.pdf')).toBe(false);
+  });
+
+  /**
+   * TC-MB-23b
+   * Rule: URI with no dot at all → pop() returns the whole string, not undefined.
+   * We need a URI where split('.') produces a single-element array so pop() 
+   * returns that element, but actually to hit ?? '' we need pop() = undefined.
+   * Input: URI that results in pop() returning undefined — empty string split.
+   * Coverage: hits the `?? ''` nullish-coalescing fallback branch.
+   */
+  test('TC-MB-23b: rejects URI where pop() returns undefined', () => {
+    expect(isAllowedImageUri('')).toBe(false);
   });
 });

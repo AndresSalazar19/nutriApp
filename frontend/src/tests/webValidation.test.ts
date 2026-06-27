@@ -10,8 +10,6 @@ import {
 } from '../pages/Appoinment/agendaUtils';
 import { buildRoute, ROUTES } from '../routes/routes';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 const baseForm: FormState = {
   fullName: '',
   cedula: '',
@@ -40,7 +38,7 @@ const makeStep3 = (overrides: Partial<FormState> = {}): FormState => ({
 
 const pdfFile = (name = 'file.pdf') => new File(['content'], name, { type: 'application/pdf' });
 
-// ─── Step 1: Personal Information ─────────────────────────────────────────────
+// Personal Information
 
 describe('Step 1 – Personal Information', () => {
   test('TC-FE-01: shows error when fullName is empty', () => {
@@ -85,9 +83,39 @@ describe('Step 1 – Personal Information', () => {
       'El teléfono debe tener exactamente 10 dígitos numéricos.',
     );
   });
+
+  test('TC-FE-05b: shows required error when cédula is empty', () => {
+    const { result } = renderHook(() => useFormValidation(makeStep1({ cedula: '' }), 1));
+
+    expect(result.current.errors.cedula).toBe('La cédula es requerida.');
+  });
+
+  test('TC-FE-05c: shows required error when birthDate is empty', () => {
+    const { result } = renderHook(() => useFormValidation(makeStep1({ birthDate: '' }), 1));
+
+    expect(result.current.errors.birthDate).toBe('La fecha de nacimiento es requerida.');
+  });
+
+  test('TC-FE-05d: shows required error when phone is empty', () => {
+    const { result } = renderHook(() => useFormValidation(makeStep1({ phone: '' }), 1));
+
+    expect(result.current.errors.phone).toBe('El teléfono es requerido.');
+  });
+
+  test('TC-FE-05e: accepts valid phone starting with 09', () => {
+    const form = makeStep1({
+      fullName: 'Ana Torres',
+      cedula: '0912345678',
+      birthDate: '1990-06-15',
+      phone: '0991234567',
+    });
+    const { result } = renderHook(() => useFormValidation(form, 1));
+
+    expect(result.current.errors.phone).toBeUndefined();
+  });
 });
 
-// ─── Step 2: Professional Information ─────────────────────────────────────────
+// Professional Information
 
 describe('Step 2 – Professional Information', () => {
   test('TC-FE-06: shows error when no specialty is selected', () => {
@@ -130,9 +158,113 @@ describe('Step 2 – Professional Information', () => {
 
     expect(result.current.errors.cvFile).toBe('El Curriculum Vitae debe ser un archivo PDF.');
   });
+
+  test('TC-FE-08b: shows required error when yearsExperience is empty', () => {
+    const { result } = renderHook(() =>
+      useFormValidation(
+        makeStep1({ specialties: '1', yearsExperience: '' }),
+        2,
+        false,
+        pdfFile('cv.pdf'),
+        pdfFile('sene.pdf'),
+      ),
+    );
+
+    expect(result.current.errors.yearsExperience).toBe('Los años de experiencia son requeridos.');
+  });
+
+  test('TC-FE-08c: shows required error when yearsExperience is whitespace only', () => {
+    const { result } = renderHook(() =>
+      useFormValidation(
+        makeStep1({ specialties: '1', yearsExperience: '   ' }),
+        2,
+        false,
+        pdfFile('cv.pdf'),
+        pdfFile('sene.pdf'),
+      ),
+    );
+
+    expect(result.current.errors.yearsExperience).toBe('Los años de experiencia son requeridos.');
+  });
+
+  test('TC-FE-08d: shows required error when cvFile is null', () => {
+    const { result } = renderHook(() =>
+      useFormValidation(
+        makeStep1({ specialties: '1', yearsExperience: '3' }),
+        2,
+        false,
+        null,
+        pdfFile('sene.pdf'),
+      ),
+    );
+
+    expect(result.current.errors.cvFile).toBe('El Curriculum Vitae es requerido.');
+  });
+
+  test('TC-FE-08e: shows required error when senescytFile is null', () => {
+    const { result } = renderHook(() =>
+      useFormValidation(
+        makeStep1({ specialties: '1', yearsExperience: '3' }),
+        2,
+        false,
+        pdfFile('cv.pdf'),
+        null,
+      ),
+    );
+
+    expect(result.current.errors.senescytFile).toBe('El Registro Senescyt es requerido.');
+  });
+
+  test('TC-FE-08f: rejects senescytFile with invalid type and extension', () => {
+    const badSenescyt = new File(['content'], 'registro.docx', {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+    const { result } = renderHook(() =>
+      useFormValidation(
+        makeStep1({ specialties: '1', yearsExperience: '3' }),
+        2,
+        false,
+        pdfFile('cv.pdf'),
+        badSenescyt,
+      ),
+    );
+
+    expect(result.current.errors.senescytFile).toBe(
+      'El Registro Senescyt debe ser PDF, JPG o PNG.',
+    );
+  });
+
+  test('TC-FE-08g: accepts senescytFile with .jpg extension', () => {
+    const jpgSenescyt = new File(['content'], 'registro.jpg', { type: 'image/jpeg' });
+    const { result } = renderHook(() =>
+      useFormValidation(
+        makeStep1({ specialties: '1', yearsExperience: '3' }),
+        2,
+        false,
+        pdfFile('cv.pdf'),
+        jpgSenescyt,
+      ),
+    );
+
+    expect(result.current.errors.senescytFile).toBeUndefined();
+  });
+
+  test('TC-FE-08h: step 2 is valid with all correct fields', () => {
+    const { result } = renderHook(() =>
+      useFormValidation(
+        makeStep1({ specialties: '1', yearsExperience: '5' }),
+        2,
+        false,
+        pdfFile('cv.pdf'),
+        pdfFile('senescyt.pdf'),
+      ),
+    );
+
+    expect(result.current.isStepValid).toBe(true);
+  });
 });
 
-// ─── Step 3: Security Credentials ─────────────────────────────────────────────
+// Security Credentials
 
 describe('Step 3 – Security Credentials', () => {
   test('TC-FE-09: rejects weak password missing uppercase, number and special char', () => {
@@ -157,9 +289,66 @@ describe('Step 3 – Security Credentials', () => {
     expect(result.current.errors.confirmPassword).toBe('Las contraseñas no coinciden.');
     expect(result.current.isStepValid).toBe(false);
   });
+
+  test('TC-FE-10b: shows required error when email is empty', () => {
+    const { result } = renderHook(() => useFormValidation(makeStep3({ email: '' }), 3, true));
+
+    expect(result.current.errors.email).toBe('El correo electrónico es requerido.');
+  });
+
+  test('TC-FE-10c: rejects email with invalid format', () => {
+    const { result } = renderHook(() =>
+      useFormValidation(makeStep3({ email: 'not-an-email' }), 3, true),
+    );
+
+    expect(result.current.errors.email).toBe(
+      'Ingresa un correo electrónico válido (ej: usuario@dominio.com).',
+    );
+  });
+
+  test('TC-FE-10d: shows required error when password is empty', () => {
+    const { result } = renderHook(() =>
+      useFormValidation(makeStep3({ password: '', confirmPassword: '' }), 3, true),
+    );
+
+    expect(result.current.errors.password).toBe('La contraseña es requerida.');
+  });
+
+  test('TC-FE-10e: shows required error when confirmPassword is empty', () => {
+    const { result } = renderHook(() =>
+      useFormValidation(makeStep3({ confirmPassword: '' }), 3, true),
+    );
+
+    expect(result.current.errors.confirmPassword).toBe('Debes confirmar tu contraseña.');
+  });
+
+  test('TC-FE-10f: shows error when terms are not accepted', () => {
+    const { result } = renderHook(() => useFormValidation(makeStep3(), 3, false));
+
+    expect(result.current.errors.acceptTerms).toBe(
+      'Debes aceptar los Términos de Servicio y Política de Privacidad.',
+    );
+  });
+
+  test('TC-FE-10g: step 3 is valid with strong password, matching confirm, and terms accepted', () => {
+    const { result } = renderHook(() => useFormValidation(makeStep3(), 3, true));
+
+    expect(result.current.isStepValid).toBe(true);
+  });
 });
 
-// ─── pad() ────────────────────────────────────────────────────────────────────
+// useFormValidation – step fallback
+
+describe('useFormValidation – step fallback', () => {
+  test('TC-FE-10h: returns empty errors and isStepValid true for unknown step', () => {
+    const { result } = renderHook(() => useFormValidation(baseForm, 99));
+
+    expect(result.current.errors).toEqual({});
+    expect(result.current.isStepValid).toBe(true);
+  });
+});
+
+// pad()
 
 describe('pad', () => {
   test('TC-FE-11: pads single digit with leading zero', () => {
@@ -175,7 +364,7 @@ describe('pad', () => {
   });
 });
 
-// ─── isSameDay() ──────────────────────────────────────────────────────────────
+// isSameDay()
 
 describe('isSameDay', () => {
   test('TC-FE-14: returns true for same calendar day at different times', () => {
@@ -191,7 +380,7 @@ describe('isSameDay', () => {
   });
 });
 
-// ─── getWeekStart() ───────────────────────────────────────────────────────────
+// getWeekStart()
 
 describe('getWeekStart', () => {
   test('TC-FE-17: returns Monday when given a Wednesday', () => {
@@ -225,7 +414,7 @@ describe('getWeekStart', () => {
   });
 });
 
-// ─── getWeekDays() ────────────────────────────────────────────────────────────
+// getWeekDays()
 
 describe('getWeekDays', () => {
   const MONDAY = new Date(2026, 5, 15);
@@ -252,7 +441,7 @@ describe('getWeekDays', () => {
   });
 });
 
-// ─── formatMonthYear() ────────────────────────────────────────────────────────
+// formatMonthYear()
 
 describe('formatMonthYear', () => {
   test('TC-FE-25: returns Spanish month name and year', () => {
@@ -267,7 +456,7 @@ describe('formatMonthYear', () => {
   });
 });
 
-// ─── buildRoute() ─────────────────────────────────────────────────────────────
+// buildRoute()
 
 describe('buildRoute', () => {
   test('TC-FE-27: replaces :id param with provided value', () => {
