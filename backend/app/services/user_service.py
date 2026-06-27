@@ -1,6 +1,7 @@
 import os
 import shutil
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import UploadFile
 from passlib.context import CryptContext
@@ -92,6 +93,7 @@ class UserService:
             email=data.email,
             password_hash=UserService.hash_password(data.password),
             role=data.role,
+            created_at=datetime.now(timezone.utc),
         )
 
         db.add(user)
