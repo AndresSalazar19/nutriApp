@@ -56,7 +56,7 @@ export function BottomTabBar({ activeTab }: BottomTabBarProps) {
           key={tab.key}
           style={styles.tabItem}
           activeOpacity={0.7}
-          onPress={() => router.navigate(tab.href as any)}
+          onPress={() => router.push(tab.href as any)}
         >
           <MaterialCommunityIcons
             name={tab.icon}

@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import ProgressHeader from './components/ProgressHeader';
 import HealthMetricsCard from './components/HealthMetricsCard'; 
 import PeriodStats from './components/PeriodStats';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { COLORS } from '@/constants/colors';
+import { AuthService } from '@/features/auth/services/authService';
+import { BloodPressureLog, ProgressService } from './services/progressService';
 
 interface ProgressScreenProps {
   navigation?: any;
@@ -87,9 +90,73 @@ const MOCK_DATA = {
 
 type Period = 'Semana' | 'Mes' | 'Año' | 'Todo';
 
+const LIMIT_BY_PERIOD: Record<Period, number> = {
+  Semana: 7,
+  Mes: 4,
+  Año: 5,
+  Todo: 7,
+};
+
+function sortPressureHistory(history: BloodPressureLog[]) {
+  return [...history].sort((a, b) => {
+    const aTime = a.measured_at ?? a.created_at ?? a.log_date;
+    const bTime = b.measured_at ?? b.created_at ?? b.log_date;
+    return aTime.localeCompare(bTime);
+  });
+}
+
+function pressureSeries(
+  history: BloodPressureLog[],
+  period: Period,
+  fallbackSys: number[],
+  fallbackDia: number[]
+) {
+  const selected = sortPressureHistory(history).slice(-LIMIT_BY_PERIOD[period]);
+
+  if (selected.length === 0) {
+    return { systolic: fallbackSys, diastolic: fallbackDia };
+  }
+
+  const systolic = selected.map(item => item.systolic);
+  const diastolic = selected.map(item => item.diastolic);
+
+  if (selected.length === 1) {
+    return {
+      systolic: [systolic[0], systolic[0]],
+      diastolic: [diastolic[0], diastolic[0]],
+    };
+  }
+
+  return { systolic, diastolic };
+}
+
+function latestDateLabel(history: BloodPressureLog[], fallback: string) {
+  const latest = sortPressureHistory(history).at(-1);
+  if (!latest) return fallback;
+  return `Ultimo registro: ${latest.log_date}`;
+}
+
 export default function ProgressScreen({ navigation } : ProgressScreenProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('Semana');
+  const [pressureHistory, setPressureHistory] = useState<BloodPressureLog[]>([]);
   const data = MOCK_DATA[selectedPeriod];
+  const pressureData = useMemo(
+    () => pressureSeries(pressureHistory, selectedPeriod, data.bpSystolic, data.bpDiastolic),
+    [pressureHistory, selectedPeriod, data.bpSystolic, data.bpDiastolic]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      async function loadPressureHistory() {
+      const user = await AuthService.getUser();
+      if (!user?.id) return;
+      const history = await ProgressService.getBloodPressureHistory(user.id, 100).catch(() => []);
+      setPressureHistory(history);
+    }
+
+    void loadPressureHistory();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -108,9 +175,9 @@ export default function ProgressScreen({ navigation } : ProgressScreenProps) {
       >
         <HealthMetricsCard
           period={selectedPeriod}
-          dateLabel={data.dateLabel}
-          systolicData={data.bpSystolic}
-          diastolicData={data.bpDiastolic}
+          dateLabel={latestDateLabel(pressureHistory, data.dateLabel)}
+          systolicData={pressureData.systolic}
+          diastolicData={pressureData.diastolic}
           nutrients={data.nutrients}
         />
 
