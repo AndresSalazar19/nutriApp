@@ -10,7 +10,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "validate": "npm run lint",
-    "test": "jest --watchAll=false"
+    "test": "jest --watchAll=false",
     "build:android:preview": "npx eas-cli build --platform android --profile preview"
   },
   "dependencies": {
