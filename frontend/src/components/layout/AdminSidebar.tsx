@@ -8,7 +8,7 @@ import { FaLeaf } from 'react-icons/fa';
 const navItems = [
   { label: 'Panel Principal', icon: MdDashboard },
   { label: 'Nutricionistas', icon: MdPerson },
-  { label: 'Clientes', icon: MdPeople },
+  { label: 'Pacientes', icon: MdPeople },
   { label: 'Contenido', icon: MdArticle },
   { label: 'Bases de Datos', icon: MdStorage },
   { label: 'Reportes', icon: MdBarChart },
@@ -26,7 +26,7 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
     const routeMap: Record<string, string> = {
       'Panel Principal': ROUTES.ADMIN,
       Nutricionistas: ROUTES.ADMIN_NUTRITIONISTS,
-      Clientes: ROUTES.ADMIN_CLIENTS,
+      Pacientes: ROUTES.ADMIN_CLIENTS,
       Contenido: ROUTES.ADMIN_CONTENT,
       'Bases de Datos': ROUTES.ADMIN_DATABASES,
       Configuración: ROUTES.ADMIN_SETTINGS,
