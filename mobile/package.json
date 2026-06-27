@@ -11,6 +11,7 @@
     "lint": "expo lint",
     "validate": "npm run lint",
     "test": "jest --watchAll=false",
+    "test:coverage": "jest --coverage --watchAll=false",
     "build:android:preview": "npx eas-cli build --platform android --profile preview"
   },
   "dependencies": {
@@ -66,6 +67,9 @@
     "testEnvironment": "node",
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*)"
+    ],
+    "collectCoverageFrom": [
+      "features/profile/utils/validations.ts"
     ]
   },
   "private": true
