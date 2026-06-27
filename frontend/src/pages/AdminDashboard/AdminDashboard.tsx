@@ -141,7 +141,7 @@ const quickActions = [
   },
   {
     icon: MdGroup,
-    title: 'Gestionar Clientes',
+    title: 'Gestionar Pacientes',
     desc: 'Ver todos los usuarios',
     iconBg: 'bg-admin-light',
   },
@@ -162,7 +162,7 @@ const quickActions = [
 const systemActivity = [
   { text: 'Nuevo nutricionista registrado: Dr. Daniel Fernández', time: 'Hace 2h' },
   { text: '8 nuevos artículos publicados en la biblioteca', time: 'Hace 5h' },
-  { text: '23 nuevos clientes registrados esta semana', time: 'Hoy' },
+  { text: '23 nuevos pacientes registrados esta semana', time: 'Hoy' },
   { text: 'Sistema actualizado a versión 2.5.1', time: 'Ayer' },
 ];
 
@@ -205,7 +205,7 @@ function AdminDashboard() {
         {/* Bienvenida */}
         <p className="text-admin-dark font-medium mb-0.5">Bienvenido al panel administrativo</p>
         <p className="text-gray-500 text-sm mb-6">
-          Gestiona nutricionistas, clientes y contenido de la plataforma
+          Gestiona nutricionistas, pacientes y contenido de la plataforma
         </p>
 
         {/* Stats */}
