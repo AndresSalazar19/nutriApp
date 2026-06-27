@@ -369,7 +369,8 @@ function ClientsPage() {
 
           <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-50">
             <p className="text-xs text-gray-400">
-              Mostrando {filtered.length > 0 ? 1 : 0}-{filtered.length} de {clients.length} pacientes
+              Mostrando {filtered.length > 0 ? 1 : 0}-{filtered.length} de {clients.length}{' '}
+              pacientes
             </p>
             <Pagination current={currentPage} total={3} onChange={setCurrentPage} />
           </div>
