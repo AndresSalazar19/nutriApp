@@ -2,15 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserMenuPopover } from '../ui/UserMenuPopover';
 import { ROUTES } from '../../routes/routes'; // Asegúrate de que la ruta de importación sea la correcta
-import {
-  MdDashboard,
-  MdPeople,
-  MdPerson,
-  MdArticle,
-  MdStorage,
-  MdSettings,
-  MdBarChart,
-} from 'react-icons/md';
+import { MdDashboard, MdPeople, MdPerson, MdArticle, MdStorage, MdBarChart } from 'react-icons/md';
 import { FaLeaf } from 'react-icons/fa';
 
 const navItems = [
@@ -19,7 +11,6 @@ const navItems = [
   { label: 'Clientes', icon: MdPeople },
   { label: 'Contenido', icon: MdArticle },
   { label: 'Bases de Datos', icon: MdStorage },
-  { label: 'Configuración', icon: MdSettings },
   { label: 'Reportes', icon: MdBarChart },
 ];
 

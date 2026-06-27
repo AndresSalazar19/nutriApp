@@ -13,7 +13,7 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   keyExtractor: (row: T) => string;
-  emptyIcon?: string;
+  emptyIcon?: React.ReactNode;
   emptyTitle?: string;
   emptyDescription?: string;
   isLoading?: boolean;
@@ -23,7 +23,7 @@ export function DataTable<T>({
   columns,
   data,
   keyExtractor,
-  emptyIcon = '📭',
+  emptyIcon,
   emptyTitle = 'No hay datos',
   emptyDescription = 'No se encontraron resultados para esta búsqueda.',
   isLoading = false,

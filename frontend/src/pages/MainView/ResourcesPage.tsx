@@ -1,4 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import {
+  MdArticle,
+  MdBarChart,
+  MdLightbulb,
+  MdRestaurant,
+  MdVideocam,
+  MdWorkspacePremium,
+} from 'react-icons/md';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import {
   ContentService,
@@ -38,12 +46,12 @@ const CATEGORY_ACCENT: Record<string, string> = {
   tips: 'border-l-nutri-medium',
 };
 
-const CONTENT_TYPE_ICON: Record<string, string> = {
-  article: '📄',
-  video: '🎬',
-  infographic: '📊',
-  recipe: '🍳',
-  tip: '💡',
+const CONTENT_TYPE_ICON: Record<string, React.ReactNode> = {
+  article: <MdArticle className="w-6 h-6" />,
+  video: <MdVideocam className="w-6 h-6" />,
+  infographic: <MdBarChart className="w-6 h-6" />,
+  recipe: <MdRestaurant className="w-6 h-6" />,
+  tip: <MdLightbulb className="w-6 h-6" />,
 };
 
 // ── Formulario vacío ─────────────────────────────────────────────────────────
@@ -274,7 +282,9 @@ export default function ResourcesPage() {
               const st = getStatus(item);
               const config = STATUS_CONFIG[st];
               const accent = CATEGORY_ACCENT[item.category] ?? 'border-l-gray-300';
-              const icon = CONTENT_TYPE_ICON[item.content_type] ?? '📄';
+              const icon = CONTENT_TYPE_ICON[item.content_type] ?? (
+                <MdArticle className="w-6 h-6" />
+              );
               const catLabel =
                 CONTENT_CATEGORIES.find((c) => c.value === item.category)?.label ?? item.category;
               const typeL =
@@ -289,7 +299,7 @@ export default function ResourcesPage() {
                   {/* Cabecera */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-2xl shrink-0">{icon}</span>
+                      <span className="text-nutri-dark shrink-0">{icon}</span>
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-gray-900 leading-snug line-clamp-2">
                           {item.title}
@@ -331,7 +341,8 @@ export default function ResourcesPage() {
                     </span>
                     {item.is_premium && (
                       <span className="text-xs bg-nutri-light text-nutri-dark font-semibold border border-nutri-medium/30 px-2 py-0.5 rounded-full">
-                        ⭐ Premium
+                        <MdWorkspacePremium className="w-3.5 h-3.5" />
+                        Premium
                       </span>
                     )}
                   </div>

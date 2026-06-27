@@ -5,18 +5,97 @@ import { InputField } from './InputField';
 
 interface PersonalInfoStepProps extends StepProps {
   errors: FormErrors;
+  avatarFile?: File | null;
+  setAvatarFile?: React.Dispatch<React.SetStateAction<File | null>>;
+  avatarPreview?: string | null;
+  setAvatarPreview?: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const today = new Date().toISOString().split('T')[0];
 
-export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ form, update, errors }) => {
+export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
+  form,
+  update,
+  errors,
+  avatarFile,
+  setAvatarFile,
+  avatarPreview,
+  setAvatarPreview,
+}) => {
   const handleDigitsOnly = (field: 'cedula' | 'phone', value: string) => {
     update(field, value.replace(/\D/g, '').slice(0, 10));
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+
+    if (!file) {
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+      setAvatarFile?.(null);
+      setAvatarPreview?.(null);
+      event.target.value = '';
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      alert('El archivo debe ser una imagen válida.');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('La imagen debe pesar menos de 2 MB.');
+      event.target.value = '';
+      return;
+    }
+
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+
+    setAvatarFile?.(file);
+    setAvatarPreview?.(URL.createObjectURL(file));
+    event.target.value = '';
   };
 
   return (
     <div className="animate-fade-in">
       <SectionTitle>Información Personal</SectionTitle>
+
+      <div className="flex flex-col items-center mb-6">
+        <div className="relative">
+          {/* Contenedor del Avatar */}
+          <div className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden shadow-sm">
+            {avatarPreview ? (
+              <img
+                src={avatarPreview}
+                alt="Avatar Preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-gray-400 text-xs text-center px-2">Subir foto</span>
+            )}
+          </div>
+
+          {/* Botón flotante circular con icono de lápiz */}
+          <label className="absolute bottom-0 right-0 bg-white border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-gray-600 shadow-md cursor-pointer hover:bg-gray-50 hover:scale-105 transition-all">
+            <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+            {/* Icono de lápiz en SVG para no depender de librerías externas */}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+              />
+            </svg>
+          </label>
+        </div>
+
+        <p className="text-xs text-gray-400 mt-3">Sube una foto opcional. Máximo 2 MB.</p>
+      </div>
 
       <InputField
         label="Nombre completo"

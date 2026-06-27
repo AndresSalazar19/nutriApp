@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tokenStorage } from '../utils/tokenStorage';
 import { ROUTES } from '../routes/routes';
+import { API_URL } from '../config/api';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -11,6 +12,7 @@ export interface AuthUser {
   userId: string;
   email: string;
   role: Role;
+  avatar_url?: string | null;
 }
 
 interface AuthState {
@@ -22,6 +24,7 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   login: (user: AuthUser, token: string) => void;
   logout: () => void;
+  refreshUser: () => Promise<AuthUser | null>;
 }
 
 // ─── Storage key ─────────────────────────────────────────────────────────────
@@ -75,8 +78,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
     navigate(ROUTES.LOGIN, { replace: true });
   }, [navigate]);
 
+  const refreshUser = useCallback(async (): Promise<AuthUser | null> => {
+    const token = tokenStorage.get();
+    if (!token) return null;
+
+    const response = await fetch(`${API_URL}/auth/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('No se pudo actualizar el usuario.');
+    }
+
+    const data = await response.json();
+    const updatedUser: AuthUser = {
+      userId: String(data.userId ?? data.id ?? state.user?.userId ?? ''),
+      email: data.email ?? state.user?.email ?? '',
+      role: (data.role as Role) ?? state.user?.role ?? null,
+      avatar_url: data.avatar_url ?? data.avatarUrl ?? state.user?.avatar_url ?? null,
+    };
+
+    localStorage.setItem(SESSION_KEY, JSON.stringify(updatedUser));
+    setState({ isAuthenticated: true, role: updatedUser.role, user: updatedUser });
+
+    return updatedUser;
+  }, [state.user]);
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ ...state, login, logout, refreshUser }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.nutritionist import (
     DocumentType,
@@ -51,7 +51,7 @@ class NutritionistService:
         profile = NutritionistService.get_by_id(db, profile_id)
 
         if not profile:
-            raise HTTPException(status_code=400, detail="Perfil de nutricionista no encontrado")
+            raise HTTPException(status_code=404, detail="Perfil de nutricionista no encontrado")
 
         if profile.status != NutritionistStatus.pending:
             raise HTTPException(
@@ -124,3 +124,34 @@ class NutritionistService:
         db.commit()
         db.refresh(document)
         return document
+
+    @staticmethod
+    def get_nutritionist_profile(db: Session, user_id: uuid.UUID):
+        profile = (
+            db.query(NutritionistProfile)
+            .options(
+                joinedload(NutritionistProfile.user),
+                joinedload(NutritionistProfile.specialty),
+                joinedload(NutritionistProfile.documents),
+            )
+            .filter(NutritionistProfile.user_id == user_id)
+            .first()
+        )
+
+        if not profile:
+            raise HTTPException(status_code=404, detail="Perfil de nutricionista no encontrado")
+
+        return {
+            "id": profile.id,
+            "license_number": profile.license_number,
+            "bio": profile.bio,
+            "specialty_id": profile.specialty_id,
+            "years_experience": profile.years_experience,
+            "education": profile.education,
+            "consultation_fee": profile.consultation_fee,
+            "max_patients": profile.max_patients,
+            "status": profile.status,
+            "user": profile.user,
+            "specialty": profile.specialty,
+            "documents": profile.documents,
+        }

@@ -1,31 +1,19 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { MdMoreVert, MdSearch } from 'react-icons/md';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
 import { SearchInput } from '../../components/ui/SearchInput';
-import { FilterTabs } from '../../components/ui/FilterTabs';
 import { Pagination } from '../../components/ui/Pagination';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PatientProfile } from '../../components/ui/PatientProfile';
-import { MOCK_PATIENTS, Patient, PatientStatus } from '../../components/mock/patientsMock';
+import { useAuth } from '../../hooks/useAuth';
+import { NutritionistService } from '../../services/NutritionistService';
+import { Patient } from '../../components/mock/patientsMock';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 8;
-
-const STATUS_TABS = [
-  { label: 'Todos' },
-  { label: 'Activos' },
-  { label: 'Pendientes' },
-  { label: 'Inactivos' },
-];
-
-const STATUS_MAP: Record<string, PatientStatus | undefined> = {
-  Activos: 'active',
-  Pendientes: 'pending',
-  Inactivos: 'inactive',
-};
 
 // ─── Row component ────────────────────────────────────────────────────────────
 
@@ -60,10 +48,6 @@ function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient
       </td>
 
       {/* ID */}
-      <td className="py-3.5 px-4">
-        <span className="text-xs text-gray-500 font-mono">#{patient.id}</span>
-      </td>
-
       {/* Estado */}
       <td className="py-3.5 px-4">
         <Badge
@@ -117,16 +101,12 @@ function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
           <button
             onClick={() => onView(patient)}
-            className="px-3 py-1.5 bg-nutri-light text-nutri-dark text-xs font-semibold rounded-lg
-              hover:bg-nutri-medium/20 transition"
+            className="px-3 py-1.5 bg-nutri-light text-nutri-dark text-xs font-semibold rounded-lg hover:bg-nutri-medium/20 transition"
           >
             Ver perfil
           </button>
-          <button
-            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100
-            text-gray-400 hover:text-gray-600 transition text-base"
-          >
-            ⋮
+          <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition text-base">
+            <MdMoreVert className="w-4 h-4" />
           </button>
         </div>
       </td>
@@ -137,43 +117,112 @@ function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function PatientsPage() {
+  const { user } = useAuth();
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   // Filter + search
   const filtered = useMemo(() => {
-    const statusFilter = STATUS_MAP[activeFilter];
-    return MOCK_PATIENTS.filter((p) => {
-      const matchesStatus = !statusFilter || p.status === statusFilter;
-      const q = search.toLowerCase();
+    const q = search.toLowerCase();
+
+    return patients.filter((p) => {
       const matchesSearch =
         !q ||
         `${p.firstName} ${p.lastName}`.toLowerCase().includes(q) ||
         p.email.toLowerCase().includes(q) ||
         p.id.includes(q);
-      return matchesStatus && matchesSearch;
+
+      return matchesSearch;
     });
-  }, [search, activeFilter]);
+  }, [patients, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  // Tab counts
-  const tabs = STATUS_TABS.map((t) => ({
-    ...t,
-    count:
-      t.label === 'Todos'
-        ? MOCK_PATIENTS.length
-        : MOCK_PATIENTS.filter((p) => p.status === STATUS_MAP[t.label]).length,
-  }));
+  useEffect(() => {
+    let isMounted = true;
 
-  // Handle filter change → reset page
-  function handleFilter(label: string) {
-    setActiveFilter(label);
-    setCurrentPage(1);
-  }
+    const fetchPatients = async () => {
+      if (!user?.userId) {
+        setPatients([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const response = await NutritionistService.getAssignedPatients(user.userId);
+        const mappedPatients: Patient[] = Array.isArray(response)
+          ? response.map((item: any) => {
+              const firstName = item.patient?.person?.first_name ?? '';
+              const lastName = item.patient?.person?.last_name ?? '';
+              const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+
+              return {
+                id: String(item.patient?.id ?? ''),
+                initials,
+                color: 'bg-nutri-light text-nutri-dark font-bold',
+                firstName,
+                lastName,
+                age: 0,
+                gender: 'Masculino',
+                email: item.patient?.email ?? '',
+                phone: item.patient?.phone ?? '',
+                status: item.is_active ? 'active' : 'inactive',
+                plan: 'Basic',
+                adherence: 0,
+                lastConsult: '—',
+                nextAppointment: '—',
+                diagnosis: '',
+                additionalConditions: [],
+                allergies: '',
+                weight: 0,
+                weightGoal: 0,
+                height: 0,
+                bmi: 0,
+                waist: 0,
+                hip: 0,
+                fatPercent: 0,
+                weightChange: 0,
+                weightHistory: [],
+                appointments: [],
+                nutritionalPlan: {
+                  id: '',
+                  name: '',
+                  startDate: '',
+                  calories: 0,
+                  sodium: 0,
+                  compliance: 0,
+                },
+              };
+            })
+          : [];
+
+        if (isMounted) {
+          setPatients(mappedPatients);
+        }
+      } catch (error) {
+        console.error('Error cargando pacientes:', error);
+        if (isMounted) {
+          setPatients([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchPatients();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.userId]);
 
   // ── Patient profile view ──
   if (selectedPatient) {
@@ -200,108 +249,87 @@ export default function PatientsPage() {
             }}
             className="w-64"
           />
-          <Button variant="primary" icon={<span className="text-sm">+</span>}>
-            Nuevo Paciente
-          </Button>
         </div>
       </div>
 
       <div className="px-8 py-6">
-        {/* Summary cards */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          {[
-            {
-              label: 'Total Pacientes',
-              value: MOCK_PATIENTS.length,
-              icon: '👥',
-              color: 'bg-nutri-light text-nutri-dark',
-            },
-            {
-              label: 'Activos',
-              value: MOCK_PATIENTS.filter((p) => p.status === 'active').length,
-              icon: '✅',
-              color: 'bg-nutri-light text-nutri-dark',
-            },
-            {
-              label: 'Pendientes',
-              value: MOCK_PATIENTS.filter((p) => p.status === 'pending').length,
-              icon: '⏳',
-              color: 'bg-nutri-light text-nutri-dark',
-            },
-            {
-              label: 'Adherencia Media',
-              value: `${Math.round(MOCK_PATIENTS.reduce((s, p) => s + p.adherence, 0) / MOCK_PATIENTS.length)}%`,
-              icon: '📊',
-              color: 'bg-nutri-light text-nutri-dark',
-            },
-          ].map((card) => (
-            <div
-              key={card.label}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3"
-            >
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${card.color}`}
-              >
-                {card.icon}
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">{card.label}</p>
-                <p className="text-2xl font-bold text-gray-800">{card.value}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* Table card */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
           {/* Table header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <FilterTabs tabs={tabs} active={activeFilter} onChange={handleFilter} />
-            <span className="text-xs text-gray-500">
-              {filtered.length} paciente{filtered.length !== 1 ? 's' : ''}
-            </span>
+            <h3 className="font-semibold text-gray-700">
+              {loading
+                ? 'Actualizando lista...'
+                : `Total: ${filtered.length} paciente${filtered.length !== 1 ? 's' : ''}`}
+            </h3>
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-gray-500 text-xs uppercase border-b border-gray-50">
-                  {[
-                    'Paciente',
-                    'ID',
-                    'Estado',
-                    'Plan',
-                    'Adherencia',
-                    'Última Consulta',
-                    'Próxima Cita',
-                    '',
-                  ].map((h) => (
-                    <th key={h} className="text-left pb-3 pt-3 px-4 font-semibold">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.length === 0 ? (
-                  <tr>
-                    <td colSpan={8}>
-                      <EmptyState
-                        icon="🔍"
-                        title="Sin resultados"
-                        description="No se encontraron pacientes con los filtros aplicados."
-                      />
-                    </td>
+          {loading ? (
+            <div className="p-16 flex flex-col items-center justify-center text-gray-400">
+              {/* Spinner animado usando Tailwind */}
+              <svg
+                className="animate-spin h-8 w-8 mb-4 text-nutri-medium"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <p className="text-sm font-medium text-gray-500">Cargando pacientes...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-gray-500 text-xs uppercase border-b border-gray-50">
+                    {[
+                      'Paciente',
+                      'Estado',
+                      'Plan',
+                      'Adherencia',
+                      'Última Consulta',
+                      'Próxima Cita',
+                      '',
+                    ].map((h) => (
+                      <th key={h} className="text-left pb-3 pt-3 px-4 font-semibold">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ) : (
-                  paginated.map((p) => (
-                    <PatientRow key={p.id} patient={p} onView={setSelectedPatient} />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {paginated.length === 0 ? (
+                    <tr>
+                      <td colSpan={7}>
+                        <EmptyState
+                          icon={<MdSearch className="w-12 h-12" />}
+                          title="Sin resultados"
+                          description="No se encontraron pacientes con los filtros aplicados."
+                        />
+                      </td>
+                    </tr>
+                  ) : (
+                    paginated.map((p) => (
+                      <PatientRow key={p.id} patient={p} onView={setSelectedPatient} />
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (

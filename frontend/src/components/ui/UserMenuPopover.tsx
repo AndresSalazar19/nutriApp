@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { ROUTES } from '../../routes/routes';
+import { ROUTES, buildRoute } from '../../routes/routes';
 
 // ─── Íconos inline ────────────────────────────────────────────────────────────
 
@@ -111,38 +111,47 @@ export function UserMenuPopover({
 
           <ul className="py-1">
             {/* Mi Perfil */}
-            <li>
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  navigate(ROUTES.ADMIN_PROFILE);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700
+            {user?.role === 'nutritionist' && (
+              <li>
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    if (user?.role === 'nutritionist') {
+                      navigate(ROUTES.NUTRITIONIST_PROFILE);
+                    } else if (user) {
+                      navigate(buildRoute(ROUTES.PATIENT_PROFILE, { id: user.userId }));
+                    } else {
+                      navigate(ROUTES.LOGIN);
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700
                   hover:bg-gray-50 transition text-left"
-              >
-                <span className="text-gray-400">
-                  <IconProfile />
-                </span>
-                Mi Perfil
-              </button>
-            </li>
-
+                >
+                  <span className="text-gray-400">
+                    <IconProfile />
+                  </span>
+                  Mi Perfil
+                </button>
+              </li>
+            )}
             {/* Configuración */}
-            <li>
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  navigate(ROUTES.ADMIN_SETTINGS);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700
+            {user?.role === 'admin' && (
+              <li>
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    navigate(ROUTES.ADMIN_SETTINGS);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700
                   hover:bg-gray-50 transition text-left"
-              >
-                <span className="text-gray-400">
-                  <IconSettings />
-                </span>
-                Configuración
-              </button>
-            </li>
+                >
+                  <span className="text-gray-400">
+                    <IconSettings />
+                  </span>
+                  Configuración
+                </button>
+              </li>
+            )}
 
             {/* Divisor */}
             <li className="my-1 border-t border-gray-100" />

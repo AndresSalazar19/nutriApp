@@ -13,6 +13,7 @@ from app.db.models.user import GenderEnum
 from app.schemas.nutritionist import (
     NutritionistCreateRequest,
     NutritionistDocumentsResponse,
+    NutritionistProfileDetailResponse,
     NutritionistProfileResponse,
     NutritionistStatusUpdate,
 )
@@ -123,6 +124,7 @@ def create_nutritionist(
     license_number: str | None = Form(None),
     cv_file: UploadFile = File(...),
     senescyt_file: UploadFile = File(...),
+    avatar_file: UploadFile | None = File(None),
     db: Session = Depends(get_db),
 ):
     if UserService.email_exists(db, email):
@@ -147,6 +149,9 @@ def create_nutritionist(
     try:
         # Crear perfil de nutricionista
         profile = NutritionistService.create(db, payload)
+
+        if avatar_file:
+            UserService.upload_avatar(db, profile.user_id, avatar_file)
 
         # Guardar archivos PDF
         cv_data = save_pdf(cv_file)
@@ -187,3 +192,14 @@ def create_nutritionist(
         data=NutritionistProfileResponse.model_validate(profile).model_dump(mode="json")
     )
     return JSONResponse(status_code=201, content=resp.model_dump())
+
+
+@router.get("/profile/{user_id}", response_model=NutritionistProfileDetailResponse)
+def get_profile(
+    user_id: uuid.UUID,
+    db: Session = Depends(get_db),
+):
+    return NutritionistService.get_nutritionist_profile(
+        db,
+        user_id,
+    )

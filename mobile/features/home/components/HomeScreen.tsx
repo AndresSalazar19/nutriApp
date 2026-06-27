@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   ScrollView,
   StyleSheet,
@@ -13,6 +14,8 @@ import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { AIFloatingButton } from './AIFloatingButton';
+import { BloodPressureModal } from './BloodPressureModal';
+import { AppointmentsModal } from './AppointmentsModal';
 import { useContent } from '@/features/content/hooks/useContent';
 import { CATEGORY_ICON, CATEGORY_LABEL } from '@/features/content/services/contentService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -46,6 +49,7 @@ function ActionCard({
   accentColor,
   badge,
   dot,
+  onPress,
 }: {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
@@ -53,9 +57,10 @@ function ActionCard({
   accentColor: string;
   badge?: number;
   dot?: boolean;
+  onPress?: () => void;
 }) {
   return (
-    <TouchableOpacity style={styles.actionCard} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.actionCard} activeOpacity={0.8} onPress={onPress}>
       <View style={[styles.actionAccent, { backgroundColor: accentColor }]} />
       <View style={styles.actionIconWrap}>
         <MaterialCommunityIcons name={icon} size={24} color={accentColor} />
@@ -109,12 +114,14 @@ export default function HomeScreen() {
   const router = useRouter();
   const { items: contentItems, loading: contentLoading } = useContent();
   const previewItems = contentItems.slice(0, 3);
+  const [bpModalVisible, setBpModalVisible] = useState(false);
+  const [aptModalVisible, setAptModalVisible] = useState(false);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerGreeting}>Hola, Juan</Text>
+          <Text style={styles.headerGreeting}>Hola!</Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
@@ -149,13 +156,15 @@ export default function HomeScreen() {
             title="Registrar Presión"
             subtitle="Registrar medición"
             accentColor={COLORS.primary}
+            onPress={() => setBpModalVisible(true)}
           />
           <ActionCard
             icon="calendar-month"
             title="Mis Citas"
-            subtitle="Próxima: 15 Nov"
+            subtitle="Próxima: 28 Jun"
             accentColor={COLORS.primaryMedium}
-            badge={2}
+            badge={3}
+            onPress={() => setAptModalVisible(true)}
           />
         </View>
 
@@ -207,11 +216,26 @@ export default function HomeScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      <NutritionistFloatingButton onPress={() => {}} />
+      <NutritionistFloatingButton onPress={() => {
+        Alert.alert(
+          'Chat con Nutricionista',
+          'Pronto podrás comunicarte directamente con tu nutricionista desde aquí. Esta función estará disponible en una próxima actualización.',
+          [{ text: 'Entendido' }],
+        );
+      }} />
       <AIFloatingButton
-        onPress={() => {}}
+        onPress={() => {
+          Alert.alert(
+            'Asistente NutrIA',
+            '¡Hola! Soy tu asistente de nutrición con IA. Recuerda que una alimentación baja en sodio y rica en frutas, verduras y cereales integrales ayuda a controlar la hipertensión. ¿Necesitas ayuda con tu plan alimenticio? Esta función estará completa próximamente.',
+            [{ text: 'Gracias' }],
+          );
+        }}
         style={{ bottom: 100, right: 90 }}
       />
+
+      <BloodPressureModal visible={bpModalVisible} onClose={() => setBpModalVisible(false)} />
+      <AppointmentsModal visible={aptModalVisible} onClose={() => setAptModalVisible(false)} />
 
       <BottomTabBar activeTab="inicio" />
     </SafeAreaView>

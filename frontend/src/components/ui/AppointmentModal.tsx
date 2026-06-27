@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiCalendar, FiClock, FiFileText } from 'react-icons/fi';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { ConsultType, pad } from '../../pages/Appoinment/agendaUtils';
+import { CalendarAppointment, ConsultType, pad } from '../../pages/Appoinment/agendaUtils';
 import { AppointmentService } from '../../services/Appointments/AppointmentService';
 import {
   PatientNutritionistService,
@@ -27,7 +27,24 @@ function parseLocalDate(isoDate: string): Date {
   return new Date(year, month - 1, day);
 }
 
-export function AppointmentViewModal({ appt, dayDate, onClose }) {
+/** YYYY-MM-DD a partir de una fecha local (para precargar el input date) */
+function toLocalISODate(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// ─── View / Edit modal ─────────────────────────────────────────────────────
+
+interface ViewModalProps {
+  appt: CalendarAppointment;
+  dayDate: Date;
+  onClose: () => void;
+  /** Se llama luego de editar o cancelar con éxito, para que el padre refresque la agenda */
+  onChanged?: () => void;
+}
+
+export function AppointmentViewModal({ appt, dayDate, onClose, onChanged }: ViewModalProps) {
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
+
   const isVirtual = appt.type === 'Virtual';
   const badge = isVirtual ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
   const dot = isVirtual ? 'bg-blue-500' : 'bg-green-500';
@@ -38,6 +55,21 @@ export function AppointmentViewModal({ appt, dayDate, onClose }) {
     day: 'numeric',
     month: 'long',
   });
+
+  if (mode === 'edit') {
+    return (
+      <EditAppointmentForm
+        appt={appt}
+        referenceDate={displayDate}
+        onClose={onClose}
+        onCancelEdit={() => setMode('view')}
+        onSaved={() => {
+          onChanged?.();
+          onClose();
+        }}
+      />
+    );
+  }
 
   return (
     <Modal isOpen onClose={onClose} title="Detalle de Cita" size="sm">
@@ -84,10 +116,18 @@ export function AppointmentViewModal({ appt, dayDate, onClose }) {
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cerrar
           </Button>
-          <Button variant="primary" className="flex-1">
+          <Button variant="primary" onClick={() => setMode('edit')} className="flex-1">
             Editar cita
           </Button>
         </div>
+
+        <CancelAppointmentAction
+          appointmentId={appt.id}
+          onCancelled={() => {
+            onChanged?.();
+            onClose();
+          }}
+        />
       </div>
     </Modal>
   );
@@ -100,6 +140,227 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
       <span className="text-gray-400 w-12 flex-shrink-0">{label}</span>
       <span className="text-gray-700 font-medium capitalize">{value}</span>
     </div>
+  );
+}
+
+// ─── Cancel action (confirmación inline de 2 pasos, sin modal extra) ──────────
+
+function CancelAppointmentAction({
+  appointmentId,
+  onCancelled,
+}: {
+  appointmentId: string;
+  onCancelled: () => void;
+}) {
+  const { user } = useAuth();
+  const [confirming, setConfirming] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleConfirm() {
+    setError(null);
+    setIsCancelling(true);
+    try {
+      await AppointmentService.cancel(appointmentId, { user_id: user?.userId });
+      onCancelled();
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || 'No se pudo cancelar la cita');
+      setIsCancelling(false);
+    }
+  }
+
+  if (!confirming) {
+    return (
+      <button
+        onClick={() => setConfirming(true)}
+        className="w-full text-center text-sm text-red-600 hover:text-red-700 font-medium pt-1"
+      >
+        Cancelar cita
+      </button>
+    );
+  }
+
+  return (
+    <div className="border border-red-100 bg-red-50 rounded-xl p-3 space-y-2">
+      <p className="text-sm text-red-700">
+        ¿Seguro que quieres cancelar esta cita? Esta acción no se puede deshacer.
+      </p>
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          onClick={() => setConfirming(false)}
+          className="flex-1"
+          disabled={isCancelling}
+        >
+          Volver
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleConfirm}
+          className="flex-1 bg-red-600 hover:bg-red-700 border-red-600"
+          disabled={isCancelling}
+        >
+          {isCancelling ? 'Cancelando...' : 'Sí, cancelar'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Edit appointment form (reusa el shell del modal) ─────────────────────────
+
+interface EditFormProps {
+  appt: CalendarAppointment;
+  referenceDate: Date;
+  onClose: () => void;
+  onCancelEdit: () => void;
+  onSaved: () => void;
+}
+
+function EditAppointmentForm({
+  appt,
+  referenceDate,
+  onClose,
+  onCancelEdit,
+  onSaved,
+}: EditFormProps) {
+  const [form, setForm] = useState({
+    date: toLocalISODate(referenceDate),
+    startTime: `${pad(appt.startHour)}:${pad(appt.startMin)}`,
+    endTime: `${pad(appt.endHour)}:${pad(appt.endMin)}`,
+    type: appt.type,
+    notes: appt.notes ?? '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  function update<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
+    setForm((f) => ({ ...f, [k]: v }));
+  }
+
+  async function handleSave() {
+    const [sh, sm] = form.startTime.split(':').map(Number);
+    const [eh, em] = form.endTime.split(':').map(Number);
+
+    const [year, month, day] = form.date.split('-').map(Number);
+    const scheduledAt = new Date(year, month - 1, day, sh, sm, 0, 0);
+
+    const durationMin = eh * 60 + em - (sh * 60 + sm);
+
+    const payload = {
+      scheduled_at: scheduledAt.toISOString(),
+      duration_min: durationMin > 0 ? durationMin : 45,
+      modality: form.type === 'Virtual' ? 'virtual' : 'in_person',
+      notes: form.notes || null,
+    };
+
+    try {
+      setSubmitError(null);
+      setIsSubmitting(true);
+      await AppointmentService.update(appt.id, payload as any);
+      onSaved();
+    } catch (err: any) {
+      console.error(err);
+      setSubmitError(err?.message || 'Error actualizando la cita');
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="Editar Cita" size="sm">
+      <div className="space-y-4">
+        <Field label="Fecha">
+          <input
+            type="date"
+            value={form.date}
+            onChange={(e) => update('date', e.target.value)}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+          />
+
+          {form.date && (
+            <div className="text-xs text-gray-500 mt-1 capitalize">
+              {parseLocalDate(form.date).toLocaleDateString('es-EC', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </div>
+          )}
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Hora inicio">
+            <input
+              type="time"
+              value={form.startTime}
+              onChange={(e) => update('startTime', e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            />
+          </Field>
+          <Field label="Hora fin">
+            <input
+              type="time"
+              value={form.endTime}
+              onChange={(e) => update('endTime', e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+            />
+          </Field>
+        </div>
+
+        <Field label="Tipo">
+          <div className="flex gap-2">
+            {(['Presencial', 'Virtual'] as ConsultType[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => update('type', t)}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition ${
+                  form.type === t
+                    ? t === 'Presencial'
+                      ? 'bg-green-50 border-green-400 text-green-700'
+                      : 'bg-blue-50 border-blue-400 text-blue-700'
+                    : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </Field>
+
+        <Field label="Notas">
+          <input
+            type="text"
+            value={form.notes}
+            onChange={(e) => update('notes', e.target.value)}
+            placeholder="Control mensual, primera consulta..."
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500"
+          />
+        </Field>
+
+        {submitError && (
+          <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+            {submitError}
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-1">
+          <Button
+            variant="outline"
+            onClick={onCancelEdit}
+            className="flex-1"
+            disabled={isSubmitting}
+          >
+            Volver
+          </Button>
+          <Button variant="primary" onClick={handleSave} className="flex-1" disabled={isSubmitting}>
+            {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
