@@ -105,3 +105,12 @@ El servidor debe estar corriendo para que la web y la app móvil funcionen.
 Si al activar el entorno de Python en Windows te sale error, ejecuta este comando en PowerShell como Administrador:
 ```powershell
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+---
+
+## Presentación del Proyecto
+
+El video de la presentación del sistema NutriApp está disponible en el siguiente enlace de Google Drive:
+
+[Hacer click para ir al enlace de Drive](https://drive.google.com/drive/folders/1Dm_KKr-9boZ5vusf6keNZt5_tHUwh56l)
