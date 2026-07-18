@@ -5,6 +5,7 @@ from app.api.v1.endpoints import (
     appointment,
     blood_pressure_log,
     catalog,
+    chats,
     content,
     educational_content,
     food_item,
@@ -12,6 +13,7 @@ from app.api.v1.endpoints import (
     patient_nutritionist,
     patients,
     users,
+    websocket,
     weight_log,
 )
 
@@ -28,3 +30,5 @@ router.include_router(educational_content.router)
 router.include_router(food_item.router)
 router.include_router(alimentos_intercambio.router)
 router.include_router(patient_nutritionist.router)
+router.include_router(chats.router)
+router.include_router(websocket.router)
