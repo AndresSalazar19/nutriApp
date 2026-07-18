@@ -1,10 +1,12 @@
+import uuid
+
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.security import decode_access_token
 from app.db.base import get_db
-from app.db.models.user import User
+from app.db.models.user import User, UserRole
 from app.services.user_service import UserService
 
 security = HTTPBearer()
@@ -20,7 +22,7 @@ def get_current_user(
     if not payload:
         raise HTTPException(status_code=401, detail="Token inválido o expirado")
 
-    user = UserService.get_by_id(db, payload["sub"])
+    user = UserService.get_by_id(db, uuid.UUID(payload["sub"]))
 
     if not user:
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
@@ -38,6 +40,6 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
 
 
 def require_nutritionist_or_admin(current_user: User = Depends(get_current_user)) -> User:
-    if not (UserService.is_admin(current_user) or current_user.role == "nutritionist"):
+    if not (UserService.is_admin(current_user) or current_user.role == UserRole.NUTRITIONIST):
         raise HTTPException(status_code=403, detail="Se requiere rol admin o nutricionista")
     return current_user

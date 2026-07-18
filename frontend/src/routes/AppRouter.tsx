@@ -18,7 +18,7 @@ const AgendaPage = lazy(() => import('../pages/Appoinment/AgendaPage'));
 const ReportsPage = lazy(() => import('../pages/MainView/ReportsPage'));
 const ResourcesPage = lazy(() => import('../pages/MainView/ResourcesPage'));
 const PlansPage = lazy(() => import('../pages/MainView/PlansPage'));
-const MessagesPage = lazy(() => import('../pages/MainView/MessagesPage'));
+const MessagesPage = lazy(() => import('../pages/Chats/MessagesPage'));
 const NutritionistProfilePage = lazy(() => import('../pages/MainView/NutritionistProfilePage'));
 
 //ADMIN
