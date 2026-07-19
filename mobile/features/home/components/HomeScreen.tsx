@@ -21,6 +21,9 @@ import { CATEGORY_ICON, CATEGORY_LABEL } from '@/features/content/services/conte
 import { AuthService, AuthUser } from '@/features/auth/services/authService';
 import { BloodPressureLog, ProgressService, WeightLog } from '@/features/progress/services/progressService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { PatientNutritionistService } from '../services/patientNutritionistService';
+import DoctorChatScreen from '@/features/Chats/DoctosChatsSceen';
+import AIChatScreen from '@/features/Chats/AiChatsScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -130,21 +133,30 @@ export default function HomeScreen() {
   const router = useRouter();
   const { items: contentItems, loading: contentLoading } = useContent();
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [nutritionist, setNutritionist] = useState<any | null>(null);
   const [latestWeight, setLatestWeight] = useState<WeightLog | null>(null);
   const [latestPressure, setLatestPressure] = useState<BloodPressureLog | null>(null);
   const previewItems = contentItems.slice(0, 3);
   const [bpModalVisible, setBpModalVisible] = useState(false);
   const [aptModalVisible, setAptModalVisible] = useState(false);
+  const [activeChat, setActiveChat] = useState<'doctor' | 'ai' | null>(null);
 
   async function loadDashboardData() {
     const currentUser = await AuthService.getUser();
     setUser(currentUser);
     if (!currentUser?.id) return;
 
-    const [weightHistory, pressureHistory] = await Promise.all([
+    const [nutritionistPatient, weightHistory, pressureHistory] = await Promise.all([
+      PatientNutritionistService
+        .list({ patient_id: currentUser.id, status: 'active' })
+        .catch(() => []),
       ProgressService.getWeightHistory(currentUser.id, 1).catch(() => []),
       ProgressService.getBloodPressureHistory(currentUser.id, 1).catch(() => []),
     ]);
+
+    if (nutritionistPatient.length > 0) {
+      setNutritionist(nutritionistPatient[0].nutritionist ?? null);
+    }
     setLatestWeight(weightHistory[0] ?? null);
     setLatestPressure(pressureHistory[0] ?? null);
   }
@@ -273,23 +285,11 @@ export default function HomeScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      <NutritionistFloatingButton onPress={() => {
-        Alert.alert(
-          'Chat con Nutricionista',
-          'Pronto podrás comunicarte directamente con tu nutricionista desde aquí. Esta función estará disponible en una próxima actualización.',
-          [{ text: 'Entendido' }],
-        );
-      }} />
-      <AIFloatingButton
-        onPress={() => {
-          Alert.alert(
-            'Asistente NutrIA',
-            '¡Hola! Soy tu asistente de nutrición con IA. Recuerda que una alimentación baja en sodio y rica en frutas, verduras y cereales integrales ayuda a controlar la hipertensión. ¿Necesitas ayuda con tu plan alimenticio? Esta función estará completa próximamente.',
-            [{ text: 'Gracias' }],
-          );
-        }}
-        style={{ bottom: 100, right: 90 }}
-      />
+      <NutritionistFloatingButton onPress={() => setActiveChat('doctor')} />
+      <AIFloatingButton onPress={() => setActiveChat('ai')} style={{ bottom: 100, right: 90 }} />
+
+      {activeChat === 'doctor' && <DoctorChatScreen onClose={() => setActiveChat(null)} nutritionist={nutritionist ?? null} />}
+      {activeChat === 'ai' && <AIChatScreen onClose={() => setActiveChat(null)} />}
 
       <BloodPressureModal
         visible={bpModalVisible}

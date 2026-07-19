@@ -1,0 +1,221 @@
+import React, { useState, useRef } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+import { COLORS } from '@/constants/colors';
+import { ChatHeader } from './components/ChatHeader';
+import { MessageBubble } from './components/MessageBubble';
+import { ChatInput } from './components/ChatInput';
+import { useDoctorChat } from './hooks/UseDoctorChat';
+
+const QUICK_REPLIES = [
+  { id: 'agendar', label: 'Agendar cita', icon: 'calendar-outline' },
+  { id: 'reporte', label: 'Ver mi último reporte', icon: 'file-chart-outline' },
+];
+
+function formatTime(iso: string) {
+  try {
+    return new Date(iso).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return '';
+  }
+}
+
+interface DoctorChatScreenProps {
+  onClose: () => void;
+  nutritionist: any | null;
+}
+
+export default function DoctorChatScreen({ onClose, nutritionist }: DoctorChatScreenProps) {
+  const {
+    messages,
+    loading,
+    error,
+    otherTyping,
+    otherOnline,
+    sendMessage,
+    notifyTyping,
+    notifyStopTyping,
+  } = useDoctorChat({ nutritionistId: nutritionist?.id });
+
+  const [draft, setDraft] = useState('');
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingRef = useRef(false);
+
+  const handleChangeDraft = (text: string) => {
+    setDraft(text);
+    if (!text.trim()) {
+        if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        }
+
+        if (isTypingRef.current) {
+        notifyStopTyping();
+        isTypingRef.current = false;
+        }
+
+        return;
+    }
+    if (!isTypingRef.current) {
+        notifyTyping();
+        isTypingRef.current = true;
+    }
+    if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+    }
+    typingTimeoutRef.current = setTimeout(() => {
+        notifyStopTyping();
+        isTypingRef.current = false;
+    }, 1000);
+    };
+
+  const handleSend = () => {
+    if (!draft.trim()) return;
+    sendMessage(draft);
+    if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+    }
+    if (isTypingRef.current) {
+        notifyStopTyping();
+        isTypingRef.current = false;
+    }
+    setDraft('');
+  };
+
+  return (
+    <Modal visible animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <ChatHeader
+          title={`${nutritionist?.person.first_name ?? 'Nutricionista'} ${nutritionist?.person.last_name ?? ''}`}
+          subtitle={otherTyping ? 'Escribiendo...' : otherOnline ?'En línea' : 'Desconectado'}
+          avatarIcon="account"
+          onBack={onClose}
+        />
+
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
+          {loading ? (
+            <View style={styles.centered}>
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            </View>
+          ) : (
+            <ScrollView style={styles.list} contentContainerStyle={{ paddingVertical: 14 }}>
+              {error && (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              )}
+
+              {messages.map((msg) => {
+                const isMe = msg.sender_role === 'patient';
+                return (
+                  <MessageBubble
+                    key={msg.id}
+                    sender={isMe ? 'me' : 'other'}
+                    timestamp={formatTime(msg.sent_at)}
+                    read={isMe && !!msg.read_at}
+                  >
+                    <Text style={isMe ? styles.textMe : styles.textOther}>{msg.content}</Text>
+                  </MessageBubble>
+                );
+              })}
+            </ScrollView>
+          )}
+
+          <View style={styles.quickRepliesWrap}>
+            <Text style={styles.quickRepliesLabel}>Respuestas Rápidas</Text>
+            <View style={styles.quickRepliesRow}>
+              {QUICK_REPLIES.map((qr) => (
+                <TouchableOpacity key={qr.id} style={styles.quickReplyChip}>
+                  <MaterialCommunityIcons name={qr.icon as any} size={16} color={COLORS.primary} />
+                  <Text style={styles.quickReplyText}>{qr.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <ChatInput value={draft} onChangeText={handleChangeDraft} onSend={handleSend} />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.surface,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  list: {
+    flex: 1,
+    backgroundColor: COLORS.background ?? COLORS.surface,
+  },
+  errorBox: {
+    marginHorizontal: 12,
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: COLORS.errorLight,
+    borderWidth: 1,
+    borderColor: COLORS.errorBorder,
+  },
+  errorText: {
+    fontSize: 12,
+    color: COLORS.error,
+  },
+  textMe: {
+    color: COLORS.textOnPrimary,
+    fontSize: 14,
+  },
+  textOther: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+  },
+  quickRepliesWrap: {
+    paddingHorizontal: 12,
+    paddingBottom: 8,
+  },
+  quickRepliesLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.textMuted,
+    marginBottom: 6,
+  },
+  quickRepliesRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  quickReplyChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  quickReplyText: {
+    fontSize: 12,
+    color: COLORS.textPrimary,
+  },
+});

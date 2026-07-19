@@ -60,6 +60,18 @@ async def websocket_chat(
             return
 
         await manager.connect(conversation_id, current_user.id, websocket)
+        connected_users = manager.get_connected_users(conversation_id)
+
+        for user_id in connected_users:
+            if user_id != current_user.id:
+                await manager.send_to_user(
+                    conversation_id,
+                    current_user.id,
+                    {
+                        "type": "user_connected",
+                        "user_id": str(user_id),
+                    },
+                )
         await manager.broadcast_except_sender(
             conversation_id,
             current_user.id,
