@@ -1,5 +1,6 @@
-import { WS_URL } from '../../config/api';
-import { tokenStorage } from '../../utils/tokenStorage';
+import { tokenStorage } from '@/utils/tokenStorage';
+
+const WS_URL = `${process.env.EXPO_PUBLIC_WS_URL}/api/v1`;
 
 export interface SocketMessage {
   type: 'message' | 'typing' | 'stop_typing' | 'read' | 'user_connected' | 'user_disconnected';
@@ -17,14 +18,14 @@ export interface SocketMessage {
 export class ChatSocket {
   private socket?: WebSocket;
 
-  connect(
+  async connect(
     conversationId: string,
     onMessage: (data: SocketMessage) => void,
     onOpen?: () => void,
     onClose?: () => void,
     onError?: (event: Event) => void,
   ) {
-    const token = tokenStorage.get();
+    const token = await tokenStorage.get();
 
     if (!token) {
       throw new Error('No existe token de autenticación');

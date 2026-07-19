@@ -8,12 +8,30 @@ interface Props {
   messages: MessageResponse[];
   loading?: boolean;
   connected?: boolean;
+  otherTyping: boolean;
+  otherOnline: boolean;
   sendMessage: (content: string) => void;
+  notifyTyping: () => void;
+  notifyStopTyping: () => void;
 }
 
-const ChatPanel = ({ conversation, messages, loading, connected, sendMessage }: Props) => {
+const ChatPanel = ({
+  conversation,
+  messages,
+  loading,
+  connected,
+  otherTyping,
+  otherOnline,
+  sendMessage,
+  notifyTyping,
+  notifyStopTyping,
+}: Props) => {
   const [message, setMessage] = useState('');
+
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingRef = useRef(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
@@ -21,16 +39,60 @@ const ChatPanel = ({ conversation, messages, loading, connected, sendMessage }: 
     });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!message.trim()) return;
-    await sendMessage(message);
-    setMessage('');
+  const handleChangeMessage = (value: string) => {
+    setMessage(value);
+
+    if (!value.trim()) {
+      if (isTypingRef.current) {
+        notifyStopTyping();
+        isTypingRef.current = false;
+      }
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      return;
+    }
+
+    // Solo manda typing la primera vez
+    if (!isTypingRef.current) {
+      notifyTyping();
+      isTypingRef.current = true;
+    }
+
+    // Reinicia contador
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      notifyStopTyping();
+      isTypingRef.current = false;
+    }, 1000);
   };
 
-  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSend = () => {
+    if (!message.trim()) return;
+
+    sendMessage(message);
+
+    setMessage('');
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    if (isTypingRef.current) {
+      notifyStopTyping();
+      isTypingRef.current = false;
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      await handleSend();
+      handleSend();
     }
   };
 
@@ -43,6 +105,7 @@ const ChatPanel = ({ conversation, messages, loading, connected, sendMessage }: 
 
   const getInitials = (name?: string) => {
     if (!name) return '';
+
     return name
       .split(' ')
       .slice(0, 2)
@@ -50,6 +113,16 @@ const ChatPanel = ({ conversation, messages, loading, connected, sendMessage }: 
       .join('')
       .toUpperCase();
   };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      notifyStopTyping();
+    };
+  }, [notifyStopTyping]);
 
   if (!conversation) {
     return (
@@ -83,11 +156,15 @@ const ChatPanel = ({ conversation, messages, loading, connected, sendMessage }: 
             <h2 className="font-semibold text-[#1B241C]">{conversation.participant_name}</h2>
 
             <span className="flex items-center gap-2 text-sm text-[#6D796C]">
-              <span className="h-2 w-2 rounded-full bg-[#3E8E5D]" />
-              Conversación activa
+              <span
+                className={`h-2 w-2 rounded-full ${otherOnline ? 'bg-green-500' : 'bg-gray-400'}`}
+              />
+
+              {otherTyping ? 'Escribiendo...' : otherOnline ? 'En línea' : 'Desconectado'}
             </span>
           </div>
         </div>
+
         <button className="rounded-full p-2 text-[#6D796C] hover:bg-[#F4F7F1]">
           <FiMoreVertical />
         </button>
@@ -113,11 +190,8 @@ const ChatPanel = ({ conversation, messages, loading, connected, sendMessage }: 
                 }`}
               >
                 <p className="leading-relaxed">{msg.content}</p>
-                <div
-                  className={`mt-2 flex justify-end gap-2 text-xs ${
-                    msg.sender_role === 'nutritionist' ? 'text-white/70' : 'text-[#9AA396]'
-                  }`}
-                >
+
+                <div className="mt-2 flex justify-end gap-2 text-xs">
                   {formatTime(msg.sent_at)}
 
                   {msg.sender_role === 'nutritionist' && <span>{msg.read_at ? '✓✓' : '✓'}</span>}
@@ -126,6 +200,7 @@ const ChatPanel = ({ conversation, messages, loading, connected, sendMessage }: 
             </div>
           ))
         )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -134,7 +209,7 @@ const ChatPanel = ({ conversation, messages, loading, connected, sendMessage }: 
         <div className="flex items-center gap-3 rounded-full border border-[#E1E8DC] bg-[#FAFBF8] px-4 py-2">
           <input
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => handleChangeMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={!connected}
             className="flex-1 bg-transparent outline-none placeholder:text-[#9AA396]"

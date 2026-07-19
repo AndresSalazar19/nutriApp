@@ -7,12 +7,19 @@ import ChatPanel from './ChatPanel';
 
 const MessagesPage = () => {
   const [loadingConversations, setLoadingConversations] = useState(false);
-
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
-
   const [selectedConversation, setSelectedConversation] = useState<ConversationResponse>();
 
-  const { messages, loading, connected, sendMessage } = useChat(selectedConversation?.id);
+  const {
+    messages,
+    loading,
+    connected,
+    otherTyping,
+    otherOnline,
+    sendMessage,
+    notifyTyping,
+    notifyStopTyping,
+  } = useChat(selectedConversation?.id);
 
   useEffect(() => {
     loadConversations();
@@ -38,12 +45,14 @@ const MessagesPage = () => {
 
   const handleSelectConversation = async (conversation: ConversationResponse) => {
     setSelectedConversation(conversation);
+
     try {
       await ChatService.markAsRead(conversation.id);
     } catch (error) {
       console.error(error);
     }
   };
+
   return (
     <NutritionistLayout>
       <div className="flex h-full flex-col bg-gray-100">
@@ -66,7 +75,11 @@ const MessagesPage = () => {
             messages={messages}
             loading={loading}
             connected={connected}
+            otherTyping={otherTyping}
+            otherOnline={otherOnline}
             sendMessage={sendMessage}
+            notifyTyping={notifyTyping}
+            notifyStopTyping={notifyStopTyping}
           />
         </div>
       </div>

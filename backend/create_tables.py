@@ -1,7 +1,8 @@
+from sqlalchemy import inspect, text
+
 from app.db.base import Base, engine
 from app.db.models.blood_pressure_log import BloodPressureLog
 from app.db.models.patient import PatientHistory, PatientProfile
-from sqlalchemy import inspect, text
 
 Base.metadata.create_all(
     bind=engine,
@@ -11,16 +12,16 @@ Base.metadata.create_all(
         BloodPressureLog.__table__,
     ],
 )
+
+
 def ensure_blood_pressure_columns():
     inspector = inspect(engine)
     if "blood_pressure_logs" not in inspector.get_table_names():
         return
 
-    existing_columns = {
-        column["name"] for column in inspector.get_columns("blood_pressure_logs")
-    }
+    existing_columns = {column["name"] for column in inspector.get_columns("blood_pressure_logs")}
     columns_sql = {
-        "user_id": 'ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE',
+        "user_id": "ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE",
         "systolic": "ADD COLUMN IF NOT EXISTS systolic INTEGER",
         "diastolic": "ADD COLUMN IF NOT EXISTS diastolic INTEGER",
         "pulse": "ADD COLUMN IF NOT EXISTS pulse INTEGER",
