@@ -90,12 +90,4 @@ export const ChatService = {
     const response = await handleResponse<any>(res);
     return response.data ?? [];
   },
-
-  async markAsRead(conversation_id: string) {
-    const res = await fetch(`${API_URL}/chats/${conversation_id}/read`, {
-      method: 'PATCH',
-      headers: authHeaders(),
-    });
-    return handleResponse(res);
-  },
 };

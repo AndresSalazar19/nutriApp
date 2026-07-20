@@ -20,6 +20,7 @@ export interface UseDoctorChatResult {
     sendMessage: (content: string) => void;
     notifyTyping: () => void;
     notifyStopTyping: () => void;
+    notifyRead: () => void;
 }
 
 /**
@@ -62,11 +63,10 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
                 if (cancelled) return;
                 setMessages(history);
 
-                ChatService.markAsRead(conv.id).catch(() => { });
-
                 // 3. Conecta el WebSocket para lo que llegue después
                 const socket = new ChatSocket();
                 socketRef.current = socket;
+                socket.sendRead();
                 const convId = conv.id;
 
                 socket.connect(convId, (data: SocketMessage) => {
@@ -93,7 +93,15 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
                                 next[optimisticIdx] = realMessage;
                                 return next;
                             }
-                            return [...next, realMessage];
+                            const updated = [...next, realMessage];
+
+                            updated.sort(
+                                (a, b) =>
+                                    new Date(a.sent_at).getTime() -
+                                    new Date(b.sent_at).getTime(),
+                            );
+
+                            return updated;
                         });
                     }
 
@@ -114,7 +122,23 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
                     if (data.type === "user_disconnected" && data.user_id === nutritionistId) {
                         setOtherOnline(false);
                     }
+
+                    if (data.type === "read") {
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.sender_role === "patient" && !m.read_at
+                                    ? {
+                                        ...m,
+                                        read_at: new Date().toISOString(),
+                                    }
+                                    : m,
+                            ),
+                        );
+                    }
                 });
+
+                socketRef.current = socket;
+                socket.sendRead();
             } catch (err: any) {
                 if (!cancelled) setError(err?.message ?? 'No se pudo cargar la conversación');
             } finally {
@@ -166,6 +190,10 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
         socketRef.current?.sendStopTyping();
     }, []);
 
+    const notifyRead = useCallback(() => {
+        socketRef.current?.sendRead();
+    }, []);
+
     return {
         conversation,
         messages,
@@ -176,5 +204,6 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
         notifyTyping,
         notifyStopTyping,
         otherOnline,
+        notifyRead,
     };
 }

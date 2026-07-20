@@ -13,6 +13,7 @@ interface Props {
   sendMessage: (content: string) => void;
   notifyTyping: () => void;
   notifyStopTyping: () => void;
+  notifyRead: () => void;
 }
 
 const ChatPanel = ({
@@ -25,19 +26,36 @@ const ChatPanel = ({
   sendMessage,
   notifyTyping,
   notifyStopTyping,
+  notifyRead,
 }: Props) => {
   const [message, setMessage] = useState('');
 
   const bottomRef = useRef<HTMLDivElement>(null);
-
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
+  const lastReadMessageRef = useRef<string | null>(null);
+  const conversationId = conversation?.id;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({
       behavior: 'smooth',
     });
   }, [messages]);
+
+  // Marcar mensajes como leídos cuando el chat está abierto
+  useEffect(() => {
+    if (!conversationId || !connected || loading) return;
+
+    const lastUnread = [...messages]
+      .reverse()
+      .find((m) => m.sender_role === 'patient' && !m.read_at);
+
+    if (!lastUnread) return;
+    if (lastReadMessageRef.current === lastUnread.id) return;
+    lastReadMessageRef.current = lastUnread.id;
+
+    notifyRead();
+  }, [conversationId, messages, connected, loading, notifyRead]);
 
   const handleChangeMessage = (value: string) => {
     setMessage(value);
@@ -55,13 +73,11 @@ const ChatPanel = ({
       return;
     }
 
-    // Solo manda typing la primera vez
     if (!isTypingRef.current) {
       notifyTyping();
       isTypingRef.current = true;
     }
 
-    // Reinicia contador
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
@@ -76,7 +92,6 @@ const ChatPanel = ({
     if (!message.trim()) return;
 
     sendMessage(message);
-
     setMessage('');
 
     if (typingTimeoutRef.current) {
@@ -137,7 +152,6 @@ const ChatPanel = ({
 
   return (
     <div className="flex flex-1 flex-col bg-[#F4F7F1]">
-      {/* HEADER */}
       <div className="flex items-center justify-between border-b border-[#E1E8DC] bg-white px-6 py-4">
         <div className="flex items-center gap-4">
           {conversation.participant_avatar_url ? (
@@ -170,7 +184,6 @@ const ChatPanel = ({
         </button>
       </div>
 
-      {/* MENSAJES */}
       <div className="flex-1 space-y-4 overflow-y-auto p-6">
         {loading ? (
           <div className="text-center text-sm text-[#9AA396]">Cargando mensajes...</div>
@@ -204,7 +217,6 @@ const ChatPanel = ({
         <div ref={bottomRef} />
       </div>
 
-      {/* INPUT */}
       <div className="border-t border-[#E1E8DC] bg-white p-5">
         <div className="flex items-center gap-3 rounded-full border border-[#E1E8DC] bg-[#FAFBF8] px-4 py-2">
           <input

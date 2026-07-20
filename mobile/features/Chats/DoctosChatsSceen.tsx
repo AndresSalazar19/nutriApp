@@ -136,18 +136,6 @@ export default function DoctorChatScreen({ onClose, nutritionist }: DoctorChatSc
             </ScrollView>
           )}
 
-          <View style={styles.quickRepliesWrap}>
-            <Text style={styles.quickRepliesLabel}>Respuestas Rápidas</Text>
-            <View style={styles.quickRepliesRow}>
-              {QUICK_REPLIES.map((qr) => (
-                <TouchableOpacity key={qr.id} style={styles.quickReplyChip}>
-                  <MaterialCommunityIcons name={qr.icon as any} size={16} color={COLORS.primary} />
-                  <Text style={styles.quickReplyText}>{qr.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
           <ChatInput value={draft} onChangeText={handleChangeDraft} onSend={handleSend} />
         </KeyboardAvoidingView>
       </SafeAreaView>

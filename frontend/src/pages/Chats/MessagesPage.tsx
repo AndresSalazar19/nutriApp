@@ -19,6 +19,7 @@ const MessagesPage = () => {
     sendMessage,
     notifyTyping,
     notifyStopTyping,
+    notifyRead,
   } = useChat(selectedConversation?.id);
 
   useEffect(() => {
@@ -43,14 +44,8 @@ const MessagesPage = () => {
     }
   };
 
-  const handleSelectConversation = async (conversation: ConversationResponse) => {
+  const handleSelectConversation = (conversation: ConversationResponse) => {
     setSelectedConversation(conversation);
-
-    try {
-      await ChatService.markAsRead(conversation.id);
-    } catch (error) {
-      console.error(error);
-    }
   };
 
   return (
@@ -80,6 +75,7 @@ const MessagesPage = () => {
             sendMessage={sendMessage}
             notifyTyping={notifyTyping}
             notifyStopTyping={notifyStopTyping}
+            notifyRead={notifyRead}
           />
         </div>
       </div>

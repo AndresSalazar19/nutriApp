@@ -139,6 +139,7 @@ class ChatsService:
             sender_id=sender_id,
             sender_role=sender_role,
             content=data.content,
+            sent_at=datetime.now(timezone.utc),
         )
 
         db.add(message)
