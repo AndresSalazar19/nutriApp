@@ -36,9 +36,6 @@ export function ChatHeader({
         </View>
       </View>
 
-      <TouchableOpacity style={styles.iconBtn} onPress={onMenuPress}>
-        <MaterialCommunityIcons name="dots-vertical" size={22} color={COLORS.textOnPrimary} />
-      </TouchableOpacity>
     </View>
   );
 }

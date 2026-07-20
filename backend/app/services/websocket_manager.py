@@ -24,12 +24,14 @@ class ConnectionManager:
         user_id: UUID,
     ):
         if conversation_id not in self.active_connections:
-            return
+            return False
 
-        self.active_connections[conversation_id].pop(user_id, None)
+        removed = self.active_connections[conversation_id].pop(user_id, None)
 
-        if len(self.active_connections[conversation_id]) == 0:
+        if not self.active_connections[conversation_id]:
             self.active_connections.pop(conversation_id)
+
+        return removed is not None
 
     async def send_to_user(
         self,
@@ -42,8 +44,18 @@ class ConnectionManager:
             {},
         ).get(user_id)
 
-        if websocket:
+        websocket = self.active_connections.get(
+            conversation_id,
+            {},
+        ).get(user_id)
+
+        if not websocket:
+            return
+
+        try:
             await websocket.send_json(message)
+        except Exception:
+            self.disconnect(conversation_id, user_id)
 
     async def broadcast(
         self,
@@ -53,8 +65,16 @@ class ConnectionManager:
         if conversation_id not in self.active_connections:
             return
 
-        for websocket in self.active_connections[conversation_id].values():
-            await websocket.send_json(message)
+        disconnected = []
+
+        for user_id, websocket in self.active_connections[conversation_id].items():
+            try:
+                await websocket.send_json(message)
+            except Exception:
+                disconnected.append(user_id)
+
+        for user_id in disconnected:
+            self.disconnect(conversation_id, user_id)
 
     async def broadcast_except_sender(
         self,
@@ -65,11 +85,19 @@ class ConnectionManager:
         if conversation_id not in self.active_connections:
             return
 
+        disconnected = []
+
         for user_id, websocket in self.active_connections[conversation_id].items():
             if user_id == sender_id:
                 continue
 
-            await websocket.send_json(message)
+            try:
+                await websocket.send_json(message)
+            except Exception:
+                disconnected.append(user_id)
+
+        for user_id in disconnected:
+            self.disconnect(conversation_id, user_id)
 
     def is_connected(
         self,

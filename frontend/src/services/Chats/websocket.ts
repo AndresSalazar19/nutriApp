@@ -33,7 +33,6 @@ export class ChatSocket {
     this.socket = new WebSocket(`${WS_URL}/ws/${conversationId}?token=${token}`);
 
     this.socket.onopen = () => {
-      console.log('WebSocket conectado');
       onOpen?.();
     };
 

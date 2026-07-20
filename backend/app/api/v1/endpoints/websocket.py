@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
@@ -137,7 +138,7 @@ async def websocket_chat(
                     {
                         "type": "read",
                         "conversation_id": str(conversation_id),
-                        "read_by": str(current_user.id),
+                        "read_by": datetime.now(timezone.utc).isoformat(),
                     },
                 )
 

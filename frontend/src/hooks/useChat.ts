@@ -11,6 +11,7 @@ interface UseChatReturn {
   sendMessage: (content: string) => void;
   notifyTyping: () => void;
   notifyStopTyping: () => void;
+  notifyRead: () => void;
   reloadMessages: () => Promise<void>;
 }
 
@@ -36,7 +37,7 @@ export const useChat = (conversationId?: string): UseChatReturn => {
       const response = await ChatService.getMessages(conversationId);
 
       setMessages(response.messages);
-      ChatService.markAsRead(conversationId).catch(() => {});
+      socketRef.current?.sendRead();
     } catch (error) {
       console.error('Error cargando mensajes', error);
     } finally {
@@ -56,6 +57,7 @@ export const useChat = (conversationId?: string): UseChatReturn => {
       (event: SocketMessage) => {
         switch (event.type) {
           case 'message':
+            const message = event as MessageResponse;
             setMessages((prev) => {
               if (prev.some((m) => m.id === event.id)) {
                 return prev;
@@ -74,6 +76,10 @@ export const useChat = (conversationId?: string): UseChatReturn => {
 
               return [...next, event as MessageResponse];
             });
+
+            if (message.sender_role === 'patient') {
+              socketRef.current?.sendRead();
+            }
             break;
 
           case 'typing':
@@ -176,6 +182,10 @@ export const useChat = (conversationId?: string): UseChatReturn => {
     socketRef.current?.sendStopTyping();
   }, []);
 
+  const notifyRead = useCallback(() => {
+    socketRef.current?.sendRead();
+  }, []);
+
   return {
     messages,
     loading,
@@ -186,5 +196,6 @@ export const useChat = (conversationId?: string): UseChatReturn => {
     notifyTyping,
     notifyStopTyping,
     reloadMessages: loadMessages,
+    notifyRead,
   };
 };

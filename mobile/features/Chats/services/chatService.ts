@@ -37,7 +37,6 @@ export interface ConversationMessagesResponse {
 
 async function authHeaders() {
   const token = (await tokenStorage.get()) ?? '';
-  console.log('Auth token:', token);
 
   return {
     Authorization: `Bearer ${token}`,
@@ -92,13 +91,5 @@ export const ChatService = {
 
     const response = await handleResponse<any>(res);
     return response.data ?? [];
-  },
-
-  async markAsRead(conversation_id: string) {
-    const res = await fetch(`${API}/chats/${conversation_id}/read`, {
-      method: 'PATCH',
-      headers: await authHeaders(),
-    });
-    return handleResponse(res);
   },
 };

@@ -18,10 +18,6 @@ export function ChatInput({
 }: ChatInputProps) {
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.attachBtn}>
-        <MaterialCommunityIcons name="paperclip" size={20} color={COLORS.textMuted} />
-      </TouchableOpacity>
-
       <TextInput
         style={styles.input}
         placeholder={placeholder}
