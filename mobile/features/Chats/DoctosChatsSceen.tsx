@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -7,22 +7,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { COLORS } from '@/constants/colors';
 import { ChatHeader } from './components/ChatHeader';
 import { MessageBubble } from './components/MessageBubble';
 import { ChatInput } from './components/ChatInput';
 import { useDoctorChat } from './hooks/UseDoctorChat';
-
-const QUICK_REPLIES = [
-  { id: 'agendar', label: 'Agendar cita', icon: 'calendar-outline' },
-  { id: 'reporte', label: 'Ver mi último reporte', icon: 'file-chart-outline' },
-];
 
 function formatTime(iso: string) {
   try {
@@ -47,11 +40,31 @@ export default function DoctorChatScreen({ onClose, nutritionist }: DoctorChatSc
     sendMessage,
     notifyTyping,
     notifyStopTyping,
+    notifyRead
   } = useDoctorChat({ nutritionistId: nutritionist?.id });
 
   const [draft, setDraft] = useState('');
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
+  const lastReadMessageRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const lastUnread = [...messages]
+      .reverse()
+      .find(
+        (m) =>
+          m.sender_role === 'nutritionist' &&
+          !m.read_at
+      );
+
+    if (!lastUnread) return;
+
+    if (lastReadMessageRef.current === lastUnread.id) return;
+
+    lastReadMessageRef.current = lastUnread.id;
+
+    notifyRead();
+  }, [messages, notifyRead]);
 
   const handleChangeDraft = (text: string) => {
     setDraft(text);

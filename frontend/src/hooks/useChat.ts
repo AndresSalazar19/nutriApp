@@ -15,7 +15,11 @@ interface UseChatReturn {
   reloadMessages: () => Promise<void>;
 }
 
-export const useChat = (conversationId?: string): UseChatReturn => {
+export const useChat = (
+  conversationId?: string,
+  otherParticipantId?: string,
+  handleIncomingMessage?: (message: MessageResponse) => void,
+): UseChatReturn => {
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [otherTyping, setOtherTyping] = useState(false);
   const [otherOnline, setOtherOnline] = useState(false);
@@ -24,6 +28,15 @@ export const useChat = (conversationId?: string): UseChatReturn => {
   const [connected, setConnected] = useState(false);
 
   const socketRef = useRef<ChatSocket | null>(null);
+  const otherParticipantIdRef = useRef(otherParticipantId);
+  useEffect(() => {
+    otherParticipantIdRef.current = otherParticipantId;
+  }, [otherParticipantId]);
+
+  const handleIncomingMessageRef = useRef(handleIncomingMessage);
+  useEffect(() => {
+    handleIncomingMessageRef.current = handleIncomingMessage;
+  }, [handleIncomingMessage]);
 
   const loadMessages = useCallback(async () => {
     if (!conversationId) {
@@ -47,16 +60,22 @@ export const useChat = (conversationId?: string): UseChatReturn => {
 
   useEffect(() => {
     if (!conversationId) return;
+    setOtherOnline(false);
+    setOtherTyping(false);
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
 
-    loadMessages();
     const socket = new ChatSocket();
+    socketRef.current = socket;
 
     socket.connect(
       conversationId,
 
       (event: SocketMessage) => {
         switch (event.type) {
-          case 'message':
+          case 'message': {
             const message = event as MessageResponse;
             setMessages((prev) => {
               if (prev.some((m) => m.id === event.id)) {
@@ -80,9 +99,14 @@ export const useChat = (conversationId?: string): UseChatReturn => {
             if (message.sender_role === 'patient') {
               socketRef.current?.sendRead();
             }
+
+            handleIncomingMessageRef.current?.(message);
             break;
+          }
 
           case 'typing':
+            if (event.user_id !== otherParticipantIdRef.current) break;
+
             setOtherTyping(true);
             if (typingTimeoutRef.current) {
               clearTimeout(typingTimeoutRef.current);
@@ -94,6 +118,7 @@ export const useChat = (conversationId?: string): UseChatReturn => {
             break;
 
           case 'stop_typing':
+            if (event.user_id !== otherParticipantIdRef.current) break;
             setOtherTyping(false);
             break;
 
@@ -111,11 +136,15 @@ export const useChat = (conversationId?: string): UseChatReturn => {
             break;
 
           case 'user_connected':
-            setOtherOnline(true);
+            if (event.user_id === otherParticipantIdRef.current) {
+              setOtherOnline(true);
+            }
             break;
 
           case 'user_disconnected':
-            setOtherOnline(false);
+            if (event.user_id === otherParticipantIdRef.current) {
+              setOtherOnline(false);
+            }
             break;
 
           default:
@@ -137,10 +166,9 @@ export const useChat = (conversationId?: string): UseChatReturn => {
       },
     );
 
-    socketRef.current = socket;
-
     return () => {
       socket.disconnect();
+      socketRef.current = null;
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
@@ -168,6 +196,7 @@ export const useChat = (conversationId?: string): UseChatReturn => {
       }
 
       setMessages((prev) => [...prev, optimistic]);
+      handleIncomingMessageRef.current?.(optimistic);
 
       socketRef.current?.sendMessage(trimmed);
     },

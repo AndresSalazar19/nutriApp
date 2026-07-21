@@ -63,14 +63,14 @@ async def websocket_chat(
         await manager.connect(conversation_id, current_user.id, websocket)
         connected_users = manager.get_connected_users(conversation_id)
 
-        for user_id in connected_users:
-            if user_id != current_user.id:
+        for existing_user_id in connected_users:
+            if existing_user_id != current_user.id:
                 await manager.send_to_user(
                     conversation_id,
                     current_user.id,
                     {
                         "type": "user_connected",
-                        "user_id": str(user_id),
+                        "user_id": str(existing_user_id),
                     },
                 )
         await manager.broadcast_except_sender(
@@ -144,19 +144,22 @@ async def websocket_chat(
 
     except WebSocketDisconnect:
 
-        if current_user:
-            manager.disconnect(conversation_id, current_user.id)
-
-            await manager.broadcast_except_sender(
-                conversation_id,
-                current_user.id,
-                {"type": "user_disconnected", "user_id": str(current_user.id)},
-            )
+        pass
 
     except Exception as e:
-
         print("WebSocket error:", e)
 
     finally:
+        if current_user:
+            try:
+                was_removed = manager.disconnect(conversation_id, current_user.id, websocket)
+                if was_removed:
+                    await manager.broadcast_except_sender(
+                        conversation_id,
+                        current_user.id,
+                        {"type": "user_disconnected", "user_id": str(current_user.id)},
+                    )
+            except Exception as cleanup_error:
+                print("Error al limpiar conexión:", cleanup_error)
 
         db.close()

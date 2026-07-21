@@ -43,6 +43,8 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
         async function init() {
             setLoading(true);
             setError(null);
+            setOtherOnline(false);
+            setOtherTyping(false);
 
             try {
                 // 1. Reutiliza la conversación si ya existe, si no la crea
@@ -66,7 +68,6 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
                 // 3. Conecta el WebSocket para lo que llegue después
                 const socket = new ChatSocket();
                 socketRef.current = socket;
-                socket.sendRead();
                 const convId = conv.id;
 
                 socket.connect(convId, (data: SocketMessage) => {
@@ -105,13 +106,13 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
                         });
                     }
 
-                    if (data.type === 'typing') {
+                    if (data.type === 'typing' && data.user_id === nutritionistId) {
                         setOtherTyping(true);
                         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
                         typingTimeoutRef.current = setTimeout(() => setOtherTyping(false), 3000);
                     }
 
-                    if (data.type === 'stop_typing') {
+                    if (data.type === 'stop_typing' && data.user_id === nutritionistId) {
                         setOtherTyping(false);
                     }
 
@@ -138,7 +139,6 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
                 });
 
                 socketRef.current = socket;
-                socket.sendRead();
             } catch (err: any) {
                 if (!cancelled) setError(err?.message ?? 'No se pudo cargar la conversación');
             } finally {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { FiMoreVertical, FiPaperclip, FiSend } from 'react-icons/fi';
+import { FiSend } from 'react-icons/fi';
 
 import { ConversationResponse, MessageResponse } from '../../services/Chats/chatService';
 
@@ -178,10 +178,6 @@ const ChatPanel = ({
             </span>
           </div>
         </div>
-
-        <button className="rounded-full p-2 text-[#6D796C] hover:bg-[#F4F7F1]">
-          <FiMoreVertical />
-        </button>
       </div>
 
       <div className="flex-1 space-y-4 overflow-y-auto p-6">
@@ -227,10 +223,6 @@ const ChatPanel = ({
             className="flex-1 bg-transparent outline-none placeholder:text-[#9AA396]"
             placeholder={connected ? 'Escribe un mensaje...' : 'Esperando conexión...'}
           />
-
-          <button className="text-[#6D796C]">
-            <FiPaperclip />
-          </button>
 
           <button
             onClick={handleSend}
