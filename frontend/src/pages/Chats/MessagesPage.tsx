@@ -1,6 +1,7 @@
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { ChatService, ConversationResponse } from '../../services/Chats/chatService';
+import { MessageResponse } from '../../services/Chats/chatService';
 import { useChat } from '../../hooks/useChat';
 import ConversationsPanel from './ConversationsPanel';
 import ChatPanel from './ChatPanel';
@@ -9,6 +10,26 @@ const MessagesPage = () => {
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [conversations, setConversations] = useState<ConversationResponse[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<ConversationResponse>();
+
+  const handleIncomingMessage = useCallback(
+    (message: MessageResponse) => {
+      if (!selectedConversation) return;
+
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === selectedConversation.id
+            ? {
+                ...c,
+                last_message: message.content,
+                last_message_time: message.sent_at,
+                unread_count: 0,
+              }
+            : c,
+        ),
+      );
+    },
+    [selectedConversation],
+  );
 
   const {
     messages,
@@ -20,7 +41,7 @@ const MessagesPage = () => {
     notifyTyping,
     notifyStopTyping,
     notifyRead,
-  } = useChat(selectedConversation?.id);
+  } = useChat(selectedConversation?.id, selectedConversation?.patient_id, handleIncomingMessage);
 
   useEffect(() => {
     loadConversations();
