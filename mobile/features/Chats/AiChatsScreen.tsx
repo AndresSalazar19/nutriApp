@@ -6,74 +6,28 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-
 import { COLORS } from '@/constants/colors';
 import { ChatHeader } from './components/ChatHeader';
 import { MessageBubble } from './components/MessageBubble';
 import { ChatInput } from './components/ChatInput';
+import { useAssistant } from './hooks/UseAssistant';
 
 type Tab = 'ingesta' | 'plan';
-
-interface AIMessage {
-  id: string;
-  sender: 'me' | 'other';
-  time: string;
-  kind: 'text' | 'actions' | 'form';
-  text?: string;
-}
-
-const INITIAL_MESSAGES: AIMessage[] = [
-  {
-    id: '1',
-    sender: 'other',
-    time: '10:15 AM',
-    kind: 'text',
-    text: '¡Hola! 👋 Soy tu asistente de salud de NutrIA. Estoy aquí para ayudarte a registrar tus comidas, presión arterial, hidratación y más.\n¿Qué te gustaría hacer hoy?',
-  },
-  { id: '2', sender: 'other', time: '10:15 AM', kind: 'actions' },
-  {
-    id: '3',
-    sender: 'me',
-    time: '10:16 AM',
-    kind: 'text',
-    text: 'Quiero registrar mi presión arterial de esta mañana',
-  },
-  {
-    id: '4',
-    sender: 'other',
-    time: '',
-    kind: 'text',
-    text: 'Perfecto! Voy a registrar tu presión arterial. Por favor ingresa los valores:',
-  },
-  { id: '5', sender: 'other', time: '', kind: 'form' },
-];
-
-const QUICK_ACTIONS = [
-  { id: 'presion', label: 'Registrar presión arterial', icon: 'heart-pulse' },
-  { id: 'hidratacion', label: 'Registrar hidratación', icon: 'cup-water' },
-];
 
 export default function AIChatScreen({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('ingesta');
-  const [messages, setMessages] = useState<AIMessage[]>(INITIAL_MESSAGES);
+  const {messages, sendMessage, loading} = useAssistant();
   const [draft, setDraft] = useState('');
-  const [systolic, setSystolic] = useState('128');
-  const [diastolic, setDiastolic] = useState('82');
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!draft.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), sender: 'me', time: 'Ahora', kind: 'text', text: draft.trim() },
-    ]);
+    await sendMessage(draft);
     setDraft('');
   };
 
@@ -82,7 +36,7 @@ export default function AIChatScreen({ onClose }: { onClose: () => void }) {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ChatHeader
         title="Asistente NutrIA"
-        subtitle="IA • En línea"
+        subtitle="IA"
         avatarIcon="robot-happy-outline"
         onBack={() => onClose()}
       />
@@ -113,56 +67,20 @@ export default function AIChatScreen({ onClose }: { onClose: () => void }) {
       >
         <ScrollView style={styles.list} contentContainerStyle={{ paddingVertical: 14 }}>
           {messages.map((msg) => (
-            <MessageBubble key={msg.id} sender={msg.sender} timestamp={msg.time}>
-              {msg.kind === 'text' && (
-                <Text style={msg.sender === 'me' ? styles.textMe : styles.textOther}>
-                  {msg.text}
-                </Text>
-              )}
-
-              {msg.kind === 'actions' && (
-                <View style={styles.actionsWrap}>
-                  {QUICK_ACTIONS.map((action) => (
-                    <TouchableOpacity key={action.id} style={styles.actionChip}>
-                      <MaterialCommunityIcons
-                        name={action.icon as any}
-                        size={16}
-                        color={COLORS.primary}
-                      />
-                      <Text style={styles.actionText}>{action.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              {msg.kind === 'form' && (
-                <View style={styles.formCard}>
-                  <View style={styles.formRow}>
-                    <View style={styles.formField}>
-                      <Text style={styles.formLabel}>Presión Sistólica (mmHg)</Text>
-                      <TextInput
-                        style={styles.formInput}
-                        value={systolic}
-                        onChangeText={setSystolic}
-                        keyboardType="numeric"
-                      />
-                    </View>
-                    <View style={styles.formField}>
-                      <Text style={styles.formLabel}>Diastólica (mmHg)</Text>
-                      <TextInput
-                        style={styles.formInput}
-                        value={diastolic}
-                        onChangeText={setDiastolic}
-                        keyboardType="numeric"
-                      />
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.formConfirmBtn}>
-                    <MaterialCommunityIcons name="check" size={16} color={COLORS.textOnPrimary} />
-                    <Text style={styles.formConfirmText}>Confirmar Registro</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+            <MessageBubble key={msg.id} sender={msg.sender_role === "patient" ? "me" : "other" } timestamp={
+              new Date(msg.sent_at).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}>
+              <Text
+                style={
+                  msg.sender_role === 'patient'
+                    ? styles.textMe
+                    : styles.textOther
+                }
+              >
+                {msg.content}
+              </Text>
             </MessageBubble>
           ))}
         </ScrollView>
