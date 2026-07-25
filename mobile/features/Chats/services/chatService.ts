@@ -3,7 +3,7 @@ import { tokenStorage } from '@/utils/tokenStorage';
 const API = `${process.env.EXPO_PUBLIC_API_URL}/api/v1`;
 
 export interface ConversationCreateRequest {
-  nutritionist_id: string;
+  participant_id: string;
 }
 
 export interface ConversationResponse {
@@ -48,13 +48,17 @@ async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const raw =
-      data?.status?.messages?.[0] ??
-      data?.detail ??
-      data?.errors?.[0] ??
-      `Error ${response.status}`;
+    console.log('Error response:', data);
 
-    const msg = raw.replace(/^\d+:\s*/, '');
+    let msg = `Error ${response.status}`;
+
+    if (typeof data?.detail === 'string') {
+      msg = data.detail;
+    } else if (Array.isArray(data?.detail)) {
+      msg = data.detail.map((e: any) => e.msg).join(', ');
+    } else if (typeof data?.status?.messages?.[0] === 'string') {
+      msg = data.status.messages[0];
+    }
     throw new Error(msg);
   }
 
@@ -69,7 +73,8 @@ export const ChatService = {
       body: JSON.stringify(payload),
     });
 
-    return handleResponse<ConversationResponse>(res);
+    const response = await handleResponse<any>(res);
+    return response.data;
   },
 
   async getConversations(): Promise<ConversationResponse[]> {

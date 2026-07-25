@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     alimentos_intercambio,
     appointment,
+    assistant,
     blood_pressure_log,
     catalog,
     chats,
@@ -32,3 +33,4 @@ router.include_router(alimentos_intercambio.router)
 router.include_router(patient_nutritionist.router)
 router.include_router(chats.router)
 router.include_router(websocket.router)
+router.include_router(assistant.router)

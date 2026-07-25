@@ -54,11 +54,13 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
                 );
 
                 if (!conv) {
-                    conv = await ChatService.createConversation({ nutritionist_id: nutritionistId });
+                    conv = await ChatService.createConversation({ participant_id: nutritionistId });
                 }
 
                 if (cancelled) return;
                 setConversation(conv);
+                console.log("nutricionista", nutritionistId)
+                console.log("conversation_id:", conv);
 
                 // 2. Carga el historial por REST
                 const { messages: history } = await ChatService.getMessages(conv.id);

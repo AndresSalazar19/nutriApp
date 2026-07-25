@@ -22,7 +22,7 @@ import { AuthService, AuthUser } from '@/features/auth/services/authService';
 import { BloodPressureLog, ProgressService, WeightLog } from '@/features/progress/services/progressService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PatientNutritionistService } from '../services/patientNutritionistService';
-import DoctorChatScreen from '@/features/Chats/DoctosChatsSceen';
+import DoctorChatScreen from '@/features/Chats/DoctorChatsSceen';
 import AIChatScreen from '@/features/Chats/AiChatsScreen';
 
 const { width } = Dimensions.get('window');
