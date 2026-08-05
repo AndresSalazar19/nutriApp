@@ -6,13 +6,8 @@ from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
+from app.core.enums import UserRole
 from app.db.base import Base
-
-
-class UserRole(str, enum.Enum):
-    patient = "patient"
-    nutritionist = "nutritionist"
-    admin = "admin"
 
 
 class User(Base):
