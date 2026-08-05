@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
-  Alert,
-  Dimensions,
+  ActivityIndicator,
+  Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,27 +10,36 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
-import { MOCK_MEAL_PLANS } from '../mockData';
-import { DayPlan, Meal } from '../types';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DAY_CELL_SIZE = (SCREEN_WIDTH - 32 - 48) / 7;
-
-const MEAL_CONFIG: Record<Meal['type'], { label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }> = {
-  desayuno: { label: 'Desayuno', icon: 'weather-sunset-up' },
-  almuerzo: { label: 'Almuerzo', icon: 'white-balance-sunny' },
-  merienda: { label: 'Merienda', icon: 'coffee-outline' },
-};
+import { GeneratePlanModal } from './GeneratePlanModal';
+import {
+  NutritionPlan,
+  NutritionPlanMeal,
+  NutritionPlanService,
+} from '../services/nutritionPlanService';
+import {
+  MEAL_TYPE_CONFIG,
+  PlanWeekDay,
+  STATUS_CONFIG,
+  buildWeekDays,
+  findActivePlan,
+  findPendingPlan,
+  formatDateRange,
+  formatFullDate,
+  formatQuantity,
+  groupMealsByType,
+  mealFoodLabel,
+} from '../utils/planHelpers';
 
 function WeekStrip({
   days,
   selectedIndex,
   onSelect,
 }: {
-  days: DayPlan[];
+  days: PlanWeekDay[];
   selectedIndex: number;
   onSelect: (i: number) => void;
 }) {
@@ -39,7 +49,7 @@ function WeekStrip({
         const isActive = selectedIndex === i;
         return (
           <TouchableOpacity
-            key={day.id}
+            key={i}
             onPress={() => onSelect(i)}
             style={[styles.dayCell, isActive && styles.dayCellActive]}
             activeOpacity={0.7}
@@ -60,45 +70,63 @@ function WeekStrip({
   );
 }
 
-function CalorieSummary({ plan }: { plan: DayPlan }) {
-  const pct = Math.min(Math.round((plan.totalCalories / 1500) * 100), 100);
+function StatusBanner({ plan }: { plan: NutritionPlan }) {
+  const cfg = STATUS_CONFIG[plan.status];
   return (
-    <View style={styles.summaryCard}>
-      <View style={styles.summaryTop}>
-        <View>
-          <Text style={styles.summaryDateLabel}>{plan.dateLabel}</Text>
-          <View style={styles.summaryCalRow}>
-            <Text style={styles.summaryCalValue}>{plan.totalCalories}</Text>
-            <Text style={styles.summaryCalUnit}> / 1,500 kcal</Text>
-          </View>
-        </View>
-        <View style={styles.summaryPctWrap}>
-          <Text style={styles.summaryPct}>{pct}%</Text>
-        </View>
-      </View>
-      <View style={styles.progressBarBg}>
-        <View style={[styles.progressBarFill, { width: `${pct}%` }]} />
-      </View>
-      <View style={styles.summaryMetrics}>
-        <View style={styles.metricItem}>
-          <MaterialCommunityIcons name="silverware-fork-knife" size={16} color={COLORS.primaryMedium} />
-          <Text style={styles.metricText}>{plan.meals.length} comidas</Text>
-        </View>
-        <View style={styles.metricItem}>
-          <MaterialCommunityIcons name="fire" size={16} color={COLORS.primaryMedium} />
-          <Text style={styles.metricText}>{plan.totalCalories} kcal</Text>
-        </View>
-        <View style={styles.metricItem}>
-          <MaterialCommunityIcons name="target" size={16} color={COLORS.primaryMedium} />
-          <Text style={styles.metricText}>Meta 1,500</Text>
-        </View>
+    <View style={[styles.banner, { backgroundColor: cfg.bg, borderLeftColor: cfg.color }]}>
+      <MaterialCommunityIcons name={cfg.icon} size={20} color={cfg.color} />
+      <View style={styles.bannerBody}>
+        <Text style={[styles.bannerTitle, { color: cfg.color }]}>{plan.title || 'Plan generado por IA'}</Text>
+        {plan.status === 'pending' && (
+          <Text style={styles.bannerText}>
+            Tu nutricionista está revisando este plan. Te avisaremos cuando esté activo.
+          </Text>
+        )}
+        {plan.status === 'rejected' && (
+          <Text style={styles.bannerText}>
+            {plan.rejection_reason
+              ? `No se aprobó: ${plan.rejection_reason}`
+              : 'Este plan no fue aprobado por tu nutricionista.'}
+          </Text>
+        )}
       </View>
     </View>
   );
 }
 
-function MealCard({ meal }: { meal: Meal }) {
-  const cfg = MEAL_CONFIG[meal.type];
+function PantryPhotoCard({ plan }: { plan: NutritionPlan }) {
+  const [showNote, setShowNote] = useState(false);
+  const imageUrl = NutritionPlanService.imageUrl(plan.source_image_path);
+
+  return (
+    <View style={styles.pantryCard}>
+      {imageUrl && <Image source={{ uri: imageUrl }} style={styles.pantryImage} resizeMode="cover" />}
+      <View style={styles.pantryBody}>
+        <View style={styles.pantryHeaderRow}>
+          <MaterialCommunityIcons name="robot-outline" size={16} color={COLORS.primaryMedium} />
+          <Text style={styles.pantryTitle}>Generado por IA a partir de tu despensa</Text>
+        </View>
+        {!!plan.description && <Text style={styles.pantryDescription}>{plan.description}</Text>}
+
+        {!!plan.patient_notes && (
+          <TouchableOpacity onPress={() => setShowNote(v => !v)} activeOpacity={0.7}>
+            <Text style={styles.pantryToggle}>
+              {showNote ? 'Ocultar nota enviada' : 'Ver nota enviada'}
+              {'  '}
+              <MaterialCommunityIcons name={showNote ? 'chevron-up' : 'chevron-down'} size={12} />
+            </Text>
+          </TouchableOpacity>
+        )}
+        {showNote && !!plan.patient_notes && (
+          <Text style={styles.pantryNote}>&ldquo;{plan.patient_notes}&rdquo;</Text>
+        )}
+      </View>
+    </View>
+  );
+}
+
+function MealCard({ type, meals }: { type: keyof typeof MEAL_TYPE_CONFIG; meals: NutritionPlanMeal[] }) {
+  const cfg = MEAL_TYPE_CONFIG[type];
   return (
     <View style={styles.mealCard}>
       <View style={styles.mealHeader}>
@@ -107,20 +135,25 @@ function MealCard({ meal }: { meal: Meal }) {
         </View>
         <View style={styles.mealHeaderText}>
           <Text style={styles.mealLabel}>{cfg.label}</Text>
-          <Text style={styles.mealTime}>{meal.time}</Text>
-        </View>
-        <View style={styles.mealCalsBadge}>
-          <Text style={styles.mealCalsText}>{meal.totalCalories} kcal</Text>
+          <Text style={styles.mealTime}>{cfg.time}</Text>
         </View>
       </View>
 
       <View style={styles.mealItems}>
-        {meal.items.map((item, i) => (
-          <View key={i} style={styles.mealItemRow}>
+        {meals.map((meal) => (
+          <View key={meal.id} style={styles.mealItemRow}>
             <View style={styles.mealItemDot} />
-            <Text style={styles.mealItemName} numberOfLines={1}>{item.name}</Text>
-            <Text style={styles.mealItemPortion}>{item.portion}</Text>
-            <Text style={styles.mealItemCals}>{item.calories}</Text>
+            <View style={styles.mealItemBody}>
+              <View style={styles.mealItemTopRow}>
+                <Text style={styles.mealItemName} numberOfLines={2}>{mealFoodLabel(meal)}</Text>
+                {!!formatQuantity(meal) && (
+                  <Text style={styles.mealItemPortion}>{formatQuantity(meal)}</Text>
+                )}
+              </View>
+              {!!meal.instructions && (
+                <Text style={styles.mealItemInstructions}>{meal.instructions}</Text>
+              )}
+            </View>
           </View>
         ))}
       </View>
@@ -128,82 +161,163 @@ function MealCard({ meal }: { meal: Meal }) {
   );
 }
 
-function NutritionistNote({ note }: { note: string }) {
+function EmptyState({ onGenerate }: { onGenerate: () => void }) {
   return (
-    <View style={styles.noteCard}>
-      <View style={styles.noteHeader}>
-        <MaterialCommunityIcons name="stethoscope" size={18} color={COLORS.primary} />
-        <Text style={styles.noteTitle}>Observaciones del nutricionista</Text>
+    <View style={styles.emptyState}>
+      <View style={styles.emptyIconWrap}>
+        <MaterialCommunityIcons name="creation" size={40} color={COLORS.primary} />
       </View>
-      <Text style={styles.noteText}>{note}</Text>
+      <Text style={styles.emptyTitle}>Aún no tienes un plan alimenticio</Text>
+      <Text style={styles.emptyText}>
+        Toma una foto de lo que tienes en casa y cuéntanos qué alimentos tienes disponibles.
+        Nuestra IA generará un plan semanal según tu perfil médico, y tu nutricionista lo revisará
+        antes de activarlo.
+      </Text>
+      <TouchableOpacity style={styles.emptyBtn} activeOpacity={0.85} onPress={onGenerate}>
+        <MaterialCommunityIcons name="creation" size={20} color={COLORS.textOnPrimary} />
+        <Text style={styles.emptyBtnText}>Generar mi primer plan con IA</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 export default function MealsScreen() {
-  const todayIndex = MOCK_MEAL_PLANS.findIndex(d => d.isToday);
-  const [selectedDay, setSelectedDay] = useState(todayIndex >= 0 ? todayIndex : 0);
-  const plan = MOCK_MEAL_PLANS[selectedDay];
-  const scrollRef = useRef<ScrollView>(null);
+  const [plans, setPlans] = useState<NutritionPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const hasLoadedRef = useRef(false);
 
-  function handleGenerate() {
-    Alert.alert(
-      'Generar plan semanal',
-      'Se generará un nuevo plan alimenticio para la próxima semana basado en tu perfil.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Generar', onPress: () => {} },
-      ],
-    );
+  const load = useCallback(async (opts: { silent?: boolean } = {}) => {
+    if (!opts.silent) setLoading(true);
+    setLoadError(null);
+    try {
+      const data = await NutritionPlanService.listMine();
+      setPlans(data);
+      hasLoadedRef.current = true;
+    } catch (error: any) {
+      setLoadError(error?.message ?? 'No se pudieron cargar tus planes.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Silent (no full-screen spinner) once we've already loaded data at least once.
+      void load({ silent: hasLoadedRef.current });
+    }, [load])
+  );
+
+  function handleRefresh() {
+    setRefreshing(true);
+    void load({ silent: true });
   }
+
+  function handleGenerated(plan: NutritionPlan) {
+    setPlans(prev => [plan, ...prev]);
+  }
+
+  const activePlan = findActivePlan(plans);
+  const pendingPlan = findPendingPlan(plans);
+  const latestPlan = plans[0] ?? null;
+  const showRejectedBanner = !activePlan && !pendingPlan && latestPlan?.status === 'rejected';
+
+  const weekDays = activePlan ? buildWeekDays(activePlan.start_date, activePlan.end_date) : [];
+  const today = weekDays.findIndex(d => d.isToday);
+  const dayIndex = Math.min(selectedDay, Math.max(weekDays.length - 1, 0));
+  const selectedWeekDay = weekDays[dayIndex] ?? weekDays[Math.max(today, 0)];
+  const mealGroups =
+    activePlan && selectedWeekDay
+      ? groupMealsByType(activePlan.meals, selectedWeekDay.isoWeekday)
+      : [];
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>Mi Plan Alimenticio</Text>
-            <Text style={styles.headerSub}>Semana del 23 - 29 de Junio</Text>
+            <Text style={styles.headerSub}>
+              {activePlan
+                ? `Semana del ${formatDateRange(activePlan.start_date, activePlan.end_date)}`
+                : 'Generado por IA, revisado por tu nutricionista'}
+            </Text>
           </View>
-          <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8} onPress={handleGenerate}>
+          <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8} onPress={() => setModalVisible(true)}>
             <MaterialCommunityIcons name="calendar-plus" size={22} color={COLORS.textOnPrimary} />
           </TouchableOpacity>
         </View>
 
-        {/* Week strip */}
-        <WeekStrip
-          days={MOCK_MEAL_PLANS}
-          selectedIndex={selectedDay}
-          onSelect={setSelectedDay}
-        />
+        {activePlan && weekDays.length > 0 && (
+          <WeekStrip days={weekDays} selectedIndex={dayIndex} onSelect={setSelectedDay} />
+        )}
       </View>
 
-      {/* Content */}
       <ScrollView
-        ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[COLORS.primary]} />}
       >
-        <CalorieSummary plan={plan} />
+        {loading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          </View>
+        ) : loadError ? (
+          <View style={styles.errorWrap}>
+            <MaterialCommunityIcons name="wifi-off" size={32} color={COLORS.textMuted} />
+            <Text style={styles.errorText}>{loadError}</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => load()}>
+              <Text style={styles.retryBtnText}>Reintentar</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            {pendingPlan && <StatusBanner plan={pendingPlan} />}
+            {showRejectedBanner && latestPlan && <StatusBanner plan={latestPlan} />}
 
-        {plan.meals.map((meal, i) => (
-          <MealCard key={i} meal={meal} />
-        ))}
+            {activePlan ? (
+              <>
+                <PantryPhotoCard plan={activePlan} />
 
-        {plan.nutritionistNote && (
-          <NutritionistNote note={plan.nutritionistNote} />
+                {selectedWeekDay && (
+                  <Text style={styles.dayHeading}>{formatFullDate(selectedWeekDay.date)}</Text>
+                )}
+
+                {mealGroups.length > 0 ? (
+                  mealGroups.map(group => (
+                    <MealCard key={group.type} type={group.type} meals={group.meals} />
+                  ))
+                ) : (
+                  <View style={styles.noMealsCard}>
+                    <MaterialCommunityIcons name="silverware-clean" size={22} color={COLORS.textMuted} />
+                    <Text style={styles.noMealsText}>No hay comidas registradas para este día.</Text>
+                  </View>
+                )}
+
+                <TouchableOpacity style={styles.generateBtn} activeOpacity={0.85} onPress={() => setModalVisible(true)}>
+                  <MaterialCommunityIcons name="creation" size={20} color={COLORS.textOnPrimary} />
+                  <Text style={styles.generateBtnText}>Generar nuevo plan semanal</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <EmptyState onGenerate={() => setModalVisible(true)} />
+            )}
+          </>
         )}
-
-        {/* Generate button */}
-        <TouchableOpacity style={styles.generateBtn} activeOpacity={0.85} onPress={handleGenerate}>
-          <MaterialCommunityIcons name="creation" size={20} color={COLORS.textOnPrimary} />
-          <Text style={styles.generateBtnText}>Generar plan semanal</Text>
-        </TouchableOpacity>
 
         <View style={{ height: 90 }} />
       </ScrollView>
+
+      <GeneratePlanModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onGenerated={handleGenerated}
+      />
 
       <BottomTabBar activeTab="comidas" />
     </SafeAreaView>
@@ -225,6 +339,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     marginBottom: 18,
+    gap: 12,
   },
   headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.textOnPrimary },
   headerSub: { fontSize: 12, color: COLORS.overlayMedium, marginTop: 2 },
@@ -245,7 +360,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dayCell: {
-    width: DAY_CELL_SIZE,
+    flex: 1,
     alignItems: 'center',
     paddingVertical: 6,
     borderRadius: 14,
@@ -295,77 +410,70 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 16 },
 
-  // ── Summary ──
-  summaryCard: {
+  loadingWrap: { paddingVertical: 60, alignItems: 'center' },
+  errorWrap: { paddingVertical: 40, alignItems: 'center', gap: 10 },
+  errorText: { fontSize: 13, color: COLORS.textMuted, textAlign: 'center', paddingHorizontal: 20 },
+  retryBtn: {
+    marginTop: 4,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: COLORS.primaryLight,
+  },
+  retryBtnText: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
+
+  // ── Status banner ──
+  banner: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+    borderLeftWidth: 4,
+    gap: 10,
+  },
+  bannerBody: { flex: 1 },
+  bannerTitle: { fontSize: 13, fontWeight: '700', marginBottom: 3 },
+  bannerText: { fontSize: 12.5, color: COLORS.textSecondary, lineHeight: 18 },
+
+  // ── Pantry photo card ──
+  pantryCard: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
-    padding: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: COLORS.border,
-  },
-  summaryTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  summaryDateLabel: {
-    fontSize: 13,
-    color: COLORS.textMuted,
-    marginBottom: 4,
-  },
-  summaryCalRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  summaryCalValue: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-  },
-  summaryCalUnit: {
-    fontSize: 13,
-    color: COLORS.textMuted,
-    marginBottom: 3,
-  },
-  summaryPctWrap: {
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  summaryPct: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: COLORS.primary,
-  },
-  progressBarBg: {
-    height: 6,
-    backgroundColor: COLORS.divider,
-    borderRadius: 3,
-    marginBottom: 14,
     overflow: 'hidden',
   },
-  progressBarFill: {
-    height: 6,
-    backgroundColor: COLORS.primaryAccent,
-    borderRadius: 3,
+  pantryImage: {
+    width: '100%',
+    height: 160,
   },
-  summaryMetrics: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  pantryBody: { padding: 14 },
+  pantryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+  pantryTitle: { fontSize: 12, fontWeight: '700', color: COLORS.primaryMedium },
+  pantryDescription: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 19, marginBottom: 6 },
+  pantryToggle: { fontSize: 12, fontWeight: '600', color: COLORS.primary },
+  pantryNote: { fontSize: 12.5, color: COLORS.textMuted, fontStyle: 'italic', marginTop: 6, lineHeight: 18 },
+
+  dayHeading: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 10,
+    textTransform: 'capitalize',
   },
-  metricItem: {
-    flexDirection: 'row',
+
+  noMealsCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 20,
     alignItems: 'center',
-    gap: 5,
+    gap: 8,
+    marginBottom: 12,
   },
-  metricText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
+  noMealsText: { fontSize: 13, color: COLORS.textMuted },
 
   // ── Meal card ──
   mealCard: {
@@ -403,25 +511,14 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     marginTop: 1,
   },
-  mealCalsBadge: {
-    backgroundColor: COLORS.background,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  mealCalsText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primaryMedium,
-  },
   mealItems: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    gap: 8,
+    gap: 10,
   },
   mealItemRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   mealItemDot: {
     width: 5,
@@ -429,51 +526,80 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: COLORS.primaryAccent,
     marginRight: 10,
+    marginTop: 6,
+  },
+  mealItemBody: { flex: 1 },
+  mealItemTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 8,
   },
   mealItemName: {
     flex: 1,
     fontSize: 13,
+    fontWeight: '600',
     color: COLORS.textPrimary,
   },
   mealItemPortion: {
     fontSize: 12,
     color: COLORS.textMuted,
-    marginRight: 12,
-    minWidth: 55,
-    textAlign: 'right',
   },
-  mealItemCals: {
+  mealItemInstructions: {
     fontSize: 12,
-    fontWeight: '600',
     color: COLORS.textSecondary,
-    minWidth: 30,
-    textAlign: 'right',
+    marginTop: 2,
+    lineHeight: 16,
   },
 
-  // ── Nutritionist note ──
-  noteCard: {
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
-  },
-  noteHeader: {
-    flexDirection: 'row',
+  // ── Empty state ──
+  emptyState: {
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    paddingVertical: 32,
+    paddingHorizontal: 12,
   },
-  noteTitle: {
-    fontSize: 13,
+  emptyIconWrap: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+  },
+  emptyTitle: {
+    fontSize: 17,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: COLORS.textPrimary,
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  noteText: {
+  emptyText: {
     fontSize: 13,
     color: COLORS.textSecondary,
+    textAlign: 'center',
     lineHeight: 20,
+    marginBottom: 24,
+  },
+  emptyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: COLORS.primary,
+    borderRadius: 50,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  emptyBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.textOnPrimary,
   },
 
   // ── Generate button ──
