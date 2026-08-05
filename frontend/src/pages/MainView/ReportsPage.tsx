@@ -1,24 +1,34 @@
-import React, { useState } from 'react';
-import {
-  MdCalendarMonth,
-  MdDirectionsRun,
-  MdFavorite,
-  MdFileDownload,
-  MdMonitorWeight,
-  MdPlaylistAddCheck,
-} from 'react-icons/md';
+import React, { useEffect, useState } from 'react';
+import { MdCalendarMonth, MdFavorite, MdFileDownload, MdMonitorWeight } from 'react-icons/md';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { Avatar } from '../../components/ui/Avatar';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Toast, ToastType } from '../../components/ui/Toast';
 import { LineChart } from '../../components/charts/LineChart';
-import { MacroBarChart } from '../../components/charts/MacroBarChart';
-import {
-  REPORT_PATIENTS,
-  getReportData,
-  RANGE_OPTIONS,
-  RangeOption,
-  CorrelationCard,
-  WeeklyActivity,
-} from '../../components/mock/reportsMock';
+import { useAuth } from '../../hooks/useAuth';
+import { API_URL } from '../../config/api';
+import { PatientNutritionistService } from '../../services/PatientNutritionist/patientNutritionistService';
+import { ReportService, PatientReportData, RangeKey } from '../../services/ReportService';
+
+// ─── Range options ──────────────────────────────────────────────────────────
+
+const RANGE_OPTIONS = ['Últimos 3 meses', 'Últimos 6 meses', 'Último año'] as const;
+type RangeOption = (typeof RANGE_OPTIONS)[number];
+
+const RANGE_TO_KEY: Record<RangeOption, RangeKey> = {
+  'Últimos 3 meses': '3m',
+  'Últimos 6 meses': '6m',
+  'Último año': '1y',
+};
+
+const AVATAR_COLORS = ['bg-green-500', 'bg-blue-500', 'bg-orange-400', 'bg-purple-500', 'bg-teal-500'];
+
+interface ReportPatientOption {
+  id: string;
+  name: string;
+  initials: string;
+  color: string;
+}
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
 
@@ -47,93 +57,181 @@ function StatCard({
   );
 }
 
-// ─── Correlation card ─────────────────────────────────────────────────────────
-
-function CorrelCard({ card }: { card: CorrelationCard }) {
-  const isPositive = card.positive;
-  const bg = isPositive ? 'bg-nutri-bg border-nutri-light' : 'bg-admin-bg border-admin-light';
-  const text = isPositive ? 'text-nutri-dark' : 'text-admin-dark';
-  const val = isPositive ? 'text-nutri-medium' : 'text-admin-accent';
-
-  return (
-    <div className={`rounded-xl border p-3.5 ${bg}`}>
-      <p className={`text-xs font-semibold mb-2 ${text}`}>{card.label}</p>
-      <p className={`text-3xl font-bold mb-1 ${val}`}>
-        {card.value > 0 ? '+' : ''}
-        {card.value.toFixed(2)}
-      </p>
-      {card.description.split('\n').map((line, i) => (
-        <p key={i} className="text-xs leading-tight text-gray-600">
-          {line}
-        </p>
-      ))}
-    </div>
-  );
-}
-
-// ─── Activity bar ─────────────────────────────────────────────────────────────
-
-function ActivityRow({ week, days, goal }: WeeklyActivity) {
-  const pct = Math.min((days / goal) * 100, 100);
-  const color = pct >= 80 ? 'bg-nutri-dark' : pct >= 50 ? 'bg-nutri-medium' : 'bg-admin-accent';
-  return (
-    <div className="flex items-center gap-3">
-      <span className="text-xs text-gray-500 w-10 flex-shrink-0">{week}</span>
-      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full ${color} transition-all`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="text-xs text-gray-500 w-12 text-right flex-shrink-0">{days} días</span>
-    </div>
-  );
-}
-
 // ─── Section card ─────────────────────────────────────────────────────────────
 
 function Section({
   title,
   subtitle,
   children,
-  action,
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
-  action?: React.ReactNode;
 }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5">
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <h3 className="font-bold text-gray-900 text-sm">{title}</h3>
-          {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
-        </div>
-        {action}
+      <div className="mb-2">
+        <h3 className="font-bold text-gray-900 text-sm">{title}</h3>
+        {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
       </div>
       {children}
     </div>
   );
 }
 
+function EmptyChartMessage({ text }: { text: string }) {
+  return <p className="text-xs text-gray-400 py-10 text-center">{text}</p>;
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
-  const [selectedId, setSelectedId] = useState(REPORT_PATIENTS[0].id);
+  const { user } = useAuth();
+
+  const [patients, setPatients] = useState<ReportPatientOption[]>([]);
+  const [patientsLoading, setPatientsLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState('');
+
   const [range, setRange] = useState<RangeOption>('Últimos 3 meses');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [rangeOpen, setRangeOpen] = useState(false);
 
-  const patient = REPORT_PATIENTS.find((p) => p.id === selectedId)!;
-  const data = getReportData(selectedId);
+  const [data, setData] = useState<PatientReportData | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
-  const adherenceChangeColor = data.adherenceChange >= 0 ? 'text-nutri-dark' : 'text-admin-accent';
+  const [toastConfig, setToastConfig] = useState<{
+    isVisible: boolean;
+    message: string;
+    type: ToastType;
+  }>({ isVisible: false, message: '', type: 'success' });
+
+  // Load real assigned patients for the selector
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPatients() {
+      if (!user?.userId) {
+        setPatients([]);
+        setPatientsLoading(false);
+        return;
+      }
+
+      setPatientsLoading(true);
+      try {
+        const list = await PatientNutritionistService.listPatientsByNutritionist(user.userId);
+        const mapped: ReportPatientOption[] = list.map((p, i) => ({
+          id: p.id,
+          name: p.fullName,
+          initials: `${p.first_name.charAt(0)}${p.last_name.charAt(0)}`.toUpperCase(),
+          color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+        }));
+
+        if (isMounted) {
+          setPatients(mapped);
+          setSelectedId((current) => current || mapped[0]?.id || '');
+        }
+      } catch (error) {
+        console.error('Error cargando pacientes:', error);
+        if (isMounted) setPatients([]);
+      } finally {
+        if (isMounted) setPatientsLoading(false);
+      }
+    }
+
+    loadPatients();
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.userId]);
+
+  // Load real report data for the selected patient + range
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadReport() {
+      if (!selectedId) {
+        setData(null);
+        return;
+      }
+
+      setReportLoading(true);
+      try {
+        const result = await ReportService.getPatientReport(selectedId, RANGE_TO_KEY[range]);
+        if (isMounted) setData(result);
+      } catch (error) {
+        console.error('Error cargando el reporte:', error);
+        if (isMounted) {
+          setData(null);
+          setToastConfig({
+            isVisible: true,
+            message: 'No se pudo cargar el reporte de este paciente.',
+            type: 'error',
+          });
+        }
+      } finally {
+        if (isMounted) setReportLoading(false);
+      }
+    }
+
+    loadReport();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedId, range]);
+
+  async function handleExport() {
+    if (!selectedId || exporting) return;
+
+    setExporting(true);
+    try {
+      const report = await ReportService.generateReportPdf(selectedId, RANGE_TO_KEY[range]);
+      window.open(`${API_URL.replace('/api/v1', '')}${report.file_url}`, '_blank');
+      setToastConfig({ isVisible: true, message: 'Reporte generado con éxito.', type: 'success' });
+    } catch (error) {
+      console.error('Error generando el reporte PDF:', error);
+      setToastConfig({
+        isVisible: true,
+        message: 'No se pudo generar el reporte en PDF.',
+        type: 'error',
+      });
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  const patient = patients.find((p) => p.id === selectedId) ?? null;
+
+  const weightValue = reportLoading
+    ? '...'
+    : data?.weight_lost != null
+      ? `-${data.weight_lost} kg`
+      : 'Sin datos';
+  const weightSub = reportLoading
+    ? undefined
+    : data?.weight_lost != null
+      ? `↓ ${data.weight_lost_pct}% del peso inicial`
+      : 'No hay suficientes registros de peso';
+
+  const bpValue = reportLoading
+    ? '...'
+    : data?.blood_pressure_systolic != null
+      ? `${data.blood_pressure_systolic}/${data.blood_pressure_diastolic}`
+      : 'Sin datos';
+  const bpSub = reportLoading
+    ? undefined
+    : (data?.blood_pressure_note ?? 'No hay registros de presión arterial');
+  const bpColor =
+    data?.blood_pressure_systolic != null
+      ? data.blood_pressure_systolic < 130
+        ? 'text-green-500'
+        : 'text-orange-500'
+      : 'text-gray-400';
 
   return (
     <NutritionistLayout>
       {/* ── Top bar ── */}
-      <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+      <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white sticky top-0 z-20">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Análisis de Progreso - Pacientes</h1>
           <p className="text-xs text-gray-500 mt-0.5">
@@ -146,14 +244,16 @@ export default function ReportsPage() {
           <div className="relative">
             <button
               onClick={() => {
+                if (patients.length === 0) return;
                 setDropdownOpen((v) => !v);
                 setRangeOpen(false);
               }}
+              disabled={patients.length === 0}
               className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg
-                text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                text-sm font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Avatar initials={patient.initials} color={patient.color} size="sm" />
-              {patient.name}
+              {patient && <Avatar initials={patient.initials} color={patient.color} size="sm" />}
+              {patient ? patient.name : patientsLoading ? 'Cargando...' : 'Sin pacientes'}
               <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
@@ -163,9 +263,9 @@ export default function ReportsPage() {
               </svg>
             </button>
 
-            {dropdownOpen && (
+            {dropdownOpen && patients.length > 0 && (
               <div className="absolute right-0 mt-1 w-52 bg-white rounded-xl border border-gray-100 shadow-xl z-20 py-1">
-                {REPORT_PATIENTS.map((p) => (
+                {patients.map((p) => (
                   <button
                     key={p.id}
                     onClick={() => {
@@ -224,9 +324,13 @@ export default function ReportsPage() {
           </div>
 
           {/* Export */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-nutri-medium hover:bg-nutri-dark text-white text-sm font-semibold rounded-lg transition shadow-sm">
+          <button
+            onClick={handleExport}
+            disabled={!selectedId || exporting}
+            className="flex items-center gap-2 px-4 py-2 bg-nutri-medium hover:bg-nutri-dark text-white text-sm font-semibold rounded-lg transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <MdFileDownload className="w-4 h-4" />
-            Exportar
+            {exporting ? 'Generando...' : 'Exportar'}
           </button>
         </div>
       </div>
@@ -242,125 +346,99 @@ export default function ReportsPage() {
         />
       )}
 
-      <div className="px-6 py-4 space-y-3">
-        {/* ── Stat cards ── */}
-        <div className="grid grid-cols-4 gap-4">
-          <StatCard
-            icon={<MdMonitorWeight className="w-6 h-6" />}
-            label="Pérdida de Peso"
-            value={`-${data.weightLost} kg`}
-            sub={`↓ ${data.weightLostPct}% del peso inicial`}
-            subColor="text-green-500"
-          />
-          <StatCard
-            icon={<MdFavorite className="w-6 h-6" />}
-            label="Presión Arterial Actual"
-            value={`${data.bloodPressureSys}/${data.bloodPressureDia}`}
-            sub={data.bloodPressureNote}
-            subColor={data.bloodPressureSys < 130 ? 'text-green-500' : 'text-orange-500'}
-          />
-          <StatCard
-            icon={<MdPlaylistAddCheck className="w-6 h-6" />}
-            label="Adherencia al Plan"
-            value={`${data.adherence}%`}
-            sub={`${data.adherenceChange >= 0 ? '↑' : '↓'} ${Math.abs(data.adherenceChange)}% vs mes anterior`}
-            subColor={adherenceChangeColor}
-          />
-          <StatCard
-            icon={<MdDirectionsRun className="w-6 h-6" />}
-            label="Actividad Física"
-            value={`${data.activityDays} días/semana`}
-            sub={`→ ${data.activityNote} · Meta: ${data.activityGoal} días/sem`}
-            subColor="text-gray-500"
+      {patientsLoading ? (
+        <div className="px-6 py-16 text-center text-sm text-gray-400">Cargando pacientes...</div>
+      ) : patients.length === 0 ? (
+        <div className="px-6 py-4">
+          <EmptyState
+            title="No tienes pacientes asignados"
+            description="Cuando tengas pacientes asignados, podrás ver aquí sus reportes de progreso."
           />
         </div>
-
-        {/* ── Charts row 1: Weight + Blood Pressure ── */}
-        <div className="grid grid-cols-2 gap-5">
-          <Section title="Evolución del Peso" subtitle="Octubre 2025 – Enero 2026">
-            <LineChart
-              height={120}
-              series={[
-                {
-                  data: data.weightHistory,
-                  color: '#16a34a',
-                  label: 'Peso (kg)',
-                  fillOpacity: 0.1,
-                },
-              ]}
-              goalLine={{ value: 70, color: '#f59e0b', label: 'Meta: 70 kg' }}
+      ) : (
+        <div className="px-6 py-4 space-y-3">
+          {/* ── Stat cards ── */}
+          <div className="grid grid-cols-2 gap-4">
+            <StatCard
+              icon={<MdMonitorWeight className="w-6 h-6" />}
+              label="Pérdida de Peso"
+              value={weightValue}
+              sub={weightSub}
+              subColor={data?.weight_lost != null ? 'text-green-500' : 'text-gray-400'}
             />
-            <div className="flex items-center gap-4 mt-2 text-xs">
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 bg-green-600 inline-block rounded" /> Peso (kg)
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 bg-amber-400 inline-block rounded border-dashed" /> Zona
-                meta
-              </span>
-            </div>
-          </Section>
-
-          <Section title="Evolución de Presión Arterial" subtitle="Sistólica y Diastólica (mmHg)">
-            <LineChart
-              height={120}
-              series={[
-                { data: data.systolicHistory, color: '#ef4444', label: 'Sistólica' },
-                {
-                  data: data.diastolicHistory,
-                  color: '#f97316',
-                  label: 'Diastólica',
-                  dashed: false,
-                },
-              ]}
-              goalLine={{ value: 120, color: '#22c55e', label: 'Normal' }}
+            <StatCard
+              icon={<MdFavorite className="w-6 h-6" />}
+              label="Presión Arterial Actual"
+              value={bpValue}
+              sub={bpSub}
+              subColor={bpColor}
             />
-            <div className="flex items-center gap-4 mt-2 text-xs">
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 bg-red-500 inline-block rounded" /> Sistólica
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-0.5 bg-orange-400 inline-block rounded" /> Diastólica
-              </span>
-            </div>
-          </Section>
-        </div>
-
-        {/* ── Charts row 2: Macros + Correlations ── */}
-        <div className="grid grid-cols-2 gap-5">
-          <Section
-            title="Distribución de Macronutrientes"
-            subtitle="Promedio consumido vs. recomendado (últimos 30 días)"
-          >
-            <MacroBarChart data={data.macros} height={130} />
-          </Section>
-
-          <Section title="Análisis de Correlación" subtitle="Relación entre variables clave">
-            <div className="grid grid-cols-3 gap-3">
-              {data.correlations.map((c, i) => (
-                <CorrelCard key={i} card={c} />
-              ))}
-            </div>
-          </Section>
-        </div>
-
-        {/* ── Activity frequency ── */}
-        <Section
-          title="Frecuencia de Actividad Física"
-          subtitle="Últimas 4 semanas"
-          action={
-            <div className="flex items-center gap-3 text-xs text-gray-500">
-              <span>Meta: {data.activityGoal} días/sem</span>
-            </div>
-          }
-        >
-          <div className="space-y-3 mt-1">
-            {data.weeklyActivity.map((w) => (
-              <ActivityRow key={w.week} {...w} />
-            ))}
           </div>
-        </Section>
-      </div>
+
+          {/* ── Charts: Weight + Blood Pressure ── */}
+          <div className="grid grid-cols-2 gap-5">
+            <Section title="Evolución del Peso" subtitle="Registros de peso en el periodo seleccionado">
+              {reportLoading ? (
+                <EmptyChartMessage text="Cargando..." />
+              ) : data && data.weight_history.length > 0 ? (
+                <>
+                  <LineChart
+                    height={120}
+                    series={[
+                      {
+                        data: data.weight_history,
+                        color: '#16a34a',
+                        label: 'Peso (kg)',
+                        fillOpacity: 0.1,
+                      },
+                    ]}
+                  />
+                  <div className="flex items-center gap-4 mt-2 text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 bg-green-600 inline-block rounded" /> Peso (kg)
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <EmptyChartMessage text="Sin datos suficientes en este periodo." />
+              )}
+            </Section>
+
+            <Section title="Evolución de Presión Arterial" subtitle="Sistólica y Diastólica (mmHg)">
+              {reportLoading ? (
+                <EmptyChartMessage text="Cargando..." />
+              ) : data && (data.systolic_history.length > 0 || data.diastolic_history.length > 0) ? (
+                <>
+                  <LineChart
+                    height={120}
+                    series={[
+                      { data: data.systolic_history, color: '#ef4444', label: 'Sistólica' },
+                      { data: data.diastolic_history, color: '#f97316', label: 'Diastólica' },
+                    ]}
+                  />
+                  <div className="flex items-center gap-4 mt-2 text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 bg-red-500 inline-block rounded" /> Sistólica
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 bg-orange-400 inline-block rounded" /> Diastólica
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <EmptyChartMessage text="Sin datos suficientes en este periodo." />
+              )}
+            </Section>
+          </div>
+        </div>
+      )}
+
+      <Toast
+        isVisible={toastConfig.isVisible}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onClose={() => setToastConfig((prev) => ({ ...prev, isVisible: false }))}
+      />
     </NutritionistLayout>
   );
 }
