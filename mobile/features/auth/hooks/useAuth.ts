@@ -31,7 +31,9 @@ export function useRegister() {
   const register = async (payload: RegisterPayload) => {
     setState({ loading: true, error: null });
     try {
-      const user = await AuthService.register(payload);
+      // Onboarding endpoints are authenticated. Keep the newly-created patient
+      // signed in before navigating to the health step.
+      const user = await AuthService.registerAndLogin(payload);
       setState({ loading: false, error: null });
       return user;
     } catch (err: any) {
