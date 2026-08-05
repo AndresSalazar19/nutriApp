@@ -13,6 +13,7 @@ from app.api.v1.endpoints import (
     nutritionist,
     patient_nutritionist,
     patients,
+    report,
     users,
     websocket,
     weight_log,
@@ -24,6 +25,7 @@ router.include_router(catalog.router)
 router.include_router(nutritionist.router)
 router.include_router(appointment.router)
 router.include_router(patients.router)
+router.include_router(report.router)
 router.include_router(content.router)
 router.include_router(weight_log.router)
 router.include_router(blood_pressure_log.router)
