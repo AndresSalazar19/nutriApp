@@ -159,7 +159,7 @@ export default function ProgressScreen({ navigation } : ProgressScreenProps) {
   );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Estilo de la barra de estado adaptado al header verde */}
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
