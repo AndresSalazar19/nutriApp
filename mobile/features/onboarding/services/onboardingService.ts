@@ -6,6 +6,10 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function csvToList(value: string): string[] {
+  return value.split(',').map((item) => item.trim()).filter(Boolean);
+}
+
 /**
  * Submit health profile data to the backend.
  * Replace with real API call when backend is ready.
@@ -20,6 +24,28 @@ export async function submitHealthProfile(data: HealthData): Promise<void> {
   const weight = Number(data.weight);
   const systolic = Number(data.systolic);
   const diastolic = Number(data.diastolic);
+
+  const token = await (await import('@/utils/tokenStorage')).tokenStorage.get();
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/patients/${user.id}/health`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token ?? ''}` },
+    body: JSON.stringify({
+      height_m: Number(data.height), weight_kg: weight, systolic, diastolic,
+      hypertension_diagnosed: data.hasHypertension,
+      medications: csvToList(data.medications),
+      allergies: data.selectedAllergies,
+      dietary_restrictions: csvToList(data.dietaryRestrictions),
+    }),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    const validationMessage = Array.isArray(payload?.detail)
+      ? payload.detail[0]?.msg
+      : payload?.detail;
+    throw new Error(
+      payload?.errors?.[0] ?? validationMessage ?? 'No se pudo guardar el perfil medico.'
+    );
+  }
 
   await Promise.all([
     Number.isFinite(weight) && weight > 0

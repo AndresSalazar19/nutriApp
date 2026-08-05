@@ -8,6 +8,8 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -22,10 +24,22 @@ import { COLORS } from '@/constants/colors';
 export default function HealthScreen() {
   const router = useRouter();
   const form = useHealthForm();
+  const [saving, setSaving] = React.useState(false);
 
   const handleContinue = async () => {
-    await submitHealthProfile(form.getData());
-    router.push('/(onboarding)/plans');
+    if (saving) return;
+    setSaving(true);
+    try {
+      await submitHealthProfile(form.getData());
+      router.push('/(onboarding)/plans');
+    } catch (error) {
+      Alert.alert(
+        'No se pudo guardar',
+        error instanceof Error ? error.message : 'Intenta nuevamente.'
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -174,9 +188,14 @@ export default function HealthScreen() {
         <TouchableOpacity
           style={styles.continueButton}
           onPress={handleContinue}
+          disabled={saving}
           activeOpacity={0.85}
         >
-          <Text style={styles.continueButtonText}>Continuar</Text>
+          {saving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.continueButtonText}>Continuar</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
