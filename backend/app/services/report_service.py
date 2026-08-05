@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -11,28 +11,15 @@ from app.db.models.report import PatientReport
 from app.db.models.user import Person, User, UserRole
 from app.db.models.weight_log import WeightLog
 from app.services.pdf.patient_report_pdf import build_patient_report_pdf
+from app.services.report_helpers import classify_blood_pressure, range_start_date
 
-_RANGE_DAYS = {"3m": 90, "6m": 182, "1y": 365}
 _UPLOAD_DIR = "uploads/reports"
 
 
 class ReportService:
 
-    @staticmethod
-    def _range_start_date(range_key: str, today: date | None = None) -> date:
-        today = today or date.today()
-        days = _RANGE_DAYS.get(range_key, _RANGE_DAYS["3m"])
-        return today - timedelta(days=days)
-
-    @staticmethod
-    def _classify_blood_pressure(systolic: int, diastolic: int) -> str:
-        if systolic < 120 and diastolic < 80:
-            return "Dentro del rango normal"
-        if systolic < 130 and diastolic < 80:
-            return "Levemente elevado"
-        if systolic < 140 or diastolic < 90:
-            return "Hipertensión etapa 1"
-        return "Hipertensión etapa 2"
+    _range_start_date = staticmethod(range_start_date)
+    _classify_blood_pressure = staticmethod(classify_blood_pressure)
 
     @staticmethod
     def get_report_data(db: Session, patient_id: uuid.UUID, range_key: str) -> dict | None:
