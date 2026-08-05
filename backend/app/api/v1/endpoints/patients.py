@@ -30,7 +30,9 @@ def update_patient_health(
     current_user: User = Depends(get_current_user),
 ):
     if current_user.id != patient_id:
-        raise HTTPException(status_code=403, detail="Solo puedes actualizar tu propio perfil medico")
+        raise HTTPException(
+            status_code=403, detail="Solo puedes actualizar tu propio perfil medico"
+        )
     if not PatientService.get_patient_detail(db, patient_id):
         resp = error_response(["Paciente no encontrado"], status_code=404)
         return JSONResponse(status_code=404, content=resp.model_dump())
