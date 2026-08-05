@@ -55,6 +55,38 @@ class OpenAIService:
             message=message,
         )
 
+        return await cls._call(messages)
+
+    @classmethod
+    async def get_vision_response(
+        cls,
+        *,
+        prompt: str,
+        message_text: str,
+        image_base64: str,
+        image_mime: str,
+    ) -> str:
+        """Same as get_response, but attaches an image to the user message."""
+
+        messages = [
+            {"role": "system", "content": prompt},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": message_text},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{image_mime};base64,{image_base64}"},
+                    },
+                ],
+            },
+        ]
+
+        return await cls._call(messages)
+
+    @classmethod
+    async def _call(cls, messages: list[dict[str, Any]]) -> str:
+
         headers = {
             "Authorization": f"Bearer {os.getenv('BLACKBOX_API_KEY')}",
             "Content-Type": "application/json",
@@ -66,8 +98,6 @@ class OpenAIService:
             "stream": False,
         }
 
-        print(payload)
-
         try:
 
             async with httpx.AsyncClient(timeout=60) as client:
@@ -76,11 +106,6 @@ class OpenAIService:
                     headers=headers,
                     json=payload,
                 )
-
-            # <-- AGREGAR ESTO
-            print("Status:", response.status_code)
-            print("Respuesta de Blackbox:")
-            print(response.text)
 
             response.raise_for_status()
 

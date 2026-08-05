@@ -43,3 +43,9 @@ def require_nutritionist_or_admin(current_user: User = Depends(get_current_user)
     if not (UserService.is_admin(current_user) or current_user.role == UserRole.nutritionist):
         raise HTTPException(status_code=403, detail="Se requiere rol admin o nutricionista")
     return current_user
+
+
+def require_patient(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != UserRole.patient:
+        raise HTTPException(status_code=403, detail="Se requiere rol paciente")
+    return current_user

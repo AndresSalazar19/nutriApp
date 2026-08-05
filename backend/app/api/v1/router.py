@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     content,
     educational_content,
     food_item,
+    nutrition_plan,
     nutritionist,
     patient_nutritionist,
     patients,
@@ -25,6 +26,7 @@ router.include_router(catalog.router)
 router.include_router(nutritionist.router)
 router.include_router(appointment.router)
 router.include_router(patients.router)
+router.include_router(nutrition_plan.router)
 router.include_router(report.router)
 router.include_router(content.router)
 router.include_router(weight_log.router)
