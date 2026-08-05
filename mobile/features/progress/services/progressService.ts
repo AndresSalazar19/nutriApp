@@ -46,6 +46,13 @@ export interface WeightPayload {
   notes?: string;
 }
 
+export interface DailyTrackingSummary {
+  log_date: string;
+  hydration_ml: number;
+  consumed_calories: number;
+  burned_calories: number;
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = (await tokenStorage.get()) ?? '';
   const response = await fetch(`${API}${endpoint}`, {
@@ -97,6 +104,29 @@ export const ProgressService = {
     return request<BloodPressureLog>('/blood-pressure-log', {
       method: 'POST',
       body: JSON.stringify(payload),
+    });
+  },
+
+  getDailySummary(userId: string, logDate: string): Promise<DailyTrackingSummary> {
+    return request<DailyTrackingSummary>(`/daily-tracking/${userId}/summary?log_date=${logDate}`);
+  },
+
+  createHydrationLog(userId: string, amountMl: number, logDate: string): Promise<unknown> {
+    return request('/daily-tracking/hydration', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, amount_ml: amountMl, log_date: logDate }),
+    });
+  },
+
+  createCalorieLog(
+    userId: string,
+    calories: number,
+    logDate: string,
+    kind: 'consumed' | 'burned'
+  ): Promise<unknown> {
+    return request(`/daily-tracking/calories-${kind}`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, calories, log_date: logDate }),
     });
   },
 };

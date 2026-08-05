@@ -2,6 +2,7 @@ from sqlalchemy import inspect, text
 
 from app.db.base import Base, engine
 from app.db.models.blood_pressure_log import BloodPressureLog
+from app.db.models.daily_tracking import DailyTrackingLog
 from app.db.models.food import Food
 from app.db.models.nutrition_plan import NutritionPlan
 from app.db.models.nutrition_plan_meal import NutritionPlanMeal
@@ -15,6 +16,7 @@ Base.metadata.create_all(
         PatientProfile.__table__,
         PatientHistory.__table__,
         BloodPressureLog.__table__,
+        DailyTrackingLog.__table__,
         PatientReport.__table__,
         Food.__table__,
         NutritionPlan.__table__,
@@ -163,6 +165,6 @@ ensure_nutrition_plan_columns()
 seed_foods_from_food_items()
 
 print(
-    "Tablas patient_profiles, patient_history, blood_pressure_logs, patient_reports, "
+    "Tablas patient_profiles, patient_history, blood_pressure_logs, daily_tracking_logs, patient_reports, "
     "foods, nutrition_plans y nutrition_plan_meals listas"
 )
