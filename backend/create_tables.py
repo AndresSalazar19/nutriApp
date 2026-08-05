@@ -3,6 +3,8 @@ from sqlalchemy import inspect, text
 from app.db.base import Base, engine
 from app.db.models.blood_pressure_log import BloodPressureLog
 from app.db.models.patient import PatientHistory, PatientProfile
+from app.db.models.report import PatientReport
+from app.db.models.user import Person, User
 
 Base.metadata.create_all(
     bind=engine,
@@ -10,6 +12,7 @@ Base.metadata.create_all(
         PatientProfile.__table__,
         PatientHistory.__table__,
         BloodPressureLog.__table__,
+        PatientReport.__table__,
     ],
 )
 
@@ -52,4 +55,4 @@ def ensure_blood_pressure_columns():
 
 ensure_blood_pressure_columns()
 
-print("Tablas patient_profiles, patient_history y blood_pressure_logs listas")
+print("Tablas patient_profiles, patient_history, blood_pressure_logs y patient_reports listas")
