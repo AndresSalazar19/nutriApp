@@ -51,9 +51,7 @@ def get_report_data(
         AppointmentSummary.model_validate(a).model_dump(mode="json") for a in data["appointments"]
     ]
 
-    resp = success_response(
-        data=PatientReportDataResponse(**data).model_dump(mode="json")
-    )
+    resp = success_response(data=PatientReportDataResponse(**data).model_dump(mode="json"))
     return JSONResponse(status_code=200, content=resp.model_dump())
 
 

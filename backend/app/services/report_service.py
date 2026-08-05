@@ -102,9 +102,7 @@ class ReportService:
                 if latest_bp
                 else None
             ),
-            "systolic_history": [
-                {"date": log.log_date, "value": log.systolic} for log in bp_logs
-            ],
+            "systolic_history": [{"date": log.log_date, "value": log.systolic} for log in bp_logs],
             "diastolic_history": [
                 {"date": log.log_date, "value": log.diastolic} for log in bp_logs
             ],

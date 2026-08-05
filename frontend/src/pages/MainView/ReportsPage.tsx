@@ -21,7 +21,13 @@ const RANGE_TO_KEY: Record<RangeOption, RangeKey> = {
   'Último año': '1y',
 };
 
-const AVATAR_COLORS = ['bg-green-500', 'bg-blue-500', 'bg-orange-400', 'bg-purple-500', 'bg-teal-500'];
+const AVATAR_COLORS = [
+  'bg-green-500',
+  'bg-blue-500',
+  'bg-orange-400',
+  'bg-purple-500',
+  'bg-teal-500',
+];
 
 interface ReportPatientOption {
   id: string;
@@ -377,7 +383,10 @@ export default function ReportsPage() {
 
           {/* ── Charts: Weight + Blood Pressure ── */}
           <div className="grid grid-cols-2 gap-5">
-            <Section title="Evolución del Peso" subtitle="Registros de peso en el periodo seleccionado">
+            <Section
+              title="Evolución del Peso"
+              subtitle="Registros de peso en el periodo seleccionado"
+            >
               {reportLoading ? (
                 <EmptyChartMessage text="Cargando..." />
               ) : data && data.weight_history.length > 0 ? (
@@ -407,7 +416,8 @@ export default function ReportsPage() {
             <Section title="Evolución de Presión Arterial" subtitle="Sistólica y Diastólica (mmHg)">
               {reportLoading ? (
                 <EmptyChartMessage text="Cargando..." />
-              ) : data && (data.systolic_history.length > 0 || data.diastolic_history.length > 0) ? (
+              ) : data &&
+                (data.systolic_history.length > 0 || data.diastolic_history.length > 0) ? (
                 <>
                   <LineChart
                     height={120}
