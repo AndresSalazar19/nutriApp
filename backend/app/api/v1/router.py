@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     catalog,
     chats,
     content,
+    daily_tracking,
     educational_content,
     food_item,
     nutrition_plan,
@@ -29,6 +30,7 @@ router.include_router(patients.router)
 router.include_router(nutrition_plan.router)
 router.include_router(report.router)
 router.include_router(content.router)
+router.include_router(daily_tracking.router)
 router.include_router(weight_log.router)
 router.include_router(blood_pressure_log.router)
 router.include_router(educational_content.router)

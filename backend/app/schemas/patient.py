@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.user import PersonResponse
 
@@ -28,6 +28,15 @@ class PatientDetailResponse(BaseModel):
     status: str = "active"
     priority_flag: bool = False
     clinical_notes: Optional[str] = None
+    height_m: Optional[float] = None
+    weight_kg: Optional[float] = None
+    bmi: Optional[float] = None
+    systolic: Optional[int] = None
+    diastolic: Optional[int] = None
+    hypertension_diagnosed: bool = False
+    medications: list[str] = []
+    allergies: list[str] = []
+    dietary_restrictions: list[str] = []
 
     class Config:
         from_attributes = True
@@ -54,3 +63,20 @@ class FlagUpdate(BaseModel):
 
 class StatusUpdate(BaseModel):
     status: str  # "active", "inactive", "at_risk"
+
+
+class PatientHealthUpdate(BaseModel):
+    height_m: float = Field(ge=0.5, le=2.5)
+    weight_kg: float = Field(ge=20, le=500)
+    systolic: int = Field(ge=60, le=260)
+    diastolic: int = Field(ge=30, le=160)
+    hypertension_diagnosed: bool = False
+    medications: list[str] = Field(default_factory=list)
+    allergies: list[str] = Field(default_factory=list)
+    dietary_restrictions: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_pressure(self):
+        if self.diastolic >= self.systolic:
+            raise ValueError("La presion diastolica debe ser menor que la sistolica")
+        return self
