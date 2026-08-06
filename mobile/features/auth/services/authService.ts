@@ -82,6 +82,12 @@ export const AuthService = {
     });
   },
 
+  async registerAndLogin(payload: RegisterPayload): Promise<AuthUser> {
+    await this.register(payload);
+    const { user } = await this.login({ email: payload.email, password: payload.password });
+    return user;
+  },
+
   async login(payload: LoginPayload): Promise<{ user: AuthUser }> {
     const body = await request<LoginResponse>('/users/login', {
       method: 'POST',
@@ -109,6 +115,10 @@ export const AuthService = {
   },
 
   async isAuthenticated(): Promise<boolean> {
-    return !!(await AsyncStorage.getItem(USER_KEY));
+    const [storedUser, token] = await Promise.all([
+      AsyncStorage.getItem(USER_KEY),
+      tokenStorage.get(),
+    ]);
+    return !!storedUser && !!token;
   },
 };

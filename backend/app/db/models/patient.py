@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -26,6 +26,13 @@ class PatientProfile(Base):
     status = Column(SQLEnum(PatientStatus), default=PatientStatus.active, nullable=False)
     priority_flag = Column(Boolean, default=False, nullable=False)
     clinical_notes = Column(Text, nullable=True)
+    height_m = Column(Float, nullable=True)
+    hypertension_diagnosed = Column(Boolean, nullable=False, default=False)
+    systolic = Column(Integer, nullable=True)
+    diastolic = Column(Integer, nullable=True)
+    medications = Column(JSON, nullable=False, default=list)
+    allergies = Column(JSON, nullable=False, default=list)
+    dietary_restrictions = Column(JSON, nullable=False, default=list)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
