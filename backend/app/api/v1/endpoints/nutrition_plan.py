@@ -19,6 +19,14 @@ router = APIRouter(prefix="/nutrition-plans", tags=["nutrition-plans"])
 
 def _plan_to_response(plan: NutritionPlan) -> dict:
     data = NutritionPlanResponse.model_validate(plan).model_dump(mode="json")
+    data["patient"] = None
+    if plan.patient:
+        person = plan.patient.person
+        data["patient"] = {
+            "id": str(plan.patient.id),
+            "name": f"{person.first_name} {person.last_name}" if person else plan.patient.email,
+            "email": plan.patient.email,
+        }
     data["meals"] = [
         {
             "id": str(meal.id),

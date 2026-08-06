@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import UploadFile
 from sqlalchemy import or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.ai.prompts import Prompts
 from app.db.models.blood_pressure_log import BloodPressureLog
@@ -29,6 +29,15 @@ _EXTENSION_BY_CONTENT_TYPE = {
     "image/webp": ".webp",
 }
 _FOOD_CATALOG_LIMIT = 150
+
+# Avoids N+1 lazy-loading: without this, rendering a list of plans triggers a
+# separate query per plan for patient/patient.person, one per plan for its
+# meals, and one per meal for its food — dozens of extra round-trips against
+# the remote dev DB for even a handful of pending plans.
+_PLAN_EAGER_OPTIONS = (
+    joinedload(NutritionPlan.patient).joinedload(User.person),
+    selectinload(NutritionPlan.meals).joinedload(NutritionPlanMeal.food),
+)
 
 
 class NutritionPlanService:
@@ -227,6 +236,7 @@ class NutritionPlanService:
     def list_for_patient(db: Session, patient_id: uuid.UUID) -> list[NutritionPlan]:
         return (
             db.query(NutritionPlan)
+            .options(*_PLAN_EAGER_OPTIONS)
             .filter(NutritionPlan.patient_id == patient_id)
             .order_by(NutritionPlan.created_at.desc())
             .all()
@@ -234,7 +244,11 @@ class NutritionPlanService:
 
     @staticmethod
     def list_pending(db: Session, nutritionist_id: Optional[uuid.UUID]) -> list[NutritionPlan]:
-        query = db.query(NutritionPlan).filter(NutritionPlan.status == NutritionPlanStatus.pending)
+        query = (
+            db.query(NutritionPlan)
+            .options(*_PLAN_EAGER_OPTIONS)
+            .filter(NutritionPlan.status == NutritionPlanStatus.pending)
+        )
         if nutritionist_id:
             query = query.filter(
                 or_(
@@ -246,4 +260,9 @@ class NutritionPlanService:
 
     @staticmethod
     def get_detail(db: Session, plan_id: uuid.UUID) -> Optional[NutritionPlan]:
-        return db.query(NutritionPlan).filter(NutritionPlan.id == plan_id).first()
+        return (
+            db.query(NutritionPlan)
+            .options(*_PLAN_EAGER_OPTIONS)
+            .filter(NutritionPlan.id == plan_id)
+            .first()
+        )
