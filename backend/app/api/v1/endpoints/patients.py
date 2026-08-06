@@ -1,22 +1,45 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from app.core.dependencies import get_current_user
 from app.core.response import error_response, success_response
 from app.db.base import get_db
+from app.db.models.user import User
 from app.schemas.patient import (
     FlagUpdate,
     HistoryEntry,
     NotesUpdate,
     PatientDetailResponse,
+    PatientHealthUpdate,
     StatusUpdate,
 )
 from app.services.patient_service import PatientService
 
 router = APIRouter(prefix="/patients", tags=["patients"])
+
+
+@router.put("/{patient_id}/health", response_model=None)
+def update_patient_health(
+    patient_id: uuid.UUID,
+    payload: PatientHealthUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.id != patient_id:
+        raise HTTPException(
+            status_code=403, detail="Solo puedes actualizar tu propio perfil medico"
+        )
+    if not PatientService.get_patient_detail(db, patient_id):
+        resp = error_response(["Paciente no encontrado"], status_code=404)
+        return JSONResponse(status_code=404, content=resp.model_dump())
+    PatientService.update_health(db, patient_id, payload)
+    detail = PatientService.get_patient_detail(db, patient_id)
+    resp = success_response(data=PatientDetailResponse(**detail).model_dump(mode="json"))
+    return JSONResponse(status_code=200, content=resp.model_dump())
 
 
 @router.get("", response_model=None)

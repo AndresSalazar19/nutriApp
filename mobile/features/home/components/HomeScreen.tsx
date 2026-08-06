@@ -19,11 +19,17 @@ import { AppointmentsModal } from './AppointmentsModal';
 import { useContent } from '@/features/content/hooks/useContent';
 import { CATEGORY_ICON, CATEGORY_LABEL } from '@/features/content/services/contentService';
 import { AuthService, AuthUser } from '@/features/auth/services/authService';
-import { BloodPressureLog, ProgressService, WeightLog } from '@/features/progress/services/progressService';
+import {
+  BloodPressureLog,
+  DailyTrackingSummary,
+  ProgressService,
+  WeightLog,
+} from '@/features/progress/services/progressService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PatientNutritionistService } from '../services/patientNutritionistService';
 import DoctorChatScreen from '@/features/Chats/DoctorChatsSceen';
 import AIChatScreen from '@/features/Chats/AiChatsScreen';
+import { DailyMetricModal, DailyMetricMode } from './DailyMetricModal';
 
 const { width } = Dimensions.get('window');
 
@@ -84,7 +90,10 @@ function ActionCard({
 }
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
 }
 
 function formatWeight(log?: WeightLog | null) {
@@ -136,8 +145,12 @@ export default function HomeScreen() {
   const [nutritionist, setNutritionist] = useState<any | null>(null);
   const [latestWeight, setLatestWeight] = useState<WeightLog | null>(null);
   const [latestPressure, setLatestPressure] = useState<BloodPressureLog | null>(null);
+  const [dailySummary, setDailySummary] = useState<DailyTrackingSummary>({
+    log_date: todayISO(), hydration_ml: 0, consumed_calories: 0, burned_calories: 0,
+  });
   const previewItems = contentItems.slice(0, 3);
   const [bpModalVisible, setBpModalVisible] = useState(false);
+  const [metricMode, setMetricMode] = useState<DailyMetricMode | null>(null);
   const [aptModalVisible, setAptModalVisible] = useState(false);
   const [activeChat, setActiveChat] = useState<'doctor' | 'ai' | null>(null);
 
@@ -146,12 +159,13 @@ export default function HomeScreen() {
     setUser(currentUser);
     if (!currentUser?.id) return;
 
-    const [nutritionistPatient, weightHistory, pressureHistory] = await Promise.all([
+    const [nutritionistPatient, weightHistory, pressureHistory, summary] = await Promise.all([
       PatientNutritionistService
         .list({ patient_id: currentUser.id, status: 'active' })
         .catch(() => []),
       ProgressService.getWeightHistory(currentUser.id, 1).catch(() => []),
       ProgressService.getBloodPressureHistory(currentUser.id, 1).catch(() => []),
+      ProgressService.getDailySummary(currentUser.id, todayISO()).catch(() => null),
     ]);
 
     if (nutritionistPatient.length > 0) {
@@ -159,6 +173,7 @@ export default function HomeScreen() {
     }
     setLatestWeight(weightHistory[0] ?? null);
     setLatestPressure(pressureHistory[0] ?? null);
+    if (summary) setDailySummary(summary);
   }
 
   useEffect(() => {
@@ -186,6 +201,25 @@ export default function HomeScreen() {
     setLatestPressure(saved);
   }
 
+  async function handleSaveMetric(value: number) {
+    if (!user?.id || !metricMode) throw new Error('Inicia sesion para registrar tus datos.');
+    const date = todayISO();
+    if (metricMode === 'weight') {
+      const saved = await ProgressService.createWeightLog({
+        user_id: user.id, weight_kg: value, log_date: date, notes: 'Registro diario',
+      });
+      setLatestWeight(saved);
+      return;
+    }
+    if (metricMode === 'hydration') {
+      await ProgressService.createHydrationLog(user.id, value, date);
+    } else {
+      await ProgressService.createCalorieLog(user.id, value, date, metricMode);
+    }
+    const summary = await ProgressService.getDailySummary(user.id, date);
+    setDailySummary(summary);
+  }
+
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={styles.header}>
@@ -204,9 +238,9 @@ export default function HomeScreen() {
           <View style={styles.statDivider} />
           <StatCard icon="heart-pulse" value={formatPressure(latestPressure)} unit="mmHg" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard icon="water" value="0" unit="L hoy" iconColor={COLORS.primaryMedium} />
+          <StatCard icon="water" value={(dailySummary.hydration_ml / 1000).toFixed(2)} unit="L hoy" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard icon="fire" value="0" unit="kcal" iconColor={COLORS.primaryMedium} />
+          <StatCard icon="food-apple" value={String(dailySummary.consumed_calories)} unit="kcal comidas" iconColor={COLORS.primaryMedium} />
         </View>
       </View>
 
@@ -221,11 +255,39 @@ export default function HomeScreen() {
 
         <View style={styles.actionsGrid}>
           <ActionCard
+            icon="scale-bathroom"
+            title="Registrar Peso"
+            subtitle="Actualizar medicion"
+            accentColor={COLORS.primaryMedium}
+            onPress={() => setMetricMode('weight')}
+          />
+          <ActionCard
             icon="heart-pulse"
             title="Registrar Presión"
             subtitle="Registrar medición"
             accentColor={COLORS.primary}
             onPress={() => setBpModalVisible(true)}
+          />
+          <ActionCard
+            icon="water"
+            title="Hidratacion"
+            subtitle={`${dailySummary.hydration_ml} ml hoy`}
+            accentColor={COLORS.primaryMedium}
+            onPress={() => setMetricMode('hydration')}
+          />
+          <ActionCard
+            icon="food-apple"
+            title="Registrar Comida"
+            subtitle={`${dailySummary.consumed_calories} kcal hoy`}
+            accentColor={COLORS.primary}
+            onPress={() => setMetricMode('consumed')}
+          />
+          <ActionCard
+            icon="run"
+            title="Registrar Actividad"
+            subtitle={`${dailySummary.burned_calories} kcal quemadas`}
+            accentColor={COLORS.primaryMedium}
+            onPress={() => setMetricMode('burned')}
           />
           <ActionCard
             icon="calendar-month"
@@ -295,6 +357,12 @@ export default function HomeScreen() {
         visible={bpModalVisible}
         onClose={() => setBpModalVisible(false)}
         onSave={handleSavePressure}
+      />
+      <DailyMetricModal
+        visible={metricMode !== null}
+        mode={metricMode ?? 'weight'}
+        onClose={() => setMetricMode(null)}
+        onSave={handleSaveMetric}
       />
       <AppointmentsModal visible={aptModalVisible} onClose={() => setAptModalVisible(false)} />
 

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, aliased
 from app.db.models.patient import PatientHistory, PatientProfile, PatientStatus
 from app.db.models.patient_nutritionist import PatientNutritionist
 from app.db.models.user import Person, User, UserRole
+from app.db.models.weight_log import WeightLog
 
 
 class PatientService:
@@ -131,6 +132,14 @@ class PatientService:
             return None
 
         profile = db.query(PatientProfile).filter(PatientProfile.user_id == user_id).first()
+        latest_weight = (
+            db.query(WeightLog)
+            .filter(WeightLog.user_id == user_id)
+            .order_by(WeightLog.log_date.desc(), WeightLog.created_at.desc())
+            .first()
+        )
+        weight = float(latest_weight.weight_kg) if latest_weight else None
+        height = profile.height_m if profile else None
 
         return {
             "user_id": str(user.id),
@@ -139,7 +148,30 @@ class PatientService:
             "status": profile.status if profile else "active",
             "priority_flag": profile.priority_flag if profile else False,
             "clinical_notes": profile.clinical_notes if profile else None,
+            "height_m": height,
+            "weight_kg": weight,
+            "bmi": round(weight / (height * height), 2) if weight and height else None,
+            "systolic": profile.systolic if profile else None,
+            "diastolic": profile.diastolic if profile else None,
+            "hypertension_diagnosed": profile.hypertension_diagnosed if profile else False,
+            "medications": profile.medications if profile else [],
+            "allergies": profile.allergies if profile else [],
+            "dietary_restrictions": profile.dietary_restrictions if profile else [],
         }
+
+    @staticmethod
+    def update_health(db: Session, user_id: uuid.UUID, data):
+        profile = PatientService._get_or_create_profile(db, user_id)
+        profile.height_m = data.height_m
+        profile.systolic = data.systolic
+        profile.diastolic = data.diastolic
+        profile.hypertension_diagnosed = data.hypertension_diagnosed
+        profile.medications = data.medications
+        profile.allergies = data.allergies
+        profile.dietary_restrictions = data.dietary_restrictions
+        db.commit()
+        db.refresh(profile)
+        return profile
 
     @staticmethod
     def get_history(db: Session, user_id: uuid.UUID):

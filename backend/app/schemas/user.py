@@ -3,7 +3,7 @@ from datetime import date
 
 from pydantic import BaseModel, EmailStr
 
-from app.db.models.user import UserRole
+from app.core.enums import UserRole
 
 
 class UserCreate(BaseModel):
