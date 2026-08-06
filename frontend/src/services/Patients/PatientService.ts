@@ -77,4 +77,34 @@ export const PatientService = {
     });
     return handleResponse<PatientDetail>(res);
   },
+
+  async updateNotes(patientId: string, clinicalNotes: string): Promise<{ message: string }> {
+    const res = await fetch(`${API_URL}/patients/${patientId}/notes`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ clinical_notes: clinicalNotes }),
+    });
+    return handleResponse(res);
+  },
+
+  async updateFlag(patientId: string, priorityFlag: boolean): Promise<{ message: string }> {
+    const res = await fetch(`${API_URL}/patients/${patientId}/flag`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ priority_flag: priorityFlag }),
+    });
+    return handleResponse(res);
+  },
+
+  async updateStatus(
+    patientId: string,
+    status: 'active' | 'inactive' | 'at_risk',
+  ): Promise<{ message: string }> {
+    const res = await fetch(`${API_URL}/patients/${patientId}/status`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    return handleResponse(res);
+  },
 };

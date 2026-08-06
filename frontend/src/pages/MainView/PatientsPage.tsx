@@ -62,11 +62,6 @@ function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient
         />
       </td>
 
-      {/* Plan */}
-      <td className="py-3.5 px-4">
-        <Badge variant={patient.plan === 'Premium' ? 'premium' : 'basic'} label={patient.plan} />
-      </td>
-
       {/* Adherencia */}
       <td className="py-3.5 px-4">
         <div className="flex items-center gap-2">
@@ -298,7 +293,6 @@ export default function PatientsPage() {
                     {[
                       'Paciente',
                       'Estado',
-                      'Plan',
                       'Adherencia',
                       'Última Consulta',
                       'Próxima Cita',
@@ -313,7 +307,7 @@ export default function PatientsPage() {
                 <tbody>
                   {paginated.length === 0 ? (
                     <tr>
-                      <td colSpan={7}>
+                      <td colSpan={6}>
                         <EmptyState
                           icon={<MdSearch className="w-12 h-12" />}
                           title="Sin resultados"
