@@ -1,6 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS } from '@/constants/colors';
-import { MealType, NutritionPlan, NutritionPlanMeal, NutritionPlanStatus } from '../services/nutritionPlanService';
+import { MealType, NutritionPlan, NutritionPlanMeal } from '../services/nutritionPlanService';
 
 export interface MealTypeConfig {
   label: string;
@@ -16,34 +15,6 @@ export const MEAL_TYPE_CONFIG: Record<MealType, MealTypeConfig> = {
   lunch: { label: 'Almuerzo', icon: 'white-balance-sunny', time: 'Mediodía' },
   snack: { label: 'Merienda', icon: 'coffee-outline', time: 'Tarde' },
   dinner: { label: 'Cena', icon: 'weather-night', time: 'Noche' },
-};
-
-export interface StatusConfig {
-  label: string;
-  color: string;
-  bg: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-}
-
-export const STATUS_CONFIG: Record<NutritionPlanStatus, StatusConfig> = {
-  pending: {
-    label: 'En revisión',
-    color: COLORS.warning,
-    bg: COLORS.warningLight,
-    icon: 'clock-outline',
-  },
-  approved: {
-    label: 'Aprobado',
-    color: COLORS.success,
-    bg: COLORS.primaryLight,
-    icon: 'check-decagram',
-  },
-  rejected: {
-    label: 'Rechazado',
-    color: COLORS.error,
-    bg: COLORS.errorLight,
-    icon: 'close-circle-outline',
-  },
 };
 
 const DAY_LABELS_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -108,11 +79,11 @@ export function formatDateRange(startDate: string | null, endDate: string | null
   if (!startDate || !endDate) return '';
   const start = parseISODate(startDate);
   const end = parseISODate(endDate);
-  const sameMonth = start.getMonth() === end.getMonth();
-  const startLabel = `${start.getDate()}`;
-  const endLabel = sameMonth
-    ? `${end.getDate()} de ${MONTH_LABELS[end.getMonth()]}`
-    : `${end.getDate()} de ${MONTH_LABELS[end.getMonth()]}`;
+  const sameMonth = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+  const startLabel = sameMonth
+    ? `${start.getDate()}`
+    : `${start.getDate()} de ${MONTH_LABELS[start.getMonth()]}`;
+  const endLabel = `${end.getDate()} de ${MONTH_LABELS[end.getMonth()]}`;
   return `${startLabel} - ${endLabel}`;
 }
 

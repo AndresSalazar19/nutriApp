@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -23,7 +23,6 @@ import {
 import {
   MEAL_TYPE_CONFIG,
   PlanWeekDay,
-  STATUS_CONFIG,
   buildWeekDays,
   findActivePlan,
   findPendingPlan,
@@ -33,6 +32,12 @@ import {
   groupMealsByType,
   mealFoodLabel,
 } from '../utils/planHelpers';
+
+function formatSentDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('es-EC', { day: 'numeric', month: 'long' });
+}
 
 function WeekStrip({
   days,
@@ -70,44 +75,83 @@ function WeekStrip({
   );
 }
 
-function StatusBanner({ plan }: { plan: NutritionPlan }) {
-  const cfg = STATUS_CONFIG[plan.status];
+/** Shown while a generated plan is waiting on the nutritionist — deliberately doesn't
+ * reveal any meal content. Only a small thumbnail of the patient's own submitted photo
+ * (as proof the request went through) and the review status are shown. */
+function PendingStatusCard({ plan }: { plan: NutritionPlan }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const imageUrl = NutritionPlanService.imageUrl(plan.source_image_path);
+  const showImage = !!imageUrl && !imageFailed;
+  const sentLabel = formatSentDate(plan.created_at);
+
   return (
-    <View style={[styles.banner, { backgroundColor: cfg.bg, borderLeftColor: cfg.color }]}>
-      <MaterialCommunityIcons name={cfg.icon} size={20} color={cfg.color} />
-      <View style={styles.bannerBody}>
-        <Text style={[styles.bannerTitle, { color: cfg.color }]}>{plan.title || 'Plan generado por IA'}</Text>
-        {plan.status === 'pending' && (
-          <Text style={styles.bannerText}>
-            Tu nutricionista está revisando este plan. Te avisaremos cuando esté activo.
-          </Text>
+    <View style={styles.statusCard}>
+      <View style={[styles.statusIconWrap, { backgroundColor: COLORS.warningLight }]}>
+        <MaterialCommunityIcons name="clock-outline" size={24} color={COLORS.warning} />
+      </View>
+      <Text style={styles.statusTitle}>Tu plan está en revisión</Text>
+      <Text style={styles.statusText}>
+        Tu nutricionista debe revisarlo y aprobarlo antes de que puedas verlo. Te avisaremos apenas
+        esté listo.
+      </Text>
+
+      <View style={styles.statusMetaRow}>
+        {showImage ? (
+          <Image
+            source={{ uri: imageUrl! }}
+            style={styles.statusThumb}
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <View style={styles.statusThumbFallback}>
+            <MaterialCommunityIcons name="image-off-outline" size={14} color={COLORS.textMuted} />
+          </View>
         )}
-        {plan.status === 'rejected' && (
-          <Text style={styles.bannerText}>
-            {plan.rejection_reason
-              ? `No se aprobó: ${plan.rejection_reason}`
-              : 'Este plan no fue aprobado por tu nutricionista.'}
-          </Text>
-        )}
+        <Text style={styles.statusMetaText}>
+          {sentLabel ? `Enviado el ${sentLabel}` : 'Enviado'} · foto recibida
+        </Text>
       </View>
     </View>
   );
 }
 
-function PantryPhotoCard({ plan }: { plan: NutritionPlan }) {
+function RejectedStatusCard({ plan }: { plan: NutritionPlan }) {
+  return (
+    <View style={styles.statusCard}>
+      <View style={[styles.statusIconWrap, { backgroundColor: COLORS.errorLight }]}>
+        <MaterialCommunityIcons name="close-circle-outline" size={24} color={COLORS.error} />
+      </View>
+      <Text style={styles.statusTitle}>Tu último plan no fue aprobado</Text>
+      <Text style={styles.statusText}>
+        {plan.rejection_reason || 'Tu nutricionista no aprobó este plan. Puedes generar uno nuevo.'}
+      </Text>
+    </View>
+  );
+}
+
+function PantryPhotoDetail({ plan }: { plan: NutritionPlan }) {
   const [showNote, setShowNote] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const imageUrl = NutritionPlanService.imageUrl(plan.source_image_path);
+  const showImage = !!imageUrl && !imageFailed;
 
   return (
-    <View style={styles.pantryCard}>
-      {imageUrl && <Image source={{ uri: imageUrl }} style={styles.pantryImage} resizeMode="cover" />}
-      <View style={styles.pantryBody}>
-        <View style={styles.pantryHeaderRow}>
-          <MaterialCommunityIcons name="robot-outline" size={16} color={COLORS.primaryMedium} />
-          <Text style={styles.pantryTitle}>Generado por IA a partir de tu despensa</Text>
+    <View style={styles.pantryDetail}>
+      {showImage ? (
+        <Image
+          source={{ uri: imageUrl! }}
+          style={styles.pantryImage}
+          resizeMode="cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <View style={styles.pantryImageFallback}>
+          <MaterialCommunityIcons name="image-off-outline" size={20} color={COLORS.textMuted} />
+          <Text style={styles.pantryImageFallbackText}>Foto no disponible</Text>
         </View>
+      )}
+      <View style={styles.pantryBody}>
         {!!plan.description && <Text style={styles.pantryDescription}>{plan.description}</Text>}
-
         {!!plan.patient_notes && (
           <TouchableOpacity onPress={() => setShowNote(v => !v)} activeOpacity={0.7}>
             <Text style={styles.pantryToggle}>
@@ -121,6 +165,30 @@ function PantryPhotoCard({ plan }: { plan: NutritionPlan }) {
           <Text style={styles.pantryNote}>&ldquo;{plan.patient_notes}&rdquo;</Text>
         )}
       </View>
+    </View>
+  );
+}
+
+/** Collapsed by default so the day's meals — the thing patients actually check daily —
+ * lead the screen; the generation details are a step away, not competing for space. */
+function PlanInfoDisclosure({ plan }: { plan: NutritionPlan }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={styles.disclosure}>
+      <TouchableOpacity
+        style={styles.disclosureHeader}
+        activeOpacity={0.7}
+        onPress={() => setOpen(v => !v)}
+      >
+        <MaterialCommunityIcons name="robot-outline" size={16} color={COLORS.primaryMedium} />
+        <Text style={styles.disclosureTitle}>Generado por IA a partir de tu despensa</Text>
+        <MaterialCommunityIcons
+          name={open ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color={COLORS.textMuted}
+        />
+      </TouchableOpacity>
+      {open && <PantryPhotoDetail plan={plan} />}
     </View>
   );
 }
@@ -161,6 +229,15 @@ function MealCard({ type, meals }: { type: keyof typeof MEAL_TYPE_CONFIG; meals:
   );
 }
 
+function NoMealsCard() {
+  return (
+    <View style={styles.noMealsCard}>
+      <MaterialCommunityIcons name="silverware-clean" size={22} color={COLORS.textMuted} />
+      <Text style={styles.noMealsText}>No hay comidas registradas para este día.</Text>
+    </View>
+  );
+}
+
 function EmptyState({ onGenerate }: { onGenerate: () => void }) {
   return (
     <View style={styles.emptyState}>
@@ -186,7 +263,8 @@ export default function MealsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selectedDay, setSelectedDay] = useState(0);
+  // null = "follow today's date automatically"; a number locks to the day the patient tapped.
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const hasLoadedRef = useRef(false);
 
@@ -224,33 +302,39 @@ export default function MealsScreen() {
   const activePlan = findActivePlan(plans);
   const pendingPlan = findPendingPlan(plans);
   const latestPlan = plans[0] ?? null;
-  const showRejectedBanner = !activePlan && !pendingPlan && latestPlan?.status === 'rejected';
+  const showRejectedCard = !activePlan && !pendingPlan && latestPlan?.status === 'rejected';
+  const hasNothingToShow = plans.length === 0;
+
+  // Re-follow today's date whenever the active plan changes (e.g. a new one got approved).
+  useEffect(() => {
+    setSelectedDay(null);
+  }, [activePlan?.id]);
 
   const weekDays = activePlan ? buildWeekDays(activePlan.start_date, activePlan.end_date) : [];
-  const today = weekDays.findIndex(d => d.isToday);
-  const dayIndex = Math.min(selectedDay, Math.max(weekDays.length - 1, 0));
-  const selectedWeekDay = weekDays[dayIndex] ?? weekDays[Math.max(today, 0)];
+  const todayIndex = weekDays.findIndex(d => d.isToday);
+  const dayIndex =
+    selectedDay != null
+      ? Math.min(selectedDay, Math.max(weekDays.length - 1, 0))
+      : Math.max(todayIndex, 0);
+  const selectedWeekDay = weekDays[dayIndex];
   const mealGroups =
     activePlan && selectedWeekDay
       ? groupMealsByType(activePlan.meals, selectedWeekDay.isoWeekday)
       : [];
 
+  const headerSubtitle = activePlan
+    ? `Semana del ${formatDateRange(activePlan.start_date, activePlan.end_date)}`
+    : pendingPlan
+    ? 'Tu plan está en revisión'
+    : showRejectedCard
+    ? 'Tu último plan no fue aprobado'
+    : 'Generado por IA, revisado por tu nutricionista';
+
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>Mi Plan Alimenticio</Text>
-            <Text style={styles.headerSub}>
-              {activePlan
-                ? `Semana del ${formatDateRange(activePlan.start_date, activePlan.end_date)}`
-                : 'Generado por IA, revisado por tu nutricionista'}
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8} onPress={() => setModalVisible(true)}>
-            <MaterialCommunityIcons name="calendar-plus" size={22} color={COLORS.textOnPrimary} />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.headerTitle}>Mi Plan Alimenticio</Text>
+        <Text style={styles.headerSub}>{headerSubtitle}</Text>
 
         {activePlan && weekDays.length > 0 && (
           <WeekStrip days={weekDays} selectedIndex={dayIndex} onSelect={setSelectedDay} />
@@ -275,38 +359,35 @@ export default function MealsScreen() {
               <Text style={styles.retryBtnText}>Reintentar</Text>
             </TouchableOpacity>
           </View>
+        ) : hasNothingToShow ? (
+          <EmptyState onGenerate={() => setModalVisible(true)} />
         ) : (
           <>
-            {pendingPlan && <StatusBanner plan={pendingPlan} />}
-            {showRejectedBanner && latestPlan && <StatusBanner plan={latestPlan} />}
+            {pendingPlan && <PendingStatusCard plan={pendingPlan} />}
+            {showRejectedCard && latestPlan && <RejectedStatusCard plan={latestPlan} />}
 
-            {activePlan ? (
+            {activePlan && (
               <>
-                <PantryPhotoCard plan={activePlan} />
+                {pendingPlan && <Text style={styles.sectionLabel}>Tu plan activo</Text>}
 
                 {selectedWeekDay && (
                   <Text style={styles.dayHeading}>{formatFullDate(selectedWeekDay.date)}</Text>
                 )}
 
-                {mealGroups.length > 0 ? (
-                  mealGroups.map(group => (
-                    <MealCard key={group.type} type={group.type} meals={group.meals} />
-                  ))
-                ) : (
-                  <View style={styles.noMealsCard}>
-                    <MaterialCommunityIcons name="silverware-clean" size={22} color={COLORS.textMuted} />
-                    <Text style={styles.noMealsText}>No hay comidas registradas para este día.</Text>
-                  </View>
-                )}
+                {mealGroups.length > 0
+                  ? mealGroups.map(group => (
+                      <MealCard key={group.type} type={group.type} meals={group.meals} />
+                    ))
+                  : <NoMealsCard />}
 
-                <TouchableOpacity style={styles.generateBtn} activeOpacity={0.85} onPress={() => setModalVisible(true)}>
-                  <MaterialCommunityIcons name="creation" size={20} color={COLORS.textOnPrimary} />
-                  <Text style={styles.generateBtnText}>Generar nuevo plan semanal</Text>
-                </TouchableOpacity>
+                <PlanInfoDisclosure plan={activePlan} />
               </>
-            ) : (
-              <EmptyState onGenerate={() => setModalVisible(true)} />
             )}
+
+            <TouchableOpacity style={styles.generateBtn} activeOpacity={0.85} onPress={() => setModalVisible(true)}>
+              <MaterialCommunityIcons name="creation" size={20} color={COLORS.textOnPrimary} />
+              <Text style={styles.generateBtnText}>Generar nuevo plan semanal</Text>
+            </TouchableOpacity>
           </>
         )}
 
@@ -332,31 +413,16 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingTop: 12,
     paddingBottom: 16,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 18,
-    gap: 12,
   },
   headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.textOnPrimary },
-  headerSub: { fontSize: 12, color: COLORS.overlayMedium, marginTop: 2 },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.overlay,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  headerSub: { fontSize: 12, color: COLORS.overlayMedium, marginTop: 2, marginBottom: 16 },
 
   // ── Week strip ──
   weekStrip: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    marginHorizontal: -4,
     gap: 4,
   },
   dayCell: {
@@ -422,45 +488,73 @@ const styles = StyleSheet.create({
   },
   retryBtnText: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
 
-  // ── Status banner ──
-  banner: {
-    flexDirection: 'row',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 14,
-    borderLeftWidth: 4,
-    gap: 10,
-  },
-  bannerBody: { flex: 1 },
-  bannerTitle: { fontSize: 13, fontWeight: '700', marginBottom: 3 },
-  bannerText: { fontSize: 12.5, color: COLORS.textSecondary, lineHeight: 18 },
-
-  // ── Pantry photo card ──
-  pantryCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: 'hidden',
-  },
-  pantryImage: {
-    width: '100%',
-    height: 160,
-  },
-  pantryBody: { padding: 14 },
-  pantryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  pantryTitle: { fontSize: 12, fontWeight: '700', color: COLORS.primaryMedium },
-  pantryDescription: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 19, marginBottom: 6 },
-  pantryToggle: { fontSize: 12, fontWeight: '600', color: COLORS.primary },
-  pantryNote: { fontSize: 12.5, color: COLORS.textMuted, fontStyle: 'italic', marginTop: 6, lineHeight: 18 },
-
-  dayHeading: {
-    fontSize: 14,
+  sectionLabel: {
+    fontSize: 13,
     fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 10,
-    textTransform: 'capitalize',
+  },
+
+  // ── Pending / rejected status card ──
+  statusCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  statusIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  statusTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  statusText: {
+    fontSize: 12.5,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  statusMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 14,
+  },
+  statusThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+  },
+  statusThumbFallback: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: COLORS.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusMetaText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+
+  dayHeading: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 12,
   },
 
   noMealsCard: {
@@ -551,6 +645,52 @@ const styles = StyleSheet.create({
     marginTop: 2,
     lineHeight: 16,
   },
+
+  // ── Plan info disclosure (collapsed AI/pantry details) ──
+  disclosure: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  disclosureHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 14,
+  },
+  disclosureTitle: {
+    flex: 1,
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  pantryDetail: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.divider,
+  },
+  pantryImage: {
+    width: '100%',
+    height: 150,
+  },
+  pantryImageFallback: {
+    width: '100%',
+    height: 90,
+    backgroundColor: COLORS.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  pantryImageFallbackText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+  pantryBody: { padding: 14 },
+  pantryDescription: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 19, marginBottom: 6 },
+  pantryToggle: { fontSize: 12, fontWeight: '600', color: COLORS.primary },
+  pantryNote: { fontSize: 12.5, color: COLORS.textMuted, fontStyle: 'italic', marginTop: 6, lineHeight: 18 },
 
   // ── Empty state ──
   emptyState: {

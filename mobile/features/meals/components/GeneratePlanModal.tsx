@@ -182,7 +182,7 @@ export function GeneratePlanModal({ visible, onClose, onGenerated }: GeneratePla
               <View style={styles.notesWrap}>
                 <TextInput
                   style={styles.notesInput}
-                  placeholder="Ej: Tengo pollo, arroz integral, lentejas, tomate, plátano verde... Mi presión hoy fue 122/80"
+                  placeholder="Ej: Tengo pollo, arroz integral, lentejas, tomate, plátano verde..."
                   placeholderTextColor={COLORS.placeholder}
                   multiline
                   numberOfLines={4}
@@ -191,14 +191,6 @@ export function GeneratePlanModal({ visible, onClose, onGenerated }: GeneratePla
                   onChangeText={setNote}
                   editable={!submitting}
                 />
-              </View>
-
-              <View style={styles.infoCard}>
-                <MaterialCommunityIcons name="information-outline" size={18} color={COLORS.primaryMedium} />
-                <Text style={styles.infoText}>
-                  Si mencionas una lectura de presión arterial (ej. &ldquo;128/82&rdquo;), la IA puede detectarla y
-                  guardarla automáticamente en tu historial.
-                </Text>
               </View>
             </ScrollView>
 
@@ -344,20 +336,6 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     paddingVertical: 12,
     minHeight: 96,
-  },
-  infoCard: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
-    padding: 12,
-    gap: 8,
-    marginBottom: 8,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    lineHeight: 17,
   },
   footer: {
     flexDirection: 'row',
