@@ -15,12 +15,24 @@ import {
 } from '../../services/NutritionPlans/NutritionPlanService';
 import {
   formatDate,
+  formatMacro,
   formatQuantity,
   groupMealsByDay,
   initialsFromName,
   mealFoodLabel,
   MEAL_TYPE_LABELS,
 } from './planReviewHelpers';
+
+// ─── Nutrition summary ──────────────────────────────────────────────────────
+
+function MacroStat({ label, value, unit }: { label: string; value: number | null; unit: string }) {
+  return (
+    <div className="text-center">
+      <p className="text-sm font-bold text-gray-800">{formatMacro(value, unit)}</p>
+      <p className="text-[11px] text-gray-400">{label}</p>
+    </div>
+  );
+}
 
 // ─── Plan card ──────────────────────────────────────────────────────────────
 
@@ -46,6 +58,11 @@ function PlanCard({
             <span className="text-xs text-gray-400">
               {formatDate(plan.start_date)} - {formatDate(plan.end_date)}
             </span>
+            {plan.nutrition_summary.daily_average.calories != null && (
+              <span className="text-xs text-gray-400">
+                · ~{formatMacro(plan.nutrition_summary.daily_average.calories, '')} kcal/día
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -146,14 +163,56 @@ function ReviewModal({
           </div>
         )}
 
+        {/* Nutrition summary */}
+        {dayGroups.length > 0 && (
+          <div className="bg-nutri-light/20 border border-nutri-light rounded-lg p-3 mb-4">
+            <p className="text-xs font-semibold text-nutri-dark uppercase mb-2">
+              Promedio diario del plan
+            </p>
+            <div className="grid grid-cols-5 gap-2">
+              <MacroStat label="Kcal" value={plan.nutrition_summary.daily_average.calories} unit="" />
+              <MacroStat
+                label="Proteína"
+                value={plan.nutrition_summary.daily_average.protein_g}
+                unit="g"
+              />
+              <MacroStat label="Carbos" value={plan.nutrition_summary.daily_average.carbs_g} unit="g" />
+              <MacroStat label="Grasa" value={plan.nutrition_summary.daily_average.fat_g} unit="g" />
+              <MacroStat
+                label="Sodio"
+                value={plan.nutrition_summary.daily_average.sodium_mg}
+                unit="mg"
+              />
+            </div>
+            {plan.nutrition_summary.meals_missing_macro_data > 0 && (
+              <p className="text-[11px] text-gray-400 mt-2">
+                {plan.nutrition_summary.meals_missing_macro_data} comida
+                {plan.nutrition_summary.meals_missing_macro_data !== 1 ? 's' : ''} sin datos
+                nutricionales (alimento personalizado, no del catálogo) — no se incluyen en este
+                promedio.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Meals by day */}
         <div className="space-y-4">
           {dayGroups.length === 0 && (
             <p className="text-sm text-gray-400">Este plan no tiene comidas registradas.</p>
           )}
-          {dayGroups.map((group) => (
+          {dayGroups.map((group) => {
+            const dayTotals = plan.nutrition_summary.by_day[String(group.day)];
+            return (
             <div key={group.day}>
-              <h4 className="text-sm font-bold text-gray-800 mb-2">{group.label}</h4>
+              <div className="flex items-baseline justify-between mb-2">
+                <h4 className="text-sm font-bold text-gray-800">{group.label}</h4>
+                {dayTotals && (
+                  <span className="text-xs text-gray-400">
+                    {formatMacro(dayTotals.calories, '')} kcal · P {formatMacro(dayTotals.protein_g, 'g')} ·
+                    {' '}C {formatMacro(dayTotals.carbs_g, 'g')} · G {formatMacro(dayTotals.fat_g, 'g')}
+                  </span>
+                )}
+              </div>
               <div className="space-y-1.5">
                 {group.meals.map((meal) => (
                   <div
@@ -178,7 +237,8 @@ function ReviewModal({
                 ))}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Reject reason form */}

@@ -6,6 +6,14 @@ export const API_ORIGIN = API_URL.replace(/\/api\/v1\/?$/, '');
 export type NutritionPlanStatus = 'pending' | 'approved' | 'rejected';
 export type MealType = 'breakfast' | 'lunch' | 'snack' | 'dinner';
 
+export interface MealMacros {
+  calories: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+  sodium_mg: number | null;
+}
+
 export interface NutritionPlanMeal {
   id: string;
   day_of_week: number; // 1-7, Monday-Sunday
@@ -15,6 +23,14 @@ export interface NutritionPlanMeal {
   custom_food: string | null;
   quantity_g: number | null;
   instructions: string | null;
+  /** Scaled from the food's per-100g composition by quantity_g; null when the meal has no catalog food. */
+  macros: MealMacros | null;
+}
+
+export interface NutritionSummary {
+  daily_average: MealMacros;
+  by_day: Record<string, MealMacros>;
+  meals_missing_macro_data: number;
 }
 
 export interface NutritionPlanPatient {
@@ -42,6 +58,7 @@ export interface NutritionPlanResponse {
   created_at: string;
   meals: NutritionPlanMeal[];
   patient: NutritionPlanPatient | null;
+  nutrition_summary: NutritionSummary;
 }
 
 function authHeaders() {

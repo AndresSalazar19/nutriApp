@@ -52,6 +52,11 @@ export function formatDate(value: string | null): string {
   });
 }
 
+export function formatMacro(value: number | null, unit: string): string {
+  if (value == null) return '—';
+  return `${Math.round(value)}${unit}`;
+}
+
 export function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0].slice(0, 2);

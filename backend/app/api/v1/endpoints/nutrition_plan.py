@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
@@ -17,6 +18,57 @@ from app.services.user_service import UserService
 router = APIRouter(prefix="/nutrition-plans", tags=["nutrition-plans"])
 
 
+_MACRO_FIELDS = ("calories", "protein_g", "carbs_g", "fat_g", "sodium_mg")
+
+
+def _meal_macros(meal) -> Optional[dict]:
+    """Scales a food's per-100g composition by the meal's quantity_g.
+
+    None when the meal has no catalog food (custom_food entries) or no
+    quantity — there's nothing to compute a contribution from.
+    """
+    if meal.food is None or meal.quantity_g is None:
+        return None
+
+    factor = float(meal.quantity_g) / 100.0
+    macros = {}
+    for field in _MACRO_FIELDS:
+        value = getattr(meal.food, field)
+        macros[field] = round(float(value) * factor, 1) if value is not None else None
+    return macros
+
+
+def _plan_nutrition_summary(plan: NutritionPlan, meal_macros: list[Optional[dict]]) -> dict:
+    """Aggregates per-meal macro contributions into daily totals + a plan-wide daily average."""
+    by_day: dict[int, dict] = {}
+    missing = 0
+
+    for meal, macros in zip(plan.meals, meal_macros):
+        if macros is None:
+            missing += 1
+            continue
+        day_totals = by_day.setdefault(meal.day_of_week, {field: 0.0 for field in _MACRO_FIELDS})
+        for field in _MACRO_FIELDS:
+            value = macros[field]
+            if value is not None:
+                day_totals[field] += value
+
+    num_days = len(by_day) or 1
+    daily_average = {
+        field: round(sum(day[field] for day in by_day.values()) / num_days, 1)
+        for field in _MACRO_FIELDS
+    }
+
+    return {
+        "daily_average": daily_average,
+        "by_day": {
+            str(day): {field: round(value, 1) for field, value in totals.items()}
+            for day, totals in by_day.items()
+        },
+        "meals_missing_macro_data": missing,
+    }
+
+
 def _plan_to_response(plan: NutritionPlan) -> dict:
     data = NutritionPlanResponse.model_validate(plan).model_dump(mode="json")
     data["patient"] = None
@@ -27,6 +79,8 @@ def _plan_to_response(plan: NutritionPlan) -> dict:
             "name": f"{person.first_name} {person.last_name}" if person else plan.patient.email,
             "email": plan.patient.email,
         }
+
+    meal_macros = [_meal_macros(meal) for meal in plan.meals]
     data["meals"] = [
         {
             "id": str(meal.id),
@@ -37,9 +91,11 @@ def _plan_to_response(plan: NutritionPlan) -> dict:
             "custom_food": meal.custom_food,
             "quantity_g": float(meal.quantity_g) if meal.quantity_g is not None else None,
             "instructions": meal.instructions,
+            "macros": macros,
         }
-        for meal in plan.meals
+        for meal, macros in zip(plan.meals, meal_macros)
     ]
+    data["nutrition_summary"] = _plan_nutrition_summary(plan, meal_macros)
     return data
 
 
