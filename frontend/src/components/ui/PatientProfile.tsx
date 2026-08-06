@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MdCalendarMonth,
   MdConstruction,
@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/charts/WeightChart';
 import { Modal } from './Modal';
 import { AnthropometricForm, AnthropometricRecord } from './AnthropometricForm';
+import { PatientDetail, PatientService } from '../../services/Patients/PatientService';
 
 function bmiColor(bmi: number) {
   if (bmi < 18.5) return 'text-blue-500';
@@ -38,21 +39,21 @@ function Metric({
   label,
   value,
   sub,
-  highlight,
+  bmiValue,
 }: {
   label: string;
   value: string;
   sub?: string;
-  highlight?: boolean;
+  /** When set, colors the value by BMI range instead of the default gray. */
+  bmiValue?: number | null;
 }) {
+  const colorClass =
+    bmiValue != null && !Number.isNaN(bmiValue) ? bmiColor(bmiValue) : 'text-gray-800';
+
   return (
     <div className="bg-gray-50 rounded-xl p-4 text-center">
       <p className="text-xs text-gray-400 mb-1">{label}</p>
-      <p
-        className={`text-2xl font-bold ${highlight ? bmiColor(parseFloat(value)) : 'text-gray-800'}`}
-      >
-        {value}
-      </p>
+      <p className={`text-2xl font-bold ${colorClass}`}>{value}</p>
       {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
     </div>
   );
@@ -62,11 +63,17 @@ function Metric({
 
 function InfoTab({
   patient,
+  detail,
   onAddMeasurement,
 }: {
   patient: Patient;
+  detail: PatientDetail | null;
   onAddMeasurement: () => void;
 }) {
+  const weight = detail?.weight_kg ?? null;
+  const height = detail?.height_m ?? null;
+  const bmi = detail?.bmi ?? null;
+
   return (
     <div className="grid grid-cols-2 gap-6">
       {/* Información médica */}
@@ -140,11 +147,20 @@ function InfoTab({
         <div className="grid grid-cols-6 gap-3">
           <Metric
             label="Peso"
-            value={`${patient.weight}`}
-            sub={`${patient.weightChange > 0 ? '+' : ''}${patient.weightChange} kg`}
+            value={weight != null ? `${weight} kg` : '—'}
+            sub={weight == null ? 'Sin registro' : undefined}
           />
-          <Metric label="Estatura" value={`${patient.height.toFixed(2)}`} sub="metros" />
-          <Metric label="IMC" value={`${patient.bmi}`} sub={bmiLabel(patient.bmi)} highlight />
+          <Metric
+            label="Estatura"
+            value={height != null ? `${height.toFixed(2)} m` : '—'}
+            sub={height == null ? 'Sin registro' : undefined}
+          />
+          <Metric
+            label="IMC"
+            value={bmi != null ? `${bmi}` : '—'}
+            sub={bmi != null ? bmiLabel(bmi) : 'Faltan peso/estatura'}
+            bmiValue={bmi}
+          />
           <Metric label="Cintura" value={`${patient.waist}`} sub="cm" />
           <Metric label="Cadera" value={`${patient.hip}`} sub="cm" />
           <Metric label="% Grasa" value={`${patient.fatPercent}`} sub="%" />
@@ -210,11 +226,41 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
   const [activeTab, setActiveTab] = useState<Tab>('Información');
 
   const [showAnthropometricForm, setShowAnthropometricForm] = useState(false);
+  const [detail, setDetail] = useState<PatientDetail | null>(null);
+  const [savingMeasurement, setSavingMeasurement] = useState(false);
+  const [measurementError, setMeasurementError] = useState<string | null>(null);
 
-  const handleSaveAnthropometric = (record: AnthropometricRecord) => {
-    console.log('Medición antropométrica guardada:', record);
-    // TODO: conectar con el backend cuando el endpoint esté listo
-    setShowAnthropometricForm(false);
+  const fetchDetail = React.useCallback(() => {
+    PatientService.getDetail(patient.id)
+      .then(setDetail)
+      .catch((err) => console.error('Error cargando datos del paciente:', err));
+  }, [patient.id]);
+
+  useEffect(() => {
+    fetchDetail();
+  }, [fetchDetail]);
+
+  const handleSaveAnthropometric = async (record: AnthropometricRecord) => {
+    setSavingMeasurement(true);
+    setMeasurementError(null);
+    try {
+      const weight_kg = record.weight.trim() ? parseFloat(record.weight) : undefined;
+      const height_m = record.height.trim() ? parseFloat(record.height) : undefined;
+
+      await PatientService.updateAnthropometrics(patient.id, {
+        log_date: record.date,
+        weight_kg,
+        height_m,
+        notes: record.notes.trim() || undefined,
+      });
+
+      fetchDetail();
+      setShowAnthropometricForm(false);
+    } catch (err: any) {
+      setMeasurementError(err.message);
+    } finally {
+      setSavingMeasurement(false);
+    }
   };
 
   const statusVariant =
@@ -367,7 +413,11 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
         {/* ── Tab content ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           {activeTab === 'Información' ? (
-            <InfoTab patient={patient} onAddMeasurement={() => setShowAnthropometricForm(true)} />
+            <InfoTab
+              patient={patient}
+              detail={detail}
+              onAddMeasurement={() => setShowAnthropometricForm(true)}
+            />
           ) : (
             <PlaceholderTab label={activeTab} />
           )}
@@ -377,14 +427,22 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
       {/* Modal de registro antropométrico */}
       <Modal
         isOpen={showAnthropometricForm}
-        onClose={() => setShowAnthropometricForm(false)}
+        onClose={() => {
+          setShowAnthropometricForm(false);
+          setMeasurementError(null);
+        }}
         title="Registro de Datos Antropométricos"
         size="lg"
       >
         <AnthropometricForm
           patientName={`${patient.firstName} ${patient.lastName}`}
-          onCancel={() => setShowAnthropometricForm(false)}
+          onCancel={() => {
+            setShowAnthropometricForm(false);
+            setMeasurementError(null);
+          }}
           onSave={handleSaveAnthropometric}
+          submitting={savingMeasurement}
+          error={measurementError}
         />
       </Modal>
     </div>

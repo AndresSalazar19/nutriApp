@@ -37,6 +37,8 @@ interface AnthropometricFormProps {
   patientName: string;
   onCancel: () => void;
   onSave: (record: AnthropometricRecord) => void;
+  submitting?: boolean;
+  error?: string | null;
 }
 
 // ─── Helpers de UI (siguen el estilo del proyecto) ──────────────────────────────
@@ -89,7 +91,13 @@ function SectionTitle({ icon, children }: { icon: React.ReactNode; children: Rea
 
 // ─── Componente principal ───────────────────────────────────────────────────────
 
-export function AnthropometricForm({ patientName, onCancel, onSave }: AnthropometricFormProps) {
+export function AnthropometricForm({
+  patientName,
+  onCancel,
+  onSave,
+  submitting = false,
+  error = null,
+}: AnthropometricFormProps) {
   const today = new Date().toISOString().split('T')[0];
 
   const [date, setDate] = useState(today);
@@ -99,6 +107,7 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
   const [muscleMass, setMuscleMass] = useState('');
   const [notes, setNotes] = useState('');
   const [bioFile, setBioFile] = useState<File | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const [skinfolds, setSkinfolds] = useState<SkinfoldData>({
     triceps: '',
@@ -127,6 +136,11 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
   };
 
   const handleSubmit = () => {
+    if (!weight.trim() && !height.trim()) {
+      setValidationError('Registra al menos el peso o la estatura.');
+      return;
+    }
+    setValidationError(null);
     onSave({
       date,
       weight,
@@ -161,8 +175,11 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
       <div>
         <SectionTitle icon={<MdBiotech className="w-4 h-4" />}>
           Resultado de Bioimpedancia
+          <span className="ml-2 text-[11px] font-normal normal-case text-gray-400">
+            (próximamente — aún no se guarda)
+          </span>
         </SectionTitle>
-        <div className="bg-gray-50 rounded-xl p-4">
+        <div className="bg-gray-50 rounded-xl p-4 opacity-60 pointer-events-none">
           <label className="flex flex-col items-center justify-center gap-2 cursor-pointer py-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-green-400 transition">
             <MdAttachFile className="w-8 h-8 text-gray-400" />
             <span className="text-sm text-gray-500">
@@ -198,8 +215,13 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
 
       {/* ── Pliegues cutáneos ── */}
       <div>
-        <SectionTitle icon={<MdTune className="w-4 h-4" />}>Pliegues Cutáneos</SectionTitle>
-        <div className="grid grid-cols-3 gap-3">
+        <SectionTitle icon={<MdTune className="w-4 h-4" />}>
+          Pliegues Cutáneos
+          <span className="ml-2 text-[11px] font-normal normal-case text-gray-400">
+            (próximamente — aún no se guarda)
+          </span>
+        </SectionTitle>
+        <div className="grid grid-cols-3 gap-3 opacity-60 pointer-events-none">
           <Field
             label="Tríceps"
             value={skinfolds.triceps}
@@ -235,8 +257,13 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
 
       {/* ── Circunferencias ── */}
       <div>
-        <SectionTitle icon={<MdStraighten className="w-4 h-4" />}>Circunferencias</SectionTitle>
-        <div className="grid grid-cols-3 gap-3">
+        <SectionTitle icon={<MdStraighten className="w-4 h-4" />}>
+          Circunferencias
+          <span className="ml-2 text-[11px] font-normal normal-case text-gray-400">
+            (próximamente — aún no se guarda)
+          </span>
+        </SectionTitle>
+        <div className="grid grid-cols-3 gap-3 opacity-60 pointer-events-none">
           <Field
             label="Cintura"
             value={circumferences.waist}
@@ -289,13 +316,23 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
       </div>
 
       {/* ── Acciones ── */}
-      <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
-        <Button variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button variant="primary" icon={<MdSave className="w-4 h-4" />} onClick={handleSubmit}>
-          Guardar Medición
-        </Button>
+      <div className="border-t border-gray-100 pt-4">
+        {(validationError || error) && (
+          <p className="text-sm text-admin-accent mb-3">{validationError || error}</p>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onCancel} disabled={submitting}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            icon={<MdSave className="w-4 h-4" />}
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? 'Guardando...' : 'Guardar Medición'}
+          </Button>
+        </div>
       </div>
     </div>
   );

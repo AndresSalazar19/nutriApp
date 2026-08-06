@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from typing import Optional
 
 from sqlalchemy import or_
@@ -8,6 +9,8 @@ from app.db.models.patient import PatientHistory, PatientProfile, PatientStatus
 from app.db.models.patient_nutritionist import PatientNutritionist
 from app.db.models.user import Person, User, UserRole
 from app.db.models.weight_log import WeightLog
+from app.schemas.weight_log import WeightLogCreate
+from app.services.weight_log_service import WeightLogService
 
 
 class PatientService:
@@ -172,6 +175,46 @@ class PatientService:
         db.commit()
         db.refresh(profile)
         return profile
+
+    @staticmethod
+    def record_anthropometric_measurement(
+        db: Session,
+        user_id: uuid.UUID,
+        log_date: date,
+        weight_kg: Optional[float],
+        height_m: Optional[float],
+        notes: Optional[str],
+        recorded_by: uuid.UUID,
+    ) -> None:
+        parts = []
+
+        if weight_kg is not None:
+            WeightLogService.create(
+                db,
+                WeightLogCreate(user_id=user_id, weight_kg=weight_kg, log_date=log_date, notes=notes),
+            )
+            parts.append(f"peso {weight_kg} kg")
+
+        if height_m is not None:
+            profile = PatientService._get_or_create_profile(db, user_id)
+            profile.height_m = height_m
+            db.commit()
+            parts.append(f"estatura {height_m} m")
+
+        profile = PatientService._get_or_create_profile(db, user_id)
+        description = f"Medición registrada: {', '.join(parts)}."
+        if notes:
+            description += f" Notas: {notes}"
+
+        db.add(
+            PatientHistory(
+                patient_profile_id=profile.id,
+                entry_type="medicion",
+                description=description,
+                created_by=recorded_by,
+            )
+        )
+        db.commit()
 
     @staticmethod
     def get_history(db: Session, user_id: uuid.UUID):

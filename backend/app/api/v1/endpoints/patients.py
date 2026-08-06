@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, require_nutritionist_or_admin
 from app.core.response import error_response, success_response
 from app.db.base import get_db
 from app.db.models.user import User
@@ -13,6 +13,7 @@ from app.schemas.patient import (
     FlagUpdate,
     HistoryEntry,
     NotesUpdate,
+    PatientAnthropometricUpdate,
     PatientDetailResponse,
     PatientHealthUpdate,
     StatusUpdate,
@@ -37,6 +38,31 @@ def update_patient_health(
         resp = error_response(["Paciente no encontrado"], status_code=404)
         return JSONResponse(status_code=404, content=resp.model_dump())
     PatientService.update_health(db, patient_id, payload)
+    detail = PatientService.get_patient_detail(db, patient_id)
+    resp = success_response(data=PatientDetailResponse(**detail).model_dump(mode="json"))
+    return JSONResponse(status_code=200, content=resp.model_dump())
+
+
+@router.put("/{patient_id}/anthropometrics", response_model=None)
+def update_patient_anthropometrics(
+    patient_id: uuid.UUID,
+    payload: PatientAnthropometricUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_nutritionist_or_admin),
+):
+    if not PatientService.get_patient_detail(db, patient_id):
+        resp = error_response(["Paciente no encontrado"], status_code=404)
+        return JSONResponse(status_code=404, content=resp.model_dump())
+
+    PatientService.record_anthropometric_measurement(
+        db,
+        patient_id,
+        log_date=payload.log_date,
+        weight_kg=payload.weight_kg,
+        height_m=payload.height_m,
+        notes=payload.notes,
+        recorded_by=current_user.id,
+    )
     detail = PatientService.get_patient_detail(db, patient_id)
     resp = success_response(data=PatientDetailResponse(**detail).model_dump(mode="json"))
     return JSONResponse(status_code=200, content=resp.model_dump())

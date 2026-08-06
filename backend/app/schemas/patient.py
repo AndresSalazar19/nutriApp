@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator
@@ -63,6 +63,19 @@ class FlagUpdate(BaseModel):
 
 class StatusUpdate(BaseModel):
     status: str  # "active", "inactive", "at_risk"
+
+
+class PatientAnthropometricUpdate(BaseModel):
+    log_date: date
+    weight_kg: Optional[float] = Field(default=None, ge=20, le=500)
+    height_m: Optional[float] = Field(default=None, ge=0.5, le=2.5)
+    notes: Optional[str] = None
+
+    @model_validator(mode="after")
+    def require_at_least_one_measurement(self):
+        if self.weight_kg is None and self.height_m is None:
+            raise ValueError("Debes registrar al menos el peso o la estatura")
+        return self
 
 
 class PatientHealthUpdate(BaseModel):
