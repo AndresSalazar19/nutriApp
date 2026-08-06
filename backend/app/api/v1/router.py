@@ -7,6 +7,7 @@ from app.api.v1.endpoints import (
     blood_pressure_log,
     catalog,
     chats,
+    consent,
     content,
     daily_tracking,
     educational_content,
@@ -28,6 +29,7 @@ router.include_router(nutritionist.router)
 router.include_router(appointment.router)
 router.include_router(patients.router)
 router.include_router(nutrition_plan.router)
+router.include_router(consent.router)
 router.include_router(report.router)
 router.include_router(content.router)
 router.include_router(daily_tracking.router)

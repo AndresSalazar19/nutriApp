@@ -4,6 +4,7 @@ import { ROUTES } from './routes';
 import { PublicRoute } from '../components/auth/PublicRoute';
 import { PrivateRoute } from '../components/auth/ProtectedRoute';
 import { NutritionistStatusGuard } from './NutritionistStatusGuard';
+import { ConsentGate } from './ConsentGate';
 import { AuthProvider, useAuth, AuthUser } from '../hooks/useAuth';
 
 const LoginPage = lazy(() => import('../pages/Login/LoginPage'));
@@ -128,20 +129,22 @@ function AppRoutes() {
           }
         />
 
-        {/* ── Nutricionista (requiere rol + guard de estado) ── */}
+        {/* ── Nutricionista (requiere rol + consentimiento + guard de estado) ── */}
         <Route element={<PrivateRoute allowedRoles={['nutritionist']} />}>
-          <Route element={<NutritionistStatusGuard />}>
-            {/* pending → MainView (pantalla de verificación) */}
-            <Route path={ROUTES.DASHBOARD} element={<MainView />} />
-            {/* verified → acceso completo */}
-            <Route path={ROUTES.HOME} element={<HomePage />} />
-            <Route path={ROUTES.PATIENTS} element={<PatientsPage />} />
-            <Route path={ROUTES.NUTRITIONIST_PROFILE} element={<NutritionistProfilePage />} />
-            <Route path={ROUTES.AGENDA} element={<AgendaPage />} />
-            <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
-            <Route path={ROUTES.RESOURCES} element={<ResourcesPage />} />
-            <Route path={ROUTES.PLANS} element={<PlansPage />} />
-            <Route path={ROUTES.MESSAGES} element={<MessagesPage />} />
+          <Route element={<ConsentGate />}>
+            <Route element={<NutritionistStatusGuard />}>
+              {/* pending → MainView (pantalla de verificación) */}
+              <Route path={ROUTES.DASHBOARD} element={<MainView />} />
+              {/* verified → acceso completo */}
+              <Route path={ROUTES.HOME} element={<HomePage />} />
+              <Route path={ROUTES.PATIENTS} element={<PatientsPage />} />
+              <Route path={ROUTES.NUTRITIONIST_PROFILE} element={<NutritionistProfilePage />} />
+              <Route path={ROUTES.AGENDA} element={<AgendaPage />} />
+              <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
+              <Route path={ROUTES.RESOURCES} element={<ResourcesPage />} />
+              <Route path={ROUTES.PLANS} element={<PlansPage />} />
+              <Route path={ROUTES.MESSAGES} element={<MessagesPage />} />
+            </Route>
           </Route>
         </Route>
 
