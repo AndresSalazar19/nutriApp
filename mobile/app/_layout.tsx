@@ -1,27 +1,24 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import 'react-native-reanimated';
-import * as Notifications from "expo-notifications";
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { requestNotificationPermissions } from "@/services/notification-service";
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   useEffect(() => {
-    requestNotificationPermissions();
+    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return;
+
+    void import('@/services/notification-service').then(
+      ({ configureNotificationHandler, requestNotificationPermissions }) => {
+        configureNotificationHandler();
+        return requestNotificationPermissions();
+      }
+    );
   }, []);
 
   return (

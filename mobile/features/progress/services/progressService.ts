@@ -53,6 +53,29 @@ export interface DailyTrackingSummary {
   burned_calories: number;
 }
 
+export type ProgressPeriod = 'day' | 'week' | 'month';
+
+export interface ProgressData {
+  user_id: string;
+  period: ProgressPeriod;
+  start_date: string;
+  end_date: string;
+  weight: { current_kg: number | null; change_kg: number | null; change_percent: number | null };
+  pressure: {
+    systolic: number | null;
+    diastolic: number | null;
+    category: string | null;
+    measured_on: string | null;
+  };
+  weight_series: Array<{ date: string; label: string; value: number | null }>;
+  pressure_series: Array<{
+    date: string;
+    label: string;
+    systolic: number | null;
+    diastolic: number | null;
+  }>;
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = (await tokenStorage.get()) ?? '';
   const response = await fetch(`${API}${endpoint}`, {
@@ -85,6 +108,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const ProgressService = {
+  getProgress(userId: string, period: ProgressPeriod): Promise<ProgressData> {
+    return request<ProgressData>(`/progress/${userId}?period=${period}`);
+  },
   getWeightHistory(userId: string, limit = 30): Promise<WeightLog[]> {
     return request<WeightLog[]>(`/weight-log/${userId}?limit=${limit}`);
   },

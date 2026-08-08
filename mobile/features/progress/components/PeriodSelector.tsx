@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { COLORS } from '@/constants/colors';
 import { Spacing, Radius } from '@/constants/theme';
 
-const PERIODS = ['Semana', 'Mes', 'Año', 'Todo'] as const;
+export const PERIODS = ['Día', 'Semana', 'Mes'] as const;
 type Period = (typeof PERIODS)[number];
 
 interface PeriodSelectorProps {
