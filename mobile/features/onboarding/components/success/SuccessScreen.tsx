@@ -14,6 +14,11 @@ import { COLORS } from '@/constants/colors';
 export default function SuccessScreen() {
   const router = useRouter();
 
+  const handleStart = () => {
+    router.dismissAll();
+    router.replace('/(tabs)');
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
@@ -45,7 +50,7 @@ export default function SuccessScreen() {
 
         <TouchableOpacity
           style={styles.continueButton}
-          onPress={() => router.replace('/(tabs)')}
+          onPress={handleStart}
           activeOpacity={0.85}
         >
           <Text style={styles.continueButtonText}>Comenzar ahora</Text>
