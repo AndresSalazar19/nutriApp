@@ -48,7 +48,7 @@ export function BloodPressureModal({ visible, onClose, onSave }: BloodPressureMo
     if (isNaN(sys) || isNaN(dia)) return null;
     if (sys < 120 && dia < 80) return { label: 'Normal', color: COLORS.success };
     if (sys < 130 && dia < 80) return { label: 'Elevada', color: COLORS.warning };
-    if (sys < 140 || dia < 90) return { label: 'Hipertensión Etapa 1', color: COLORS.chartOrange };
+    if (sys < 140 && dia < 90) return { label: 'Hipertensión Etapa 1', color: COLORS.chartOrange };
     return { label: 'Hipertensión Etapa 2', color: COLORS.danger };
   }
 
