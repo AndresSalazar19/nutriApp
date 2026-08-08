@@ -90,9 +90,7 @@ class ProgressService:
         comparison_weight = (
             float(previous_weight.weight_kg)
             if previous_weight
-            else weight_values[0]
-            if len(weight_values) > 1
-            else None
+            else weight_values[0] if len(weight_values) > 1 else None
         )
         change, change_percent = weight_change(current_weight, comparison_weight)
 
