@@ -17,12 +17,7 @@ import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/charts/WeightChart';
 import { Modal } from './Modal';
 import { AnthropometricForm, AnthropometricRecord } from './AnthropometricForm';
-import {
-  AnthropometricMeasurement,
-  PatientDetail,
-  PatientService,
-} from '../../services/Patients/PatientService';
-import { WeightLogService } from '../../services/WeightLog/WeightLogService';
+import { PatientDetail, PatientService } from '../../services/Patients/PatientService';
 import { API_ORIGIN } from '../../services/NutritionPlans/NutritionPlanService';
 import { ROUTES } from '../../routes/routes';
 
@@ -72,21 +67,20 @@ function Metric({
 function InfoTab({
   patient,
   detail,
-  weightHistory,
-  latestMeasurement,
   onAddMeasurement,
   onEditNotes,
 }: {
   patient: Patient;
   detail: PatientDetail | null;
-  weightHistory: WeightEntry[];
-  latestMeasurement: AnthropometricMeasurement | null;
   onAddMeasurement: () => void;
   onEditNotes: () => void;
 }) {
   const weight = detail?.weight_kg ?? null;
   const height = detail?.height_m ?? null;
   const bmi = detail?.bmi ?? null;
+  const latestMeasurement = detail?.latest_measurement ?? null;
+  const weightHistory: WeightEntry[] =
+    detail?.weight_history.map((w) => ({ date: w.log_date, value: w.weight_kg })) ?? [];
   const navigate = useNavigate();
 
   return (
@@ -289,8 +283,6 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
 
   const [showAnthropometricForm, setShowAnthropometricForm] = useState(false);
   const [detail, setDetail] = useState<PatientDetail | null>(null);
-  const [weightHistory, setWeightHistory] = useState<WeightEntry[]>([]);
-  const [latestMeasurement, setLatestMeasurement] = useState<AnthropometricMeasurement | null>(null);
   const [savingMeasurement, setSavingMeasurement] = useState(false);
   const [measurementError, setMeasurementError] = useState<string | null>(null);
 
@@ -307,12 +299,6 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
     PatientService.getDetail(patient.id)
       .then(setDetail)
       .catch((err) => console.error('Error cargando datos del paciente:', err));
-    WeightLogService.getHistory(patient.id)
-      .then(setWeightHistory)
-      .catch((err) => console.error('Error cargando historial de peso:', err));
-    PatientService.getLatestMeasurement(patient.id)
-      .then(setLatestMeasurement)
-      .catch((err) => console.error('Error cargando última medición antropométrica:', err));
   }, [patient.id]);
 
   useEffect(() => {
@@ -614,8 +600,6 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
             <InfoTab
               patient={patient}
               detail={detail}
-              weightHistory={weightHistory}
-              latestMeasurement={latestMeasurement}
               onAddMeasurement={() => setShowAnthropometricForm(true)}
               onEditNotes={openNotesForm}
             />

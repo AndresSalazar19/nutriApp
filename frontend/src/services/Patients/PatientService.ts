@@ -10,6 +10,11 @@ export interface PatientPerson {
   gender: string | null;
 }
 
+export interface WeightHistoryPoint {
+  log_date: string;
+  weight_kg: number;
+}
+
 export interface PatientDetail {
   user_id: string;
   email: string;
@@ -26,6 +31,8 @@ export interface PatientDetail {
   medications: string[];
   allergies: string[];
   dietary_restrictions: string[];
+  weight_history: WeightHistoryPoint[];
+  latest_measurement: AnthropometricMeasurement | null;
 }
 
 export interface AnthropometricUpdatePayload {
@@ -155,14 +162,6 @@ export const PatientService = {
       body: formData,
     });
     return handleResponse<AnthropometricMeasurement>(res);
-  },
-
-  async getLatestMeasurement(patientId: string): Promise<AnthropometricMeasurement | null> {
-    const res = await fetch(`${API_URL}/patients/${patientId}/anthropometrics/measurement/latest`, {
-      method: 'GET',
-      headers: authHeaders(),
-    });
-    return handleResponse<AnthropometricMeasurement | null>(res);
   },
 
   async updateNotes(patientId: string, clinicalNotes: string): Promise<{ message: string }> {

@@ -4,7 +4,13 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.schemas.anthropometric_measurement import AnthropometricMeasurementResponse
 from app.schemas.user import PersonResponse
+
+
+class WeightHistoryPoint(BaseModel):
+    log_date: date
+    weight_kg: float
 
 
 class PatientListItem(BaseModel):
@@ -37,6 +43,8 @@ class PatientDetailResponse(BaseModel):
     medications: list[str] = []
     allergies: list[str] = []
     dietary_restrictions: list[str] = []
+    weight_history: list[WeightHistoryPoint] = []
+    latest_measurement: Optional[AnthropometricMeasurementResponse] = None
 
     class Config:
         from_attributes = True

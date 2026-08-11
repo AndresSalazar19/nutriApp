@@ -139,11 +139,13 @@ export function CreatePlanModal({ isOpen, onClose, onCreated }: CreatePlanModalP
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOpen || !user?.userId) return;
+    // Only fetch once per session (opening/closing the modal repeatedly shouldn't
+    // re-hit the network — the nutritionist's patient list rarely changes mid-session).
+    if (!isOpen || !user?.userId || patients.length > 0) return;
     PatientNutritionistService.listPatientsByNutritionist(user.userId)
       .then(setPatients)
       .catch((err) => console.error('Error cargando pacientes:', err));
-  }, [isOpen, user?.userId]);
+  }, [isOpen, user?.userId, patients.length]);
 
   useEffect(() => {
     if (isOpen) {

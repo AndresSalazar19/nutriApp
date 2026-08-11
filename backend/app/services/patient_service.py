@@ -8,9 +8,11 @@ from sqlalchemy.orm import Session, aliased
 from app.db.models.patient import PatientHistory, PatientProfile, PatientStatus
 from app.db.models.patient_nutritionist import PatientNutritionist
 from app.db.models.user import Person, User, UserRole
-from app.db.models.weight_log import WeightLog
 from app.schemas.weight_log import WeightLogCreate
+from app.services.anthropometric_measurement_service import AnthropometricMeasurementService
 from app.services.weight_log_service import WeightLogService
+
+_WEIGHT_HISTORY_LIMIT = 30
 
 
 class PatientService:
@@ -135,14 +137,18 @@ class PatientService:
             return None
 
         profile = db.query(PatientProfile).filter(PatientProfile.user_id == user_id).first()
-        latest_weight = (
-            db.query(WeightLog)
-            .filter(WeightLog.user_id == user_id)
-            .order_by(WeightLog.log_date.desc(), WeightLog.created_at.desc())
-            .first()
-        )
-        weight = float(latest_weight.weight_kg) if latest_weight else None
+
+        # One query covers both the latest weight (weight_history[0]) and the
+        # chart history, instead of a separate "latest" query plus a second
+        # "history" round-trip when the frontend used to fetch them apart.
+        weight_logs = WeightLogService.get_history(db, user_id, limit=_WEIGHT_HISTORY_LIMIT)
+        weight = float(weight_logs[0].weight_kg) if weight_logs else None
         height = profile.height_m if profile else None
+        weight_history = [
+            {"log_date": log.log_date, "weight_kg": float(log.weight_kg)}
+            for log in reversed(weight_logs)
+        ]
+        latest_measurement = AnthropometricMeasurementService.get_latest(db, user_id)
 
         return {
             "user_id": str(user.id),
@@ -160,6 +166,8 @@ class PatientService:
             "medications": profile.medications if profile else [],
             "allergies": profile.allergies if profile else [],
             "dietary_restrictions": profile.dietary_restrictions if profile else [],
+            "weight_history": weight_history,
+            "latest_measurement": latest_measurement,
         }
 
     @staticmethod
