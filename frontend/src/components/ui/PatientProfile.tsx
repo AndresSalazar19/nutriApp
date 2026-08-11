@@ -11,13 +11,19 @@ import {
   MdPhone,
   MdSms,
 } from 'react-icons/md';
-import { Patient } from '../../components/mock/patientsMock';
+import { Patient, WeightEntry } from '../../components/mock/patientsMock';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/charts/WeightChart';
 import { Modal } from './Modal';
 import { AnthropometricForm, AnthropometricRecord } from './AnthropometricForm';
-import { PatientDetail, PatientService } from '../../services/Patients/PatientService';
+import {
+  AnthropometricMeasurement,
+  PatientDetail,
+  PatientService,
+} from '../../services/Patients/PatientService';
+import { WeightLogService } from '../../services/WeightLog/WeightLogService';
+import { API_ORIGIN } from '../../services/NutritionPlans/NutritionPlanService';
 import { ROUTES } from '../../routes/routes';
 
 function bmiColor(bmi: number) {
@@ -66,11 +72,15 @@ function Metric({
 function InfoTab({
   patient,
   detail,
+  weightHistory,
+  latestMeasurement,
   onAddMeasurement,
   onEditNotes,
 }: {
   patient: Patient;
   detail: PatientDetail | null;
+  weightHistory: WeightEntry[];
+  latestMeasurement: AnthropometricMeasurement | null;
   onAddMeasurement: () => void;
   onEditNotes: () => void;
 }) {
@@ -162,7 +172,13 @@ function InfoTab({
             ))}
           </div>
         </div>
-        <WeightChart data={patient.weightHistory} goal={patient.weightGoal} />
+        {weightHistory.length > 0 ? (
+          <WeightChart data={weightHistory} goal={patient.weightGoal} />
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-8">
+            Sin registros de peso todavía.
+          </p>
+        )}
       </div>
 
       {/* Datos antropométricos */}
@@ -194,14 +210,40 @@ function InfoTab({
             sub={bmi != null ? bmiLabel(bmi) : 'Faltan peso/estatura'}
             bmiValue={bmi}
           />
-          <Metric label="Cintura" value={patient.waist ? `${patient.waist}` : '—'} sub="cm" />
-          <Metric label="Cadera" value={patient.hip ? `${patient.hip}` : '—'} sub="cm" />
+          <Metric
+            label="Cintura"
+            value={
+              latestMeasurement?.circumference_waist_cm != null
+                ? `${latestMeasurement.circumference_waist_cm}`
+                : '—'
+            }
+            sub="cm"
+          />
+          <Metric
+            label="Cadera"
+            value={
+              latestMeasurement?.circumference_hip_cm != null
+                ? `${latestMeasurement.circumference_hip_cm}`
+                : '—'
+            }
+            sub="cm"
+          />
           <Metric
             label="% Grasa"
-            value={patient.fatPercent ? `${patient.fatPercent}` : '—'}
+            value={latestMeasurement?.fat_percent != null ? `${latestMeasurement.fat_percent}` : '—'}
             sub="%"
           />
         </div>
+        {latestMeasurement?.bioimpedance_file_path && (
+          <a
+            href={`${API_ORIGIN}/${latestMeasurement.bioimpedance_file_path.replace(/^\/+/, '')}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block mt-3 text-xs text-green-600 hover:underline"
+          >
+            Ver resultado de bioimpedancia adjunto
+          </a>
+        )}
       </div>
 
       {/* Plan nutricional */}
@@ -247,6 +289,8 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
 
   const [showAnthropometricForm, setShowAnthropometricForm] = useState(false);
   const [detail, setDetail] = useState<PatientDetail | null>(null);
+  const [weightHistory, setWeightHistory] = useState<WeightEntry[]>([]);
+  const [latestMeasurement, setLatestMeasurement] = useState<AnthropometricMeasurement | null>(null);
   const [savingMeasurement, setSavingMeasurement] = useState(false);
   const [measurementError, setMeasurementError] = useState<string | null>(null);
 
@@ -263,6 +307,12 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
     PatientService.getDetail(patient.id)
       .then(setDetail)
       .catch((err) => console.error('Error cargando datos del paciente:', err));
+    WeightLogService.getHistory(patient.id)
+      .then(setWeightHistory)
+      .catch((err) => console.error('Error cargando historial de peso:', err));
+    PatientService.getLatestMeasurement(patient.id)
+      .then(setLatestMeasurement)
+      .catch((err) => console.error('Error cargando última medición antropométrica:', err));
   }, [patient.id]);
 
   useEffect(() => {
@@ -338,6 +388,35 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
         height_m,
         notes: record.notes.trim() || undefined,
       });
+
+      const toNum = (v: string) => (v.trim() ? parseFloat(v) : undefined);
+      const hasExtendedData =
+        record.bioFile ||
+        record.fatPercent.trim() ||
+        record.muscleMass.trim() ||
+        Object.values(record.skinfolds).some((v) => v.trim()) ||
+        Object.values(record.circumferences).some((v) => v.trim());
+
+      if (hasExtendedData) {
+        await PatientService.saveAnthropometricMeasurement(patient.id, {
+          log_date: record.date,
+          fat_percent: toNum(record.fatPercent),
+          muscle_mass_kg: toNum(record.muscleMass),
+          skinfold_triceps: toNum(record.skinfolds.triceps),
+          skinfold_subscapular: toNum(record.skinfolds.subscapular),
+          skinfold_suprailiac: toNum(record.skinfolds.suprailiac),
+          skinfold_abdominal: toNum(record.skinfolds.abdominal),
+          skinfold_thigh: toNum(record.skinfolds.thigh),
+          circumference_waist: toNum(record.circumferences.waist),
+          circumference_hip: toNum(record.circumferences.hip),
+          circumference_arm: toNum(record.circumferences.arm),
+          circumference_thigh: toNum(record.circumferences.thigh),
+          circumference_calf: toNum(record.circumferences.calf),
+          circumference_neck: toNum(record.circumferences.neck),
+          notes: record.notes.trim() || undefined,
+          bioimpedanceFile: record.bioFile,
+        });
+      }
 
       fetchDetail();
       setShowAnthropometricForm(false);
@@ -535,6 +614,8 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
             <InfoTab
               patient={patient}
               detail={detail}
+              weightHistory={weightHistory}
+              latestMeasurement={latestMeasurement}
               onAddMeasurement={() => setShowAnthropometricForm(true)}
               onEditNotes={openNotesForm}
             />

@@ -25,7 +25,7 @@ export interface AnthropometricRecord {
   date: string;
   weight: string;
   height: string;
-  bioimpedanceFileName: string | null;
+  bioFile: File | null;
   fatPercent: string;
   muscleMass: string;
   skinfolds: SkinfoldData;
@@ -145,7 +145,7 @@ export function AnthropometricForm({
       date,
       weight,
       height,
-      bioimpedanceFileName: bioFile ? bioFile.name : null,
+      bioFile,
       fatPercent,
       muscleMass,
       skinfolds,
@@ -175,11 +175,8 @@ export function AnthropometricForm({
       <div>
         <SectionTitle icon={<MdBiotech className="w-4 h-4" />}>
           Resultado de Bioimpedancia
-          <span className="ml-2 text-[11px] font-normal normal-case text-gray-400">
-            (próximamente — aún no se guarda)
-          </span>
         </SectionTitle>
-        <div className="bg-gray-50 rounded-xl p-4 opacity-60 pointer-events-none">
+        <div className="bg-gray-50 rounded-xl p-4">
           <label className="flex flex-col items-center justify-center gap-2 cursor-pointer py-4 border-2 border-dashed border-gray-200 rounded-lg hover:border-green-400 transition">
             <MdAttachFile className="w-8 h-8 text-gray-400" />
             <span className="text-sm text-gray-500">
@@ -215,13 +212,8 @@ export function AnthropometricForm({
 
       {/* ── Pliegues cutáneos ── */}
       <div>
-        <SectionTitle icon={<MdTune className="w-4 h-4" />}>
-          Pliegues Cutáneos
-          <span className="ml-2 text-[11px] font-normal normal-case text-gray-400">
-            (próximamente — aún no se guarda)
-          </span>
-        </SectionTitle>
-        <div className="grid grid-cols-3 gap-3 opacity-60 pointer-events-none">
+        <SectionTitle icon={<MdTune className="w-4 h-4" />}>Pliegues Cutáneos</SectionTitle>
+        <div className="grid grid-cols-3 gap-3">
           <Field
             label="Tríceps"
             value={skinfolds.triceps}
@@ -257,13 +249,8 @@ export function AnthropometricForm({
 
       {/* ── Circunferencias ── */}
       <div>
-        <SectionTitle icon={<MdStraighten className="w-4 h-4" />}>
-          Circunferencias
-          <span className="ml-2 text-[11px] font-normal normal-case text-gray-400">
-            (próximamente — aún no se guarda)
-          </span>
-        </SectionTitle>
-        <div className="grid grid-cols-3 gap-3 opacity-60 pointer-events-none">
+        <SectionTitle icon={<MdStraighten className="w-4 h-4" />}>Circunferencias</SectionTitle>
+        <div className="grid grid-cols-3 gap-3">
           <Field
             label="Cintura"
             value={circumferences.waist}
