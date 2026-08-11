@@ -11,12 +11,14 @@ from app.api.v1.endpoints import (
     content,
     daily_tracking,
     educational_content,
+    food as food_catalog,
     food_item,
     nutrition_plan,
     nutritionist,
     patient_nutritionist,
     patients,
     report,
+    subscription,
     users,
     websocket,
     weight_log,
@@ -37,8 +39,10 @@ router.include_router(weight_log.router)
 router.include_router(blood_pressure_log.router)
 router.include_router(educational_content.router)
 router.include_router(food_item.router)
+router.include_router(food_catalog.router)
 router.include_router(alimentos_intercambio.router)
 router.include_router(patient_nutritionist.router)
 router.include_router(chats.router)
 router.include_router(websocket.router)
 router.include_router(assistant.router)
+router.include_router(subscription.router)
