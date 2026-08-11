@@ -18,7 +18,22 @@ from app.services.user_service import UserService
 router = APIRouter(prefix="/nutrition-plans", tags=["nutrition-plans"])
 
 
-_MACRO_FIELDS = ("calories", "protein_g", "carbs_g", "fat_g", "sodium_mg")
+_MACRO_FIELDS = (
+    "calories",
+    "protein_g",
+    "carbs_g",
+    "fat_g",
+    "fiber_g",
+    "sugar_g",
+    "sodium_mg",
+    "calcium_mg",
+    "iron_mg",
+    "vitamin_c_mg",
+    "potassium_mg",
+    "zinc_mg",
+    "vitamin_a_ug",
+    "folate_ug",
+)
 
 
 def _meal_macros(meal) -> Optional[dict]:

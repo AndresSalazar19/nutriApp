@@ -11,7 +11,16 @@ export interface MealMacros {
   protein_g: number | null;
   carbs_g: number | null;
   fat_g: number | null;
+  fiber_g: number | null;
+  sugar_g: number | null;
   sodium_mg: number | null;
+  calcium_mg: number | null;
+  iron_mg: number | null;
+  vitamin_c_mg: number | null;
+  potassium_mg: number | null;
+  zinc_mg: number | null;
+  vitamin_a_ug: number | null;
+  folate_ug: number | null;
 }
 
 export interface NutritionPlanMeal {

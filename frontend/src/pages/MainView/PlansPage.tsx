@@ -20,7 +20,11 @@ import {
   groupMealsByDay,
   initialsFromName,
   mealFoodLabel,
+  MACRO_FIELDS,
+  MACRO_LABELS,
+  MACRO_UNITS,
   MEAL_TYPE_LABELS,
+  MICRO_FIELDS,
 } from './planReviewHelpers';
 
 // ─── Nutrition summary ──────────────────────────────────────────────────────
@@ -169,20 +173,31 @@ function ReviewModal({
             <p className="text-xs font-semibold text-nutri-dark uppercase mb-2">
               Promedio diario del plan
             </p>
-            <div className="grid grid-cols-5 gap-2">
-              <MacroStat label="Kcal" value={plan.nutrition_summary.daily_average.calories} unit="" />
-              <MacroStat
-                label="Proteína"
-                value={plan.nutrition_summary.daily_average.protein_g}
-                unit="g"
-              />
-              <MacroStat label="Carbos" value={plan.nutrition_summary.daily_average.carbs_g} unit="g" />
-              <MacroStat label="Grasa" value={plan.nutrition_summary.daily_average.fat_g} unit="g" />
-              <MacroStat
-                label="Sodio"
-                value={plan.nutrition_summary.daily_average.sodium_mg}
-                unit="mg"
-              />
+            <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">
+              Macronutrientes
+            </p>
+            <div className="grid grid-cols-4 md:grid-cols-7 gap-2 mb-3">
+              {MACRO_FIELDS.map((field) => (
+                <MacroStat
+                  key={field}
+                  label={MACRO_LABELS[field]}
+                  value={plan.nutrition_summary.daily_average[field]}
+                  unit={MACRO_UNITS[field]}
+                />
+              ))}
+            </div>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">
+              Micronutrientes
+            </p>
+            <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+              {MICRO_FIELDS.map((field) => (
+                <MacroStat
+                  key={field}
+                  label={MACRO_LABELS[field]}
+                  value={plan.nutrition_summary.daily_average[field]}
+                  unit={MACRO_UNITS[field]}
+                />
+              ))}
             </div>
             {plan.nutrition_summary.meals_missing_macro_data > 0 && (
               <p className="text-[11px] text-gray-400 mt-2">
