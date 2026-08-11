@@ -4,6 +4,7 @@ import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
+import { CreatePlanModal } from '../../components/ui/CreatePlanModal';
 import { Modal } from '../../components/ui/Modal';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -306,6 +307,7 @@ function ReviewModal({
 const PlansPage: React.FC = () => {
   const { plans, loading, error, refetch } = usePendingNutritionPlans();
   const [selectedPlan, setSelectedPlan] = useState<NutritionPlanResponse | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [toastConfig, setToastConfig] = useState({
     isVisible: false,
     message: '',
@@ -328,15 +330,25 @@ const PlansPage: React.FC = () => {
     showToast('Plan rechazado', 'success');
   }
 
+  function handleCreated() {
+    setShowCreateModal(false);
+    showToast('Plan creado y activado para el paciente', 'success');
+  }
+
   return (
     <NutritionistLayout>
       <div className="flex flex-col h-full overflow-hidden">
-        <div className="px-8 py-4 border-b border-gray-100 bg-white">
-          <h1 className="text-xl font-bold text-gray-900">Planes por revisar</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {plans.length} plan{plans.length !== 1 ? 'es' : ''} generado
-            {plans.length !== 1 ? 's' : ''} por IA esperando tu aprobación
-          </p>
+        <div className="px-8 py-4 border-b border-gray-100 bg-white flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Planes por revisar</h1>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {plans.length} plan{plans.length !== 1 ? 'es' : ''} generado
+              {plans.length !== 1 ? 's' : ''} por IA esperando tu aprobación
+            </p>
+          </div>
+          <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+            Crear Plan
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-8 py-6">
@@ -376,6 +388,12 @@ const PlansPage: React.FC = () => {
           onRejected={handleRejected}
         />
       )}
+
+      <CreatePlanModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={handleCreated}
+      />
 
       <Toast
         isVisible={toastConfig.isVisible}

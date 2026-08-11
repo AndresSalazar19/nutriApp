@@ -70,6 +70,24 @@ export interface NutritionPlanResponse {
   nutrition_summary: NutritionSummary;
 }
 
+export interface NutritionPlanMealCreatePayload {
+  day_of_week: number;
+  meal_type: MealType;
+  food_id?: string | null;
+  custom_food?: string | null;
+  quantity_g?: number | null;
+  instructions?: string | null;
+}
+
+export interface NutritionPlanCreatePayload {
+  patient_id: string;
+  title: string;
+  description?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  meals: NutritionPlanMealCreatePayload[];
+}
+
 function authHeaders() {
   const token = tokenStorage.get() ?? '';
   return {
@@ -128,6 +146,16 @@ export const NutritionPlanService = {
       method: 'PATCH',
       headers: authHeaders(),
       body: JSON.stringify({ reason }),
+    });
+
+    return handleResponse<NutritionPlanResponse>(res);
+  },
+
+  async createManualPlan(payload: NutritionPlanCreatePayload): Promise<NutritionPlanResponse> {
+    const res = await fetch(`${API_URL}/nutrition-plans/manual`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
     });
 
     return handleResponse<NutritionPlanResponse>(res);
