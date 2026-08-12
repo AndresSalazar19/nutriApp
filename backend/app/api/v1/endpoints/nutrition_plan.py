@@ -9,6 +9,7 @@ from app.core.dependencies import get_current_user, require_nutritionist_or_admi
 from app.core.response import error_response, success_response
 from app.db.base import get_db
 from app.db.models.nutrition_plan import NutritionPlan
+from app.db.models.patient_nutritionist import PatientNutritionist
 from app.db.models.user import User, UserRole
 from app.schemas.nutrition_plan import (
     NutritionPlanCreate,
