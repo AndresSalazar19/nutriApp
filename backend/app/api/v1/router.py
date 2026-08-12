@@ -11,7 +11,6 @@ from app.api.v1.endpoints import (
     content,
     daily_tracking,
     educational_content,
-    food as food_catalog,
     food_item,
     nutrition_plan,
     nutritionist,
@@ -22,6 +21,9 @@ from app.api.v1.endpoints import (
     users,
     websocket,
     weight_log,
+)
+from app.api.v1.endpoints import (
+    food as food_catalog,
 )
 
 router = APIRouter()

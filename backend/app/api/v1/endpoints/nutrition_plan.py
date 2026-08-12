@@ -64,7 +64,7 @@ def _plan_nutrition_summary(plan: NutritionPlan, meal_macros: list[Optional[dict
     by_day: dict[int, dict] = {}
     missing = 0
 
-    for meal, macros in zip(plan.meals, meal_macros):
+    for meal, macros in zip(plan.meals, meal_macros, strict=True):
         if macros is None:
             missing += 1
             continue
@@ -114,7 +114,7 @@ def _plan_to_response(plan: NutritionPlan) -> dict:
             "instructions": meal.instructions,
             "macros": macros,
         }
-        for meal, macros in zip(plan.meals, meal_macros)
+        for meal, macros in zip(plan.meals, meal_macros, strict=True)
     ]
     data["nutrition_summary"] = _plan_nutrition_summary(plan, meal_macros)
     return data
