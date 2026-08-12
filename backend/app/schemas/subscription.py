@@ -13,6 +13,11 @@ class SubscriptionCreate(BaseModel):
     plan: SubscriptionPlanEnum
 
 
+class SubscriptionStatusUpdate(BaseModel):
+    """Para uso administrativo (nutricionista/admin), no del propio paciente."""
+    status: SubscriptionStatusEnum
+
+
 class SubscriptionResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID

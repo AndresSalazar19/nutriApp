@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { Button } from '../../components/ui/Button';
 import { AppointmentViewModal, NewAppointmentModal } from '../../components/ui/AppointmentModal';
@@ -27,11 +28,27 @@ export default function AgendaPage() {
     null,
   );
   const [showNewModal, setShowNewModal] = useState(false);
+  const [prefillPatientId, setPrefillPatientId] = useState<string | undefined>(undefined);
   const [toastConfig, setToastConfig] = useState({
     isVisible: false,
     message: '',
     type: 'success' as 'success' | 'error',
   });
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Arriving from a patient's profile ("Agendar") opens the modal pre-filled
+  // and clears the nav state so a refresh/back doesn't reopen it.
+  useEffect(() => {
+    const state = location.state as { patientId?: string } | null;
+    if (state?.patientId) {
+      setPrefillPatientId(state.patientId);
+      setShowNewModal(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
 
@@ -82,6 +99,7 @@ export default function AgendaPage() {
 
   function handleNewAppt() {
     setShowNewModal(false);
+    setPrefillPatientId(undefined);
     setToastConfig({ isVisible: true, message: '¡Cita agendada con éxito!', type: 'success' });
     refetch();
   }
@@ -201,9 +219,13 @@ export default function AgendaPage() {
       )}
       {showNewModal && (
         <NewAppointmentModal
-          onClose={() => setShowNewModal(false)}
+          onClose={() => {
+            setShowNewModal(false);
+            setPrefillPatientId(undefined);
+          }}
           onSave={handleNewAppt}
           prefillWeekStart={weekStart}
+          prefillPatientId={prefillPatientId}
         />
       )}
 

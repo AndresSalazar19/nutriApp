@@ -57,3 +57,18 @@ class SubscriptionService:
         db.commit()
         db.refresh(subscription)
         return subscription
+
+    @staticmethod
+    def update_status(
+        db: Session, subscription_id: uuid.UUID, status: SubscriptionStatusEnum
+    ) -> Subscription | None:
+        """Cambio administrativo de estado (nutricionista/admin), sin pasar
+        por las reglas de subscribe()/cancel() pensadas para el paciente."""
+        subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
+        if not subscription:
+            return None
+
+        subscription.status = status
+        db.commit()
+        db.refresh(subscription)
+        return subscription

@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import UploadFile
 from sqlalchemy import or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.ai.prompts import Prompts
 from app.db.models.blood_pressure_log import BloodPressureLog
@@ -29,6 +29,15 @@ _EXTENSION_BY_CONTENT_TYPE = {
     "image/webp": ".webp",
 }
 _FOOD_CATALOG_LIMIT = 150
+
+# Avoids N+1 lazy-loading: without this, rendering a list of plans triggers a
+# separate query per plan for patient/patient.person, one per plan for its
+# meals, and one per meal for its food — dozens of extra round-trips against
+# the remote dev DB for even a handful of pending plans.
+_PLAN_EAGER_OPTIONS = (
+    joinedload(NutritionPlan.patient).joinedload(User.person),
+    selectinload(NutritionPlan.meals).joinedload(NutritionPlanMeal.food),
+)
 
 
 class NutritionPlanService:
@@ -103,6 +112,68 @@ class NutritionPlanService:
         return "\n".join(f"- {p}" for p in parts) if parts else None
 
     @classmethod
+    def create_plan(
+        cls,
+        db: Session,
+        *,
+        patient_id: uuid.UUID,
+        nutritionist_id: Optional[uuid.UUID],
+        title: str,
+        description: Optional[str],
+        start_date: date,
+        end_date: Optional[date],
+        meals: list[dict],
+        is_ai_generated: bool,
+        status: NutritionPlanStatus,
+        is_active: bool,
+        reviewed_by: Optional[uuid.UUID] = None,
+        patient_notes: Optional[str] = None,
+        source_image_path: Optional[str] = None,
+    ) -> NutritionPlan:
+        """Persists a plan + its meals. Shared by the AI-generation flow and manual creation."""
+        plan = NutritionPlan(
+            patient_id=patient_id,
+            nutritionist_id=nutritionist_id,
+            title=title,
+            description=description,
+            start_date=start_date,
+            end_date=end_date,
+            is_ai_generated=is_ai_generated,
+            is_active=is_active,
+            status=status,
+            patient_notes=patient_notes,
+            source_image_path=source_image_path,
+            reviewed_by=reviewed_by,
+            reviewed_at=datetime.utcnow() if reviewed_by else None,
+        )
+        db.add(plan)
+        db.flush()
+
+        for meal in meals:
+            db.add(
+                NutritionPlanMeal(
+                    plan_id=plan.id,
+                    day_of_week=meal["day_of_week"],
+                    meal_type=meal["meal_type"],
+                    food_id=meal.get("food_id"),
+                    custom_food=meal.get("custom_food"),
+                    quantity_g=meal.get("quantity_g"),
+                    instructions=meal.get("instructions"),
+                )
+            )
+
+        db.commit()
+        db.refresh(plan)
+        return plan
+
+    @staticmethod
+    def search_foods(db: Session, search: Optional[str], limit: int = 30) -> list[Food]:
+        query = db.query(Food)
+        if search:
+            query = query.filter(Food.name.ilike(f"%{search}%"))
+        return query.order_by(Food.name.asc()).limit(limit).all()
+
+    @classmethod
     async def generate_from_request(
         cls, db: Session, patient: User, text: str, image: UploadFile
     ) -> NutritionPlan:
@@ -147,33 +218,21 @@ class NutritionPlanService:
         )
 
         today = date.today()
-        plan = NutritionPlan(
+        plan = cls.create_plan(
+            db,
             patient_id=patient.id,
             nutritionist_id=active_relation.nutritionist_id if active_relation else None,
             title=parsed["title"],
             description=parsed["summary"],
             start_date=today,
             end_date=today + timedelta(days=6),
+            meals=parsed["meals"],
             is_ai_generated=True,
-            is_active=False,
             status=NutritionPlanStatus.pending,
+            is_active=False,
             patient_notes=text,
             source_image_path=image_path,
         )
-        db.add(plan)
-        db.flush()
-
-        for meal in parsed["meals"]:
-            db.add(
-                NutritionPlanMeal(
-                    plan_id=plan.id,
-                    day_of_week=meal["day_of_week"],
-                    meal_type=meal["meal_type"],
-                    food_id=meal["food_id"],
-                    quantity_g=meal["quantity_g"],
-                    instructions=meal["instructions"],
-                )
-            )
 
         if parsed["blood_pressure"]:
             bp = parsed["blood_pressure"]
@@ -187,9 +246,8 @@ class NutritionPlanService:
                     notes="Extraído automáticamente de una solicitud de plan alimenticio con IA",
                 )
             )
+            db.commit()
 
-        db.commit()
-        db.refresh(plan)
         return plan
 
     @staticmethod
@@ -227,6 +285,7 @@ class NutritionPlanService:
     def list_for_patient(db: Session, patient_id: uuid.UUID) -> list[NutritionPlan]:
         return (
             db.query(NutritionPlan)
+            .options(*_PLAN_EAGER_OPTIONS)
             .filter(NutritionPlan.patient_id == patient_id)
             .order_by(NutritionPlan.created_at.desc())
             .all()
@@ -234,7 +293,11 @@ class NutritionPlanService:
 
     @staticmethod
     def list_pending(db: Session, nutritionist_id: Optional[uuid.UUID]) -> list[NutritionPlan]:
-        query = db.query(NutritionPlan).filter(NutritionPlan.status == NutritionPlanStatus.pending)
+        query = (
+            db.query(NutritionPlan)
+            .options(*_PLAN_EAGER_OPTIONS)
+            .filter(NutritionPlan.status == NutritionPlanStatus.pending)
+        )
         if nutritionist_id:
             query = query.filter(
                 or_(
@@ -246,4 +309,9 @@ class NutritionPlanService:
 
     @staticmethod
     def get_detail(db: Session, plan_id: uuid.UUID) -> Optional[NutritionPlan]:
-        return db.query(NutritionPlan).filter(NutritionPlan.id == plan_id).first()
+        return (
+            db.query(NutritionPlan)
+            .options(*_PLAN_EAGER_OPTIONS)
+            .filter(NutritionPlan.id == plan_id)
+            .first()
+        )

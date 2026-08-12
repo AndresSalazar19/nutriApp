@@ -1,5 +1,6 @@
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { useEffect, useState, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ChatService, ConversationResponse } from '../../services/Chats/chatService';
 import { MessageResponse } from '../../services/Chats/chatService';
 import { useChat } from '../../hooks/useChat';
@@ -43,15 +44,39 @@ const MessagesPage = () => {
     notifyRead,
   } = useChat(selectedConversation?.id, selectedConversation?.patient_id, handleIncomingMessage);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
   useEffect(() => {
-    loadConversations();
+    const state = location.state as { patientId?: string } | null;
+    loadConversations(state?.patientId);
+    if (state?.patientId) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadConversations = async () => {
+  const loadConversations = async (openPatientId?: string) => {
     try {
       setLoadingConversations(true);
 
       const data = await ChatService.getConversations();
+
+      // Arriving from a patient's profile ("Mensaje") opens (or creates) that
+      // patient's thread instead of just defaulting to the first conversation.
+      if (openPatientId) {
+        const existing = data.find((c) => c.patient_id === openPatientId);
+        if (existing) {
+          setConversations(data);
+          setSelectedConversation(existing);
+          return;
+        }
+
+        const created = await ChatService.createConversation({ participant_id: openPatientId });
+        setConversations([created, ...data]);
+        setSelectedConversation(created);
+        return;
+      }
 
       setConversations(data);
 
