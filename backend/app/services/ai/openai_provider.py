@@ -15,8 +15,6 @@ class OpenAIProvider(BaseAIProvider):
         history = prompt_data.get("history", [])
         message = prompt_data.get("message", "")
 
-        content = await OpenAIService.get_response(
-            prompt=prompt, history=history, message=message
-        )
+        content = await OpenAIService.get_response(prompt=prompt, history=history, message=message)
 
         return {"content": content}
