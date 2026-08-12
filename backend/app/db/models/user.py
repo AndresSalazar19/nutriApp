@@ -25,8 +25,17 @@ class User(Base):
     person = relationship(
         "Person", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
+    # OJO: uselist=False es imprescindible aquí. Sin él, SQLAlchemy trata la
+    # relación como colección (lista) en vez de objeto único, aunque
+    # NutritionistProfile.user_id tenga unique=True en la BDD -- ese
+    # unique=True no hace que SQLAlchemy infiera "uno a uno" automáticamente
+    # a nivel de ORM. Esto causaba que nutritionist_profile llegara como
+    # {specialty: null, ...} en vez de null para pacientes.
     nutritionist_profile = relationship(
-        "NutritionistProfile", back_populates="user", foreign_keys="NutritionistProfile.user_id"
+        "NutritionistProfile",
+        back_populates="user",
+        uselist=False,
+        foreign_keys="NutritionistProfile.user_id",
     )
 
     patient_relations_as_patient = relationship(

@@ -1,21 +1,21 @@
 import enum
 import uuid
-from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, func
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from app.db.base import Base
 
 
-class SubscriptionPlan(str, enum.Enum):
+class SubscriptionPlanEnum(str, enum.Enum):
     free = "free"
     basic = "basic"
     premium = "premium"
 
 
-class SubscriptionStatus(str, enum.Enum):
+class SubscriptionStatusEnum(str, enum.Enum):
     active = "active"
     cancelled = "cancelled"
     expired = "expired"
@@ -23,25 +23,32 @@ class SubscriptionStatus(str, enum.Enum):
 
 
 class Subscription(Base):
-    """Maps the pre-existing `subscriptions` table (already live with real rows —
-    schema confirmed by inspecting the DB, not introduced by this migration)."""
-
     __tablename__ = "subscriptions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    # name/create_type=False: el tipo enum ya existe en la BD (confirmado via
+    # `SELECT enum_range(NULL::subscription_plan)`), no queremos que
+    # SQLAlchemy intente recrearlo.
     plan = Column(
-        SQLEnum(SubscriptionPlan, name="subscription_plan"),
+        SQLEnum(SubscriptionPlanEnum, name="subscription_plan", create_type=False),
         nullable=False,
-        default=SubscriptionPlan.free,
+        default=SubscriptionPlanEnum.free,
     )
     status = Column(
-        SQLEnum(SubscriptionStatus, name="subscription_status"),
+        SQLEnum(SubscriptionStatusEnum, name="subscription_status", create_type=False),
         nullable=False,
-        default=SubscriptionStatus.active,
+        default=SubscriptionStatusEnum.active,
     )
+
+    started_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=True)
     auto_renew = Column(Boolean, nullable=False, default=True)
-    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    expires_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    user = relationship("User")

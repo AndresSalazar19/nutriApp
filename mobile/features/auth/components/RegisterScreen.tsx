@@ -98,9 +98,13 @@ const dpStyles = StyleSheet.create({
   btnSaveText: { fontSize: 15, fontWeight: '700', color: COLORS.textOnPrimary },
 });
 
+// Nombres de campo que puede devolver el backend en la respuesta de error,
+// para saber cuál TextInput resaltar.
+type ErrorField = 'email' | 'identification' | 'phone' | null;
+
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register, loading, error } = useRegister();
+  const { register, loading, error, errorField } = useRegister();
 
   const [form, setForm] = useState({
     fullName: '',
@@ -170,6 +174,12 @@ export default function RegisterScreen() {
     if (user) router.replace('/(onboarding)/health');
   };
 
+  // Solo mostramos la caja de error genérica arriba cuando el backend NO
+  // indicó un campo específico (p. ej. error de conexión). Si sí lo indicó,
+  // el mensaje aparece pegado al input correspondiente.
+  const showGenericError = !!error && !errorField;
+  const fieldHasError = (field: ErrorField) => !!error && errorField === field;
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -191,7 +201,7 @@ export default function RegisterScreen() {
 
           <View style={styles.bottomPanel}>
 
-            {error ? (
+            {showGenericError ? (
               <View style={styles.errorBox}>
                 <View style={styles.errorRow}>
                   <MaterialCommunityIcons name="alert-circle-outline" size={18} color={COLORS.error} />
@@ -212,7 +222,7 @@ export default function RegisterScreen() {
 
             <Text style={styles.label}>Cédula</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, fieldHasError('identification') && styles.inputError]}
               placeholder="0934567890"
               keyboardType="phone-pad"
               placeholderTextColor={COLORS.placeholder}
@@ -220,6 +230,9 @@ export default function RegisterScreen() {
               onChangeText={(v) => updateField('identification', v)}
               editable={!loading}
             />
+            {fieldHasError('identification') && (
+              <Text style={styles.fieldErrorText}>{error}</Text>
+            )}
 
             <Text style={styles.label}>Género</Text>
             <View style={styles.pickerContainer}>
@@ -238,7 +251,7 @@ export default function RegisterScreen() {
 
             <Text style={styles.label}>Correo Electrónico</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, fieldHasError('email') && styles.inputError]}
               placeholder="juan@ejemplo.com"
               placeholderTextColor={COLORS.placeholder}
               keyboardType="email-address"
@@ -247,10 +260,13 @@ export default function RegisterScreen() {
               onChangeText={(v) => updateField('email', v)}
               editable={!loading}
             />
+            {fieldHasError('email') && (
+              <Text style={styles.fieldErrorText}>{error}</Text>
+            )}
 
             <Text style={styles.label}>Teléfono</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, fieldHasError('phone') && styles.inputError]}
               placeholder="0999 999 999"
               placeholderTextColor={COLORS.placeholder}
               keyboardType="phone-pad"
@@ -258,6 +274,9 @@ export default function RegisterScreen() {
               onChangeText={(v) => updateField('phone', v)}
               editable={!loading}
             />
+            {fieldHasError('phone') && (
+              <Text style={styles.fieldErrorText}>{error}</Text>
+            )}
 
             <Text style={styles.label}>Fecha de Nacimiento</Text>
             <TouchableOpacity
@@ -287,29 +306,31 @@ export default function RegisterScreen() {
               placeholder="••••••••"
             />
 
-            <Checkbox
-              checked={acceptTerms}
-              onPress={() => setAcceptTerms(!acceptTerms)}
-            >
-              <Text style={styles.checkLabel}>
-                Acepto los{' '}
-                <Text style={styles.checkLink}>
-                  Términos y Condiciones
+            <View style={styles.termsSection}>
+              <Checkbox
+                checked={acceptTerms}
+                onPress={() => setAcceptTerms(!acceptTerms)}
+              >
+                <Text style={styles.checkLabel}>
+                  Acepto los{' '}
+                  <Text style={styles.checkLink}>
+                    Términos y Condiciones
+                  </Text>
                 </Text>
-              </Text>
-            </Checkbox>
+              </Checkbox>
 
-            <Checkbox
-              checked={acceptPrivacy}
-              onPress={() => setAcceptPrivacy(!acceptPrivacy)}
-            >
-              <Text style={styles.checkLabel}>
-                Acepto la{' '}
-                <Text style={styles.checkLink}>
-                  Política de Privacidad
+              <Checkbox
+                checked={acceptPrivacy}
+                onPress={() => setAcceptPrivacy(!acceptPrivacy)}
+              >
+                <Text style={styles.checkLabel}>
+                  Acepto la{' '}
+                  <Text style={styles.checkLink}>
+                    Política de Privacidad
+                  </Text>
                 </Text>
-              </Text>
-            </Checkbox>
+              </Checkbox>
+            </View>
 
             <TouchableOpacity
               style={[styles.btnPrimary, loading && styles.btnDisabled]}
@@ -381,6 +402,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 13,
     fontSize: 14, color: COLORS.textPrimary, backgroundColor: COLORS.inputBg, marginBottom: 16,
   },
+  inputError: {
+    borderColor: COLORS.error, borderWidth: 1.5, marginBottom: 6,
+  },
+  fieldErrorText: {
+    color: COLORS.error, fontSize: 12, marginTop: -2, marginBottom: 14,
+  },
   pickerContainer: {
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -414,6 +441,11 @@ const styles = StyleSheet.create({
   inputFlex:   { flex: 1, paddingVertical: 13, fontSize: 14, color: COLORS.textPrimary },
   inputIcon:   { fontSize: 16, marginLeft: 8 },
   checkRow:    { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  termsSection: {
+    marginTop: 18,
+    marginBottom: 24,
+    gap: 14,
+  },
   checkbox: {
     width: 20, height: 20, borderRadius: 5,
     borderWidth: 2, borderColor: COLORS.primary,
@@ -421,11 +453,11 @@ const styles = StyleSheet.create({
   },
   checkboxActive: { backgroundColor: COLORS.primary },
   checkmark:      { color: COLORS.textOnPrimary, fontSize: 12, fontWeight: 'bold' },
-  checkLabel:     { fontSize: 13, color: COLORS.textSecondary, flexShrink: 1 },
+  checkLabel:     { fontSize: 13, color: COLORS.textSecondary, flexShrink: 1, lineHeight: 19 },
   checkLink:      { color: COLORS.primary, fontWeight: '600' },
   btnPrimary: {
     backgroundColor: COLORS.primary, paddingVertical: 16,
-    borderRadius: 50, alignItems: 'center', marginBottom: 20,
+    borderRadius: 50, alignItems: 'center', marginTop: 4, marginBottom: 20,
     shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
   },

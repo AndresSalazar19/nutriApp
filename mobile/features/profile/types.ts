@@ -12,6 +12,7 @@ export interface HealthInfo {
 }
 
 export interface Nutritionist {
+  id?: string;
   name: string;
   specialty: string;
 }
