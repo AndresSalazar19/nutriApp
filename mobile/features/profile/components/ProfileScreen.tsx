@@ -75,16 +75,6 @@ const FIELD_CONFIG: Record<string, FieldConfig> = {
     type: 'select',
     options: ['Masculino', 'Femenino', 'Otro', 'Prefiero no decirlo'],
   },
-  medicalCondition: {
-    title: 'Condición Médica',
-    type: 'text',
-    placeholder: 'Ej: Hipertensión, Diabetes...',
-  },
-  allergies: {
-    title: 'Alergias',
-    type: 'text',
-    placeholder: 'Ej: Lactosa, Gluten... o Ninguna',
-  },
 };
 
 function SectionTitle({ title }: { title: string }) {
@@ -262,10 +252,21 @@ export default function ProfileScreen() {
         </View>
 
         <SectionTitle title="Información de Salud" />
+        <Text style={styles.sectionHint}>Completada en tu registro inicial</Text>
         <View style={styles.card}>
-          <InfoRow icon="heart-pulse" label="Condición Médica" value={hi.medicalCondition} onPress={() => openModal('medicalCondition', 'health')} />
+          <InfoRow icon="scale-bathroom" label="Peso" value={hi.weight} />
           <Separator />
-          <InfoRow icon="alert-circle-outline" label="Alergias" value={hi.allergies} onPress={() => openModal('allergies', 'health')} />
+          <InfoRow icon="chart-bar" label="IMC" value={hi.bmi} />
+          <Separator />
+          <InfoRow icon="heart-pulse" label="Presión Arterial" value={hi.bloodPressure} />
+          <Separator />
+          <InfoRow icon="run" label="Nivel de Actividad" value={hi.activityLevel} />
+          <Separator />
+          <InfoRow icon="clipboard-pulse-outline" label="Condición Médica" value={hi.medicalCondition} />
+          <Separator />
+          <InfoRow icon="alert-circle-outline" label="Alergias" value={hi.allergies} />
+          <Separator />
+          <InfoRow icon="food-off-outline" label="Restricciones" value={hi.dietaryRestrictions} />
         </View>
 
         <SectionTitle title="Mi Nutricionista" />
@@ -417,6 +418,12 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     marginBottom: 10,
     marginTop: 4,
+  },
+  sectionHint: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginTop: -8,
+    marginBottom: 10,
   },
 
   card: {

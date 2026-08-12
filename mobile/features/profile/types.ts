@@ -7,8 +7,13 @@ export interface PersonalInfo {
 }
 
 export interface HealthInfo {
+  weight: string;
+  bmi: string;
+  bloodPressure: string;
+  activityLevel: string;
   medicalCondition: string;
   allergies: string;
+  dietaryRestrictions: string;
 }
 
 export interface Nutritionist {

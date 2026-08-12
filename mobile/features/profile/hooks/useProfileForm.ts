@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PersonalInfo, HealthInfo, UserProfile } from '../types';
 import { UserService, UserAccount } from '@/services/userservice';
+import { PatientService, PatientDetail } from '@/services/patientService';
 import { useAssignedNutritionist } from './useAssignedNutritionist';
 import { avatarStorage } from '../utils/avatarStorage';
 
@@ -16,8 +17,13 @@ const EMPTY_PROFILE: UserProfile = {
     gender: '',
   },
   healthInfo: {
+    weight: '',
+    bmi: '',
+    bloodPressure: '',
+    activityLevel: '',
     medicalCondition: '',
     allergies: '',
+    dietaryRestrictions: '',
   },
   nutritionist: {
     name: '',
@@ -25,11 +31,24 @@ const EMPTY_PROFILE: UserProfile = {
   },
 };
 
+const ACTIVITY_LEVEL_LABELS: Record<string, string> = {
+  sedentario: 'Sedentario',
+  moderado: 'Moderado',
+  pesado: 'Pesado',
+};
+
 function formatBirthDate(iso: string | null | undefined): string {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
   if (!y || !m || !d) return '';
   return `${d}/${m}/${y}`;
+}
+
+function bmiLabel(bmi: number): string {
+  if (bmi < 18.5) return 'Bajo peso';
+  if (bmi < 25) return 'Normal';
+  if (bmi < 30) return 'Sobrepeso';
+  return 'Obesidad';
 }
 
 function mapUserToProfile(user: UserAccount): UserProfile {
@@ -48,13 +67,48 @@ function mapUserToProfile(user: UserAccount): UserProfile {
       gender: person?.gender ?? '',
     },
     healthInfo: {
+      weight: '',
+      bmi: '',
+      bloodPressure: '',
+      activityLevel: '',
       medicalCondition: '',
       allergies: '',
+      dietaryRestrictions: '',
     },
     nutritionist: {
       name: '',
       specialty: '',
     },
+  };
+}
+
+/** Traduce el detalle real del paciente (lo que se llenó en el onboarding)
+ *  a los textos que pinta la tarjeta "Información de Salud" del perfil. */
+function mapPatientDetailToHealthInfo(detail: PatientDetail): { height: string; healthInfo: HealthInfo } {
+  const height = detail.height_m ? `${Math.round(detail.height_m * 100)} cm` : '';
+  const weight = detail.weight_kg ? `${detail.weight_kg} kg` : 'Sin registrar';
+  const bmi = detail.bmi ? `${detail.bmi} · ${bmiLabel(detail.bmi)}` : 'Sin registrar';
+  const bloodPressure =
+    detail.systolic && detail.diastolic ? `${detail.systolic}/${detail.diastolic} mmHg` : 'Sin registrar';
+  const activityLevel = detail.activity_level ? ACTIVITY_LEVEL_LABELS[detail.activity_level] : 'Sin registrar';
+  const conditions: string[] = [];
+  if (detail.hypertension_diagnosed) conditions.push('Hipertensión');
+  const pathological = (detail.clinical_history as any)?.pathological;
+  if (Array.isArray(pathological?.conditions)) {
+    pathological.conditions.forEach((c: string) => {
+      if (c !== 'Otra' && !conditions.includes(c)) conditions.push(c);
+    });
+    if (pathological.other_condition) conditions.push(pathological.other_condition);
+  }
+  const medicalCondition = conditions.length ? conditions.join(', ') : 'Ninguna registrada';
+  const allergies = detail.allergies.length ? detail.allergies.join(', ') : 'Ninguna registrada';
+  const dietaryRestrictions = detail.dietary_restrictions.length
+    ? detail.dietary_restrictions.join(', ')
+    : 'Ninguna registrada';
+
+  return {
+    height,
+    healthInfo: { weight, bmi, bloodPressure, activityLevel, medicalCondition, allergies, dietaryRestrictions },
   };
 }
 
@@ -78,7 +132,21 @@ export function useProfileForm(userId: string) {
     setError(null);
     try {
       const user = await UserService.getById(userId);
-      setProfile(mapUserToProfile(user));
+      const next = mapUserToProfile(user);
+
+      // El detalle de salud es "best effort": si el paciente todavía no
+      // completó el onboarding (o falla la llamada), igual mostramos los
+      // datos personales en vez de tumbar toda la pantalla de perfil.
+      try {
+        const detail = await PatientService.getDetail(userId);
+        const { height, healthInfo } = mapPatientDetailToHealthInfo(detail);
+        next.personalInfo.height = height || next.personalInfo.height;
+        next.healthInfo = healthInfo;
+      } catch {
+        // Se deja el healthInfo vacío del mapUserToProfile.
+      }
+
+      setProfile(next);
     } catch {
       setError('No se pudo cargar el perfil. Verifica tu conexión.');
     } finally {

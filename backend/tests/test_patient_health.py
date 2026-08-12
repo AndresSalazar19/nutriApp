@@ -11,6 +11,7 @@ def valid_payload():
         "systolic": 120,
         "diastolic": 80,
         "hypertension_diagnosed": False,
+        "activity_level": "moderado",
         "medications": [],
         "allergies": ["mani"],
         "dietary_restrictions": ["vegetariana"],

@@ -165,6 +165,8 @@ class PatientService:
             "medications": profile.medications if profile else [],
             "allergies": profile.allergies if profile else [],
             "dietary_restrictions": profile.dietary_restrictions if profile else [],
+            "activity_level": profile.activity_level if profile else None,
+            "clinical_history": (profile.clinical_history or {}) if profile else {},
             "weight_history": weight_history,
             "latest_measurement": latest_measurement,
         }
@@ -176,9 +178,32 @@ class PatientService:
         profile.systolic = data.systolic
         profile.diastolic = data.diastolic
         profile.hypertension_diagnosed = data.hypertension_diagnosed
+        profile.activity_level = data.activity_level
         profile.medications = data.medications
         profile.allergies = data.allergies
         profile.dietary_restrictions = data.dietary_restrictions
+        db.commit()
+        db.refresh(profile)
+        return profile
+
+    @staticmethod
+    def update_pathological_history(db: Session, user_id: uuid.UUID, data):
+        """Guarda antecedentes personales patologicos + familiares (paso 2 onboarding)."""
+        profile = PatientService._get_or_create_profile(db, user_id)
+        history = dict(profile.clinical_history or {})
+        history["pathological"] = data.model_dump(mode="json")
+        profile.clinical_history = history
+        db.commit()
+        db.refresh(profile)
+        return profile
+
+    @staticmethod
+    def update_dietary_history(db: Session, user_id: uuid.UUID, data):
+        """Guarda historia alimentaria + frecuencia de consumo (paso 3 onboarding)."""
+        profile = PatientService._get_or_create_profile(db, user_id)
+        history = dict(profile.clinical_history or {})
+        history["dietary"] = data.model_dump(mode="json")
+        profile.clinical_history = history
         db.commit()
         db.refresh(profile)
         return profile

@@ -33,6 +33,13 @@ class PatientProfile(Base):
     medications = Column(JSON, nullable=False, default=list)
     allergies = Column(JSON, nullable=False, default=list)
     dietary_restrictions = Column(JSON, nullable=False, default=list)
+    activity_level = Column(String(20), nullable=True)  # "sedentario" | "moderado" | "pesado"
+    # Historia clinica extendida del onboarding (antecedentes personales,
+    # familiares e historia alimentaria). Se guarda como JSON en vez de
+    # columnas individuales porque son ~40 campos anidados que solo se leen
+    # de vuelta en el perfil del paciente, nunca se filtran/consultan por
+    # sub-campo -- una tabla con 40 columnas no aportaria nada aqui.
+    clinical_history = Column(JSON, nullable=False, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
