@@ -9,7 +9,9 @@ import { FilterTabs } from '../../components/ui/FilterTabs';
 import { DataTable, Column } from '../../components/ui/DataTable';
 import { Pagination } from '../../components/ui/Pagination';
 import { AssignNutritionistModal } from '../../components/admin/AssignNutritionistModal';
+import { PatientProfile } from '../../components/ui/PatientProfile';
 import { Toast } from '../../components/ui/Toast';
+import { Patient } from '../../components/mock/patientsMock';
 import {
   PatientResponse,
   PatientService,
@@ -75,6 +77,47 @@ function mapPatientToClient(p: PatientResponse): Client {
   };
 }
 
+// Same placeholder-field pattern PatientsPage.tsx uses for its own profile
+// mapping — the real data (weight, plans, history) is fetched live inside
+// PatientProfile itself via PatientService.getDetail, this only covers the
+// header fields the profile needs before that fetch resolves.
+function mapPatientResponseToProfilePatient(p: PatientResponse): Patient {
+  const firstName = p.first_name?.trim() ?? '';
+  const lastName = p.last_name?.trim() ?? '';
+  const initials = `${firstName.charAt(0) ?? ''}${lastName.charAt(0) ?? ''}`.toUpperCase() || 'P';
+
+  return {
+    id: p.user_id,
+    initials,
+    color: 'bg-admin-light',
+    firstName,
+    lastName,
+    age: 0,
+    gender: 'Masculino',
+    email: p.email,
+    phone: p.phone ?? '',
+    status: p.status as Patient['status'],
+    plan: 'Basic',
+    adherence: 0,
+    lastConsult: '—',
+    nextAppointment: '—',
+    diagnosis: '',
+    additionalConditions: [],
+    allergies: '',
+    weight: 0,
+    weightGoal: 0,
+    height: 0,
+    bmi: 0,
+    waist: 0,
+    hip: 0,
+    fatPercent: 0,
+    weightChange: 0,
+    weightHistory: [],
+    appointments: [],
+    nutritionalPlan: { id: '', name: '', startDate: '', calories: 0, sodium: 0, compliance: 0 },
+  };
+}
+
 const statsCards = [
   {
     icon: MdPeople,
@@ -136,11 +179,20 @@ function NutritionistCell({ nutritionist }: { nutritionist: Client['nutritionist
   );
 }
 
-function ActionButtons({ client, onAssign }: { client: Client; onAssign?: () => void }) {
+function ActionButtons({
+  client,
+  onAssign,
+  onView,
+}: {
+  client: Client;
+  onAssign?: () => void;
+  onView?: () => void;
+}) {
   return (
     <div className="flex items-center gap-1">
       {/* View */}
       <button
+        onClick={onView}
         className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
         title="Ver"
       >
@@ -182,6 +234,8 @@ function ClientsPage() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [clients, setClients] = useState<Client[]>([]);
+  const [rawPatients, setRawPatients] = useState<PatientResponse[]>([]);
+  const [selectedClient, setSelectedClient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -198,9 +252,11 @@ function ClientsPage() {
 
     try {
       const patients = await PatientService.getAll();
+      setRawPatients(patients);
       setClients(patients.map(mapPatientToClient));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudieron cargar los pacientes.');
+      setRawPatients([]);
       setClients([]);
     } finally {
       setIsLoading(false);
@@ -283,6 +339,10 @@ function ClientsPage() {
       render: (row) => (
         <ActionButtons
           client={row}
+          onView={() => {
+            const raw = rawPatients.find((p) => p.user_id === row.id);
+            if (raw) setSelectedClient(mapPatientResponseToProfilePatient(raw));
+          }}
           onAssign={() => {
             setPatientToAssign({ id: row.id, name: row.name });
             setIsAssignModalOpen(true);
@@ -291,6 +351,14 @@ function ClientsPage() {
       ),
     },
   ];
+
+  if (selectedClient) {
+    return (
+      <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
+        <PatientProfile patient={selectedClient} onBack={() => setSelectedClient(null)} />
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>

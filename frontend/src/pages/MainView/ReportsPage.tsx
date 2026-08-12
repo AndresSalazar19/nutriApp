@@ -8,7 +8,13 @@ import { LineChart } from '../../components/charts/LineChart';
 import { useAuth } from '../../hooks/useAuth';
 import { API_URL } from '../../config/api';
 import { PatientNutritionistService } from '../../services/PatientNutritionist/patientNutritionistService';
-import { ReportService, PatientReportData, RangeKey } from '../../services/ReportService';
+import {
+  ReportService,
+  PatientReportData,
+  RangeKey,
+  ReportType,
+} from '../../services/ReportService';
+import { NutritionPlanService } from '../../services/NutritionPlans/NutritionPlanService';
 
 // ─── Range options ──────────────────────────────────────────────────────────
 
@@ -20,6 +26,16 @@ const RANGE_TO_KEY: Record<RangeOption, RangeKey> = {
   'Últimos 6 meses': '6m',
   'Último año': '1y',
 };
+
+// ─── Report type options ────────────────────────────────────────────────────
+
+const REPORT_TYPE_OPTIONS: { value: ReportType; label: string }[] = [
+  { value: 'progress', label: 'Reporte de progreso' },
+  { value: 'clinical_history', label: 'Historia clínica' },
+  { value: 'soap', label: 'SOAP nutricional' },
+  { value: 'evolution', label: 'Evolución clínica' },
+  { value: 'meal_plan', label: 'Plan alimentario' },
+];
 
 const AVATAR_COLORS = [
   'bg-green-500',
@@ -99,8 +115,11 @@ export default function ReportsPage() {
   const [selectedId, setSelectedId] = useState('');
 
   const [range, setRange] = useState<RangeOption>('Últimos 3 meses');
+  const [reportType, setReportType] = useState<ReportType>('progress');
+  const [hasActivePlan, setHasActivePlan] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [rangeOpen, setRangeOpen] = useState(false);
+  const [typeOpen, setTypeOpen] = useState(false);
 
   const [data, setData] = useState<PatientReportData | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
@@ -186,12 +205,38 @@ export default function ReportsPage() {
     };
   }, [selectedId, range]);
 
+  // Check whether the selected patient has an active plan (needed to offer "Plan alimentario")
+  useEffect(() => {
+    let isMounted = true;
+    if (!selectedId) {
+      setHasActivePlan(true);
+      return;
+    }
+    NutritionPlanService.listForPatient(selectedId)
+      .then((plans) => {
+        const active = plans.some((p) => p.is_active);
+        if (!isMounted) return;
+        setHasActivePlan(active);
+        setReportType((current) => (current === 'meal_plan' && !active ? 'progress' : current));
+      })
+      .catch(() => {
+        if (isMounted) setHasActivePlan(true);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedId]);
+
   async function handleExport() {
     if (!selectedId || exporting) return;
 
     setExporting(true);
     try {
-      const report = await ReportService.generateReportPdf(selectedId, RANGE_TO_KEY[range]);
+      const report = await ReportService.generateReportPdf(
+        selectedId,
+        RANGE_TO_KEY[range],
+        reportType,
+      );
       window.open(`${API_URL.replace('/api/v1', '')}${report.file_url}`, '_blank');
       setToastConfig({ isVisible: true, message: 'Reporte generado con éxito.', type: 'success' });
     } catch (error) {
@@ -253,6 +298,7 @@ export default function ReportsPage() {
                 if (patients.length === 0) return;
                 setDropdownOpen((v) => !v);
                 setRangeOpen(false);
+                setTypeOpen(false);
               }}
               disabled={patients.length === 0}
               className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg
@@ -295,6 +341,7 @@ export default function ReportsPage() {
               onClick={() => {
                 setRangeOpen((v) => !v);
                 setDropdownOpen(false);
+                setTypeOpen(false);
               }}
               className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg
                 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
@@ -329,10 +376,59 @@ export default function ReportsPage() {
             )}
           </div>
 
+          {/* Report type selector */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setTypeOpen((v) => !v);
+                setDropdownOpen(false);
+                setRangeOpen(false);
+              }}
+              className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg
+                text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            >
+              {REPORT_TYPE_OPTIONS.find((o) => o.value === reportType)?.label}
+              <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+
+            {typeOpen && (
+              <div className="absolute right-0 mt-1 w-56 bg-white rounded-xl border border-gray-100 shadow-xl z-20 py-1">
+                {REPORT_TYPE_OPTIONS.map((o) => {
+                  const disabled = o.value === 'meal_plan' && !hasActivePlan;
+                  return (
+                    <button
+                      key={o.value}
+                      onClick={() => {
+                        if (disabled) return;
+                        setReportType(o.value);
+                        setTypeOpen(false);
+                      }}
+                      disabled={disabled}
+                      title={
+                        disabled ? 'Este paciente no tiene un plan nutricional activo' : undefined
+                      }
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition
+                        ${o.value === reportType ? 'text-green-700 font-semibold' : 'text-gray-700'}
+                        ${disabled ? 'opacity-40 cursor-not-allowed hover:bg-transparent' : ''}`}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Export */}
           <button
             onClick={handleExport}
-            disabled={!selectedId || exporting}
+            disabled={!selectedId || exporting || (reportType === 'meal_plan' && !hasActivePlan)}
             className="flex items-center gap-2 px-4 py-2 bg-nutri-medium hover:bg-nutri-dark text-white text-sm font-semibold rounded-lg transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <MdFileDownload className="w-4 h-4" />
@@ -342,12 +438,13 @@ export default function ReportsPage() {
       </div>
 
       {/* Click outside to close dropdowns */}
-      {(dropdownOpen || rangeOpen) && (
+      {(dropdownOpen || rangeOpen || typeOpen) && (
         <div
           className="fixed inset-0 z-10"
           onClick={() => {
             setDropdownOpen(false);
             setRangeOpen(false);
+            setTypeOpen(false);
           }}
         />
       )}

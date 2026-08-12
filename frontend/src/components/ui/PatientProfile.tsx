@@ -17,8 +17,15 @@ import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/charts/WeightChart';
 import { Modal } from './Modal';
 import { AnthropometricForm, AnthropometricRecord } from './AnthropometricForm';
+import { PlanNutritionDetail } from './PlanNutritionDetail';
 import { PatientDetail, PatientService } from '../../services/Patients/PatientService';
-import { API_ORIGIN } from '../../services/NutritionPlans/NutritionPlanService';
+import {
+  API_ORIGIN,
+  NutritionPlanResponse,
+  NutritionPlanService,
+} from '../../services/NutritionPlans/NutritionPlanService';
+import { formatDate } from '../../pages/MainView/planReviewHelpers';
+import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../routes/routes';
 
 function bmiColor(bmi: number) {
@@ -69,11 +76,13 @@ function InfoTab({
   detail,
   onAddMeasurement,
   onEditNotes,
+  onGoToPlans,
 }: {
   patient: Patient;
   detail: PatientDetail | null;
   onAddMeasurement: () => void;
   onEditNotes: () => void;
+  onGoToPlans: () => void;
 }) {
   const weight = detail?.weight_kg ?? null;
   const height = detail?.height_m ?? null;
@@ -81,7 +90,6 @@ function InfoTab({
   const latestMeasurement = detail?.latest_measurement ?? null;
   const weightHistory: WeightEntry[] =
     detail?.weight_history.map((w) => ({ date: w.log_date, value: w.weight_kg })) ?? [];
-  const navigate = useNavigate();
 
   return (
     <div className="grid grid-cols-2 gap-6">
@@ -247,17 +255,112 @@ function InfoTab({
         </div>
         <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
           <p className="text-sm text-gray-500">
-            Los planes de este paciente se revisan y aprueban desde la bandeja de Planes
-            Nutricionales.
+            Consulta la pestaña <span className="font-semibold">Planes</span> para ver el historial
+            completo de planes de este paciente.
           </p>
-          <Button
-            variant="outline"
-            onClick={() => navigate(ROUTES.PLANS)}
-            className="flex-shrink-0"
-          >
-            Ir a Planes →
+          <Button variant="outline" onClick={onGoToPlans} className="flex-shrink-0">
+            Ver Planes →
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Planes tab ───────────────────────────────────────────────────────────────
+
+const PLAN_STATUS_BADGE: Record<
+  NutritionPlanResponse['status'],
+  'active' | 'pending' | 'rejected'
+> = {
+  approved: 'active',
+  pending: 'pending',
+  rejected: 'rejected',
+};
+const PLAN_STATUS_LABEL: Record<NutritionPlanResponse['status'], string> = {
+  approved: 'Aprobado',
+  pending: 'Pendiente',
+  rejected: 'Rechazado',
+};
+
+function PlanesTab({ patientId }: { patientId: string }) {
+  const [plans, setPlans] = useState<NutritionPlanResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+    NutritionPlanService.listForPatient(patientId)
+      .then((data) => {
+        if (!isMounted) return;
+        setPlans(data);
+        const active = data.find((p) => p.is_active);
+        setSelectedId((active ?? data[0])?.id ?? null);
+      })
+      .catch((err: any) => {
+        if (isMounted) setError(err.message);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [patientId]);
+
+  if (loading) {
+    return <p className="text-sm text-gray-400 text-center py-12">Cargando planes...</p>;
+  }
+
+  if (error) {
+    return <p className="text-sm text-admin-accent text-center py-12">{error}</p>;
+  }
+
+  if (plans.length === 0) {
+    return (
+      <p className="text-sm text-gray-400 text-center py-12">
+        Este paciente todavía no tiene ningún plan nutricional.
+      </p>
+    );
+  }
+
+  const selected = plans.find((p) => p.id === selectedId) ?? plans[0];
+
+  return (
+    <div className="grid grid-cols-3 gap-6">
+      <div className="space-y-2">
+        {plans.map((plan) => (
+          <button
+            key={plan.id}
+            onClick={() => setSelectedId(plan.id)}
+            className={`w-full text-left rounded-xl border p-3 transition ${
+              plan.id === selected.id
+                ? 'border-green-400 bg-green-50'
+                : 'border-gray-100 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <p className="text-sm font-semibold text-gray-800 truncate">{plan.title}</p>
+              {plan.is_active && <Badge variant="active" label="Activo" />}
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={PLAN_STATUS_BADGE[plan.status]}
+                label={PLAN_STATUS_LABEL[plan.status]}
+              />
+              {plan.is_ai_generated && <Badge variant="basic" label="IA" />}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              {formatDate(plan.start_date)} - {formatDate(plan.end_date)}
+            </p>
+          </button>
+        ))}
+      </div>
+      <div className="col-span-2">
+        <PlanNutritionDetail plan={selected} />
       </div>
     </div>
   );
@@ -284,6 +387,8 @@ interface PatientProfileProps {
 export function PatientProfile({ patient, onBack }: PatientProfileProps) {
   const [activeTab, setActiveTab] = useState<Tab>('Información');
   const navigate = useNavigate();
+  const { role } = useAuth();
+  const isAdmin = role === 'admin';
 
   const [showAnthropometricForm, setShowAnthropometricForm] = useState(false);
   const [detail, setDetail] = useState<PatientDetail | null>(null);
@@ -442,20 +547,24 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
           Perfil del Paciente
         </button>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            icon={<MdSms className="w-4 h-4" />}
-            onClick={() => navigate(ROUTES.MESSAGES, { state: { patientId: patient.id } })}
-          >
-            Mensaje
-          </Button>
-          <Button
-            variant="primary"
-            icon={<MdCalendarMonth className="w-4 h-4" />}
-            onClick={() => navigate(ROUTES.AGENDA, { state: { patientId: patient.id } })}
-          >
-            Agendar
-          </Button>
+          {!isAdmin && (
+            <>
+              <Button
+                variant="outline"
+                icon={<MdSms className="w-4 h-4" />}
+                onClick={() => navigate(ROUTES.MESSAGES, { state: { patientId: patient.id } })}
+              >
+                Mensaje
+              </Button>
+              <Button
+                variant="primary"
+                icon={<MdCalendarMonth className="w-4 h-4" />}
+                onClick={() => navigate(ROUTES.AGENDA, { state: { patientId: patient.id } })}
+              >
+                Agendar
+              </Button>
+            </>
+          )}
           <div className="relative" ref={actionsMenuRef}>
             <button
               onClick={() => setShowActionsMenu((v) => !v)}
@@ -606,7 +715,10 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
               detail={detail}
               onAddMeasurement={() => setShowAnthropometricForm(true)}
               onEditNotes={openNotesForm}
+              onGoToPlans={() => setActiveTab('Planes')}
             />
+          ) : activeTab === 'Planes' ? (
+            <PlanesTab patientId={patient.id} />
           ) : (
             <PlaceholderTab label={activeTab} />
           )}

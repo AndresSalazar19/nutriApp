@@ -121,6 +121,24 @@ def ensure_food_micros_columns():
             connection.execute(text(f"ALTER TABLE foods {statement}"))
 
 
+def ensure_report_type_column():
+    inspector = inspect(engine)
+    if "patient_reports" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("patient_reports")}
+    if "report_type" in existing_columns:
+        return
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE patient_reports "
+                "ADD COLUMN IF NOT EXISTS report_type VARCHAR(30) NOT NULL DEFAULT 'progress'"
+            )
+        )
+
+
 def seed_foods_from_food_items():
     """One-time backfill: nutrition_plan_meals.food_id references foods, but foods
     starts empty while food_items already holds the real, populated catalog."""
@@ -202,6 +220,7 @@ def seed_foods_from_food_items():
 ensure_blood_pressure_columns()
 ensure_nutrition_plan_columns()
 ensure_food_micros_columns()
+ensure_report_type_column()
 seed_foods_from_food_items()
 
 print(
