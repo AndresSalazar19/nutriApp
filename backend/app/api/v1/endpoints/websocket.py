@@ -32,7 +32,6 @@ async def websocket_chat(
     conversation_id: uuid.UUID,
     token: str = Query(...),
 ):
-
     db: Session = SessionLocal()
     current_user = None
 
@@ -83,7 +82,6 @@ async def websocket_chat(
             data = await websocket.receive_json()
             event_type = data.get("type")
             if event_type == "message":
-
                 role = (
                     MessageSenderRole.patient
                     if current_user.role == UserRole.patient
@@ -143,7 +141,6 @@ async def websocket_chat(
                 )
 
     except WebSocketDisconnect:
-
         pass
 
     except Exception as e:

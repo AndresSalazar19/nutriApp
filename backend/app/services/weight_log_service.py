@@ -7,7 +7,6 @@ from app.schemas.weight_log import WeightLogCreate
 
 
 class WeightLogService:
-
     @staticmethod
     def create(db: Session, data: WeightLogCreate) -> WeightLog:
         existing = (

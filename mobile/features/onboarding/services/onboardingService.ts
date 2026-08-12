@@ -3,6 +3,8 @@ import { AuthService } from '@/features/auth/services/authService';
 import { ProgressService } from '@/features/progress/services/progressService';
 import { tokenStorage } from '@/utils/tokenStorage';
 import { OnboardingProgress } from './onboardingProgress';
+import { SubscriptionService, UserSubscription, toSubscriptionPlanCode } from './subscriptionService';
+import { Plan as ApiPlan } from './planService';
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -73,15 +75,21 @@ export async function submitHealthProfile(data: HealthData): Promise<void> {
 
 /**
  * Submit selected subscription plan.
- * Replace with real API call when backend is ready.
+ * `planCode` es el code del catalogo ('basic' | 'standard' | 'premium', tabla
+ * `plans`), NO el id (uuid). Internamente se convierte al code que acepta el
+ * enum subscription_plan en BD ('standard' -> 'basic', ver subscriptionService).
+ *
+ * Devuelve la suscripcion creada y actualiza el paso del onboarding a 'payment'.
  */
-export async function submitPlanSelection(planId: string): Promise<void> {
-  // TODO: POST /api/onboarding/plan
-  console.log('[onboardingService] submitPlanSelection', planId);
-  await new Promise((resolve) => setTimeout(resolve, 200));
+export async function submitPlanSelection(planCode: ApiPlan['code']): Promise<UserSubscription> {
   const user = await AuthService.getUser();
-  if (!user?.id) throw new Error('No hay sesion activa para guardar el plan.');
+  if (!user?.id) {
+    throw new Error('No hay sesion activa para guardar el plan.');
+  }
+
+  const subscription = await SubscriptionService.subscribe(user.id, toSubscriptionPlanCode(planCode));
   await OnboardingProgress.set(user.id, 'payment');
+  return subscription;
 }
 
 /**
@@ -96,6 +104,7 @@ export async function processPayment(data: PaymentData): Promise<void> {
     cardNumber: data.cardNumber.slice(-4).padStart(data.cardNumber.length, '*'),
   });
   await new Promise((resolve) => setTimeout(resolve, 500));
+  
   const user = await AuthService.getUser();
   if (!user?.id) throw new Error('No hay sesion activa para completar el registro.');
   await OnboardingProgress.set(user.id, 'completed');

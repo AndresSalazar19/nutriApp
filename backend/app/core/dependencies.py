@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from app.core.security import decode_access_token
 from app.db.base import get_db
 from app.db.models.user import User, UserRole
+from app.services.ai.base_provider import BaseAIProvider
+from app.services.ai.openai_provider import OpenAIProvider
 from app.services.user_service import UserService
 
 security = HTTPBearer()
@@ -49,3 +51,7 @@ def require_patient(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != UserRole.patient:
         raise HTTPException(status_code=403, detail="Se requiere rol paciente")
     return current_user
+
+
+def get_ai_provider() -> BaseAIProvider:
+    return OpenAIProvider()

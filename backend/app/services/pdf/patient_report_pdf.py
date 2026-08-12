@@ -33,7 +33,7 @@ def build_patient_report_pdf(data: dict) -> bytes:
     range_label = RANGE_LABELS.get(data["range_key"], data["range_key"])
     story.append(
         Paragraph(
-            f"Periodo: {range_label} · Generado el " f"{datetime.now().strftime('%d/%m/%Y %H:%M')}",
+            f"Periodo: {range_label} · Generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}",
             normal_style,
         )
     )

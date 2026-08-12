@@ -58,7 +58,6 @@ class AvailabilityNutritionistRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_data(self):
-
         if self.rule_type == AvailabilityRuleType.recurring:
             if self.day_of_week is None:
                 raise ValueError("day_of_week es requerido para reglas recurrentes")

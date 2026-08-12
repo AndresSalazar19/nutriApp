@@ -18,7 +18,7 @@ from app.api.v1.endpoints import (
     patients,
     progress,
     report,
-    subscription,
+    subscriptions,
     users,
     websocket,
     weight_log,
@@ -49,4 +49,4 @@ router.include_router(patient_nutritionist.router)
 router.include_router(chats.router)
 router.include_router(websocket.router)
 router.include_router(assistant.router)
-router.include_router(subscription.router)
+router.include_router(subscriptions.router)

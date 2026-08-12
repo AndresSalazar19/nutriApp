@@ -8,8 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.dependencies import get_current_user, require_nutritionist_or_admin, require_patient
 from app.core.response import error_response, success_response
 from app.db.base import get_db
-from app.db.models.nutrition_plan import NutritionPlan, NutritionPlanStatus
-from app.db.models.patient_nutritionist import PatientNutritionist
+from app.db.models.nutrition_plan import NutritionPlan
 from app.db.models.user import User, UserRole
 from app.schemas.nutrition_plan import (
     NutritionPlanCreate,
@@ -114,34 +113,21 @@ def create_manual_plan(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_nutritionist_or_admin),
 ):
-    if not UserService.is_admin(current_user):
-        assigned = (
-            db.query(PatientNutritionist)
-            .filter(
-                PatientNutritionist.patient_id == payload.patient_id,
-                PatientNutritionist.nutritionist_id == current_user.id,
-                PatientNutritionist.is_active.is_(True),
-            )
-            .first()
+    try:
+        plan = NutritionPlanService.create_manual_plan(
+            db=db,
+            patient_id=payload.patient_id,
+            nutritionist_id=current_user.id,
+            title=payload.title,
+            description=payload.description,
+            start_date=payload.start_date or date.today(),
+            end_date=payload.end_date,
+            meals=[m.model_dump() for m in payload.meals],
+            is_admin=UserService.is_admin(current_user),
         )
-        if not assigned:
-            resp = error_response(["Este paciente no está asignado a tu cuenta"], status_code=403)
-            return JSONResponse(status_code=403, content=resp.model_dump())
-
-    plan = NutritionPlanService.create_plan(
-        db,
-        patient_id=payload.patient_id,
-        nutritionist_id=current_user.id,
-        title=payload.title,
-        description=payload.description,
-        start_date=payload.start_date or date.today(),
-        end_date=payload.end_date,
-        meals=[m.model_dump() for m in payload.meals],
-        is_ai_generated=False,
-        status=NutritionPlanStatus.approved,
-        is_active=True,
-        reviewed_by=current_user.id,
-    )
+    except ValueError as exc:
+        resp = error_response([str(exc)], status_code=403)
+        return JSONResponse(status_code=403, content=resp.model_dump())
 
     resp = success_response(data=_plan_to_response(plan))
     return JSONResponse(status_code=201, content=resp.model_dump())
