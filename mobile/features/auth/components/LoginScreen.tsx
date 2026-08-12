@@ -16,8 +16,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useLogin } from '@/features/auth/hooks/useAuth';
+import { AuthService } from '@/features/auth/services/authService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PasswordField } from '@/components/ui/PasswordField';
+
+const NON_PATIENT_MESSAGE =
+  'Si eres administrador o nutricionista ingresa a la página web. Esta versión es solo para pacientes.';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -35,9 +39,19 @@ export default function LoginScreen() {
 
     const result = await login({ email: email.trim(), password });
 
-    if (result) {
-      router.replace('/(tabs)');
+    if (!result) return;
+
+    // Guard de rol: la app móvil es solo para pacientes. Si el backend
+    // devuelve otro rol, no se deja entrar y se limpia la sesión para que
+    // no quede el token guardado (si no, la próxima apertura entraría
+    // directo sin pasar por este guard).
+    if (!AuthService.isPatient(result.user)) {
+      await AuthService.logout();
+      Alert.alert('Acceso no disponible', NON_PATIENT_MESSAGE);
+      return;
     }
+
+    router.replace('/(tabs)');
   };
 
   return (

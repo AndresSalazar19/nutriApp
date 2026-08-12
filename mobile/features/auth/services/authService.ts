@@ -57,6 +57,9 @@ interface AuthTokenResponse {
 
 const USER_KEY = 'auth_user';
 
+// Esta app móvil es solo para pacientes; admin/nutricionista usan la web.
+export const PATIENT_ROLE = 'patient';
+
 /**
  * Error de API que además de un mensaje legible, puede traer el nombre del
  * campo (`field`) que provocó el error, cuando el backend lo indica
@@ -173,5 +176,9 @@ export const AuthService = {
 
   async isAuthenticated(): Promise<boolean> {
     return !!(await AsyncStorage.getItem(USER_KEY));
+  },
+
+  isPatient(user: Pick<AuthUser, 'role'> | null | undefined): boolean {
+    return user?.role === PATIENT_ROLE;
   },
 };
