@@ -3,6 +3,7 @@ import { tokenStorage } from '../utils/tokenStorage';
 import { TimePoint } from '../components/mock/reportsMock';
 
 export type RangeKey = '3m' | '6m' | '1y';
+export type ReportType = 'progress' | 'clinical_history' | 'soap' | 'evolution' | 'meal_plan';
 
 export interface HistoryEntry {
   id: string;
@@ -42,6 +43,7 @@ export interface GeneratedReport {
   file_url: string;
   file_name: string;
   range_key: RangeKey;
+  report_type: ReportType;
   created_at: string;
 }
 
@@ -75,11 +77,18 @@ export const ReportService = {
     return body.data;
   },
 
-  async generateReportPdf(patientId: string, range: RangeKey): Promise<GeneratedReport> {
-    const res = await fetch(`${API_URL}/patients/${patientId}/report/pdf?range=${range}`, {
-      method: 'POST',
-      headers: authHeaders(),
-    });
+  async generateReportPdf(
+    patientId: string,
+    range: RangeKey,
+    reportType: ReportType = 'progress',
+  ): Promise<GeneratedReport> {
+    const res = await fetch(
+      `${API_URL}/patients/${patientId}/report/pdf?range=${range}&report_type=${reportType}`,
+      {
+        method: 'POST',
+        headers: authHeaders(),
+      },
+    );
 
     const body = await handleResponse<{ data: GeneratedReport }>(res);
     return body.data;
