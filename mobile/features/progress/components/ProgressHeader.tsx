@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import PeriodSelector from './PeriodSelector';
 import { COLORS } from '@/constants/colors';
 
-type Period = 'Semana' | 'Mes' | 'Año' | 'Todo';
+type Period = 'Día' | 'Semana' | 'Mes';
 
 interface ProgressHeaderProps {
   selectedPeriod: Period;

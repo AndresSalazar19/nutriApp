@@ -1,6 +1,8 @@
 import { HealthData, PaymentData } from '../types';
 import { AuthService } from '@/features/auth/services/authService';
 import { ProgressService } from '@/features/progress/services/progressService';
+import { tokenStorage } from '@/utils/tokenStorage';
+import { OnboardingProgress } from './onboardingProgress';
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -25,7 +27,7 @@ export async function submitHealthProfile(data: HealthData): Promise<void> {
   const systolic = Number(data.systolic);
   const diastolic = Number(data.diastolic);
 
-  const token = await (await import('@/utils/tokenStorage')).tokenStorage.get();
+  const token = await tokenStorage.get();
   const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/v1/patients/${user.id}/health`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token ?? ''}` },
@@ -66,6 +68,7 @@ export async function submitHealthProfile(data: HealthData): Promise<void> {
         })
       : Promise.resolve(),
   ]);
+  await OnboardingProgress.set(user.id, 'plans');
 }
 
 /**
@@ -76,6 +79,9 @@ export async function submitPlanSelection(planId: string): Promise<void> {
   // TODO: POST /api/onboarding/plan
   console.log('[onboardingService] submitPlanSelection', planId);
   await new Promise((resolve) => setTimeout(resolve, 200));
+  const user = await AuthService.getUser();
+  if (!user?.id) throw new Error('No hay sesion activa para guardar el plan.');
+  await OnboardingProgress.set(user.id, 'payment');
 }
 
 /**
@@ -90,4 +96,7 @@ export async function processPayment(data: PaymentData): Promise<void> {
     cardNumber: data.cardNumber.slice(-4).padStart(data.cardNumber.length, '*'),
   });
   await new Promise((resolve) => setTimeout(resolve, 500));
+  const user = await AuthService.getUser();
+  if (!user?.id) throw new Error('No hay sesion activa para completar el registro.');
+  await OnboardingProgress.set(user.id, 'completed');
 }

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokenStorage } from '@/utils/tokenStorage';
+import { OnboardingProgress } from '@/features/onboarding/services/onboardingProgress';
 
 const API = `${process.env.EXPO_PUBLIC_API_URL}/api/v1`;
 
@@ -85,6 +86,7 @@ export const AuthService = {
   async registerAndLogin(payload: RegisterPayload): Promise<AuthUser> {
     await this.register(payload);
     const { user } = await this.login({ email: payload.email, password: payload.password });
+    await OnboardingProgress.set(user.id, 'health');
     return user;
   },
 
