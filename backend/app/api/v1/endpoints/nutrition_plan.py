@@ -1,6 +1,5 @@
 import uuid
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
@@ -18,76 +17,14 @@ from app.schemas.nutrition_plan import (
     NutritionPlanResponse,
 )
 from app.services.nutrition_plan_helpers import AIPlanParseError
-from app.services.nutrition_plan_service import NutritionPlanService
+from app.services.nutrition_plan_service import (
+    NutritionPlanService,
+    meal_macros,
+    plan_nutrition_summary,
+)
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/nutrition-plans", tags=["nutrition-plans"])
-
-
-_MACRO_FIELDS = (
-    "calories",
-    "protein_g",
-    "carbs_g",
-    "fat_g",
-    "fiber_g",
-    "sugar_g",
-    "sodium_mg",
-    "calcium_mg",
-    "iron_mg",
-    "vitamin_c_mg",
-    "potassium_mg",
-    "zinc_mg",
-    "vitamin_a_ug",
-    "folate_ug",
-)
-
-
-def _meal_macros(meal) -> Optional[dict]:
-    """Scales a food's per-100g composition by the meal's quantity_g.
-
-    None when the meal has no catalog food (custom_food entries) or no
-    quantity — there's nothing to compute a contribution from.
-    """
-    if meal.food is None or meal.quantity_g is None:
-        return None
-
-    factor = float(meal.quantity_g) / 100.0
-    macros = {}
-    for field in _MACRO_FIELDS:
-        value = getattr(meal.food, field)
-        macros[field] = round(float(value) * factor, 1) if value is not None else None
-    return macros
-
-
-def _plan_nutrition_summary(plan: NutritionPlan, meal_macros: list[Optional[dict]]) -> dict:
-    """Aggregates per-meal macro contributions into daily totals + a plan-wide daily average."""
-    by_day: dict[int, dict] = {}
-    missing = 0
-
-    for meal, macros in zip(plan.meals, meal_macros, strict=True):
-        if macros is None:
-            missing += 1
-            continue
-        day_totals = by_day.setdefault(meal.day_of_week, {field: 0.0 for field in _MACRO_FIELDS})
-        for field in _MACRO_FIELDS:
-            value = macros[field]
-            if value is not None:
-                day_totals[field] += value
-
-    num_days = len(by_day) or 1
-    daily_average = {
-        field: round(sum(day[field] for day in by_day.values()) / num_days, 1)
-        for field in _MACRO_FIELDS
-    }
-
-    return {
-        "daily_average": daily_average,
-        "by_day": {
-            str(day): {field: round(value, 1) for field, value in totals.items()}
-            for day, totals in by_day.items()
-        },
-        "meals_missing_macro_data": missing,
-    }
 
 
 def _plan_to_response(plan: NutritionPlan) -> dict:
@@ -101,7 +38,7 @@ def _plan_to_response(plan: NutritionPlan) -> dict:
             "email": plan.patient.email,
         }
 
-    meal_macros = [_meal_macros(meal) for meal in plan.meals]
+    meals_macros = [meal_macros(meal) for meal in plan.meals]
     data["meals"] = [
         {
             "id": str(meal.id),
@@ -114,9 +51,9 @@ def _plan_to_response(plan: NutritionPlan) -> dict:
             "instructions": meal.instructions,
             "macros": macros,
         }
-        for meal, macros in zip(plan.meals, meal_macros, strict=True)
+        for meal, macros in zip(plan.meals, meals_macros, strict=True)
     ]
-    data["nutrition_summary"] = _plan_nutrition_summary(plan, meal_macros)
+    data["nutrition_summary"] = plan_nutrition_summary(plan, meals_macros)
     return data
 
 
@@ -208,6 +145,31 @@ def create_manual_plan(
 
     resp = success_response(data=_plan_to_response(plan))
     return JSONResponse(status_code=201, content=resp.model_dump())
+
+
+@router.get("/patient/{patient_id}", response_model=None)
+def list_plans_for_patient(
+    patient_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_nutritionist_or_admin),
+):
+    if not UserService.is_admin(current_user):
+        assigned = (
+            db.query(PatientNutritionist)
+            .filter(
+                PatientNutritionist.patient_id == patient_id,
+                PatientNutritionist.nutritionist_id == current_user.id,
+                PatientNutritionist.is_active.is_(True),
+            )
+            .first()
+        )
+        if not assigned:
+            resp = error_response(["Este paciente no está asignado a tu cuenta"], status_code=403)
+            return JSONResponse(status_code=403, content=resp.model_dump())
+
+    plans = NutritionPlanService.list_for_patient(db, patient_id)
+    resp = success_response(list_data=[_plan_to_response(p) for p in plans])
+    return JSONResponse(status_code=200, content=resp.model_dump())
 
 
 @router.get("/{plan_id}", response_model=None)
