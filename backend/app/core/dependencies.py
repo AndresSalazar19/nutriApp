@@ -7,10 +7,9 @@ from sqlalchemy.orm import Session
 from app.core.security import decode_access_token
 from app.db.base import get_db
 from app.db.models.user import User, UserRole
-from app.services.user_service import UserService
-
 from app.services.ai.base_provider import BaseAIProvider
 from app.services.ai.openai_provider import OpenAIProvider
+from app.services.user_service import UserService
 
 security = HTTPBearer()
 

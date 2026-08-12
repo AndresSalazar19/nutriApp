@@ -59,7 +59,6 @@ class AssistantService:
 
     @staticmethod
     def _get_or_create_conversation(*, db: Session, patient_id: uuid.UUID) -> Conversation:
-
         conversation = (
             db.query(Conversation)
             .filter(
@@ -86,7 +85,6 @@ class AssistantService:
     def _save_user_message(
         *, db: Session, conversation_id: uuid.UUID, user_id: uuid.UUID, content: str
     ) -> Message:
-
         message = Message(
             conversation_id=conversation_id,
             sender_id=user_id,
@@ -104,7 +102,6 @@ class AssistantService:
     def _save_assistant_message(
         *, db: Session, conversation_id: uuid.UUID, content: str
     ) -> Message:
-
         message = Message(
             conversation_id=conversation_id,
             sender_id=None,
@@ -119,7 +116,6 @@ class AssistantService:
 
     @staticmethod
     def _build_history(*, db: Session, conversation_id: uuid.UUID, limit: int = 20) -> list[dict]:
-
         messages = (
             db.query(Message)
             .filter(Message.conversation_id == conversation_id)
@@ -132,7 +128,6 @@ class AssistantService:
         history = []
 
         for msg in messages:
-
             role = "assistant" if msg.sender_role == MessageSenderRole.assistant else "user"
 
             history.append(
@@ -146,7 +141,6 @@ class AssistantService:
 
     @classmethod
     def get_messages(cls, *, db: Session, user: User) -> list[Message]:
-
         conversation = (
             db.query(Conversation)
             .filter(

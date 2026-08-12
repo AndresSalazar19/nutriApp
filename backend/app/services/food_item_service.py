@@ -9,10 +9,8 @@ from app.schemas.food_item import FoodItemRequest, FoodItemResponse
 
 
 class FoodItemService:
-
     @staticmethod
     def create(db: Session, data: FoodItemRequest) -> FoodItemResponse:
-
         existing_food = (
             db.query(FoodItem)
             .filter(FoodItem.name.ilike(data.name.strip()), FoodItem.is_active == True)
@@ -49,7 +47,6 @@ class FoodItemService:
 
     @staticmethod
     def update(db: Session, id: uuid.UUID, data: FoodItemRequest) -> FoodItemResponse:
-
         alimento = db.query(FoodItem).filter(FoodItem.id == id, FoodItem.is_active == True).first()
 
         if not alimento:
@@ -96,7 +93,6 @@ class FoodItemService:
 
     @staticmethod
     def get_by_id(db: Session, id: uuid.UUID) -> FoodItemResponse:
-
         alimento = db.query(FoodItem).filter(FoodItem.id == id, FoodItem.is_active == True).first()
 
         if not alimento:
@@ -108,7 +104,6 @@ class FoodItemService:
     def list(
         db: Session, category: Optional[str] = None, search: Optional[str] = None
     ) -> List[FoodItemResponse]:
-
         query = db.query(FoodItem).filter(FoodItem.is_active == True)
         if category:
             query = query.filter(FoodItem.category.ilike(f"%{category}%"))
@@ -120,7 +115,6 @@ class FoodItemService:
 
     @staticmethod
     def delete(db: Session, id: uuid.UUID):
-
         alimento = db.query(FoodItem).filter(FoodItem.id == id).first()
 
         if alimento and not alimento.is_active:

@@ -10,14 +10,12 @@ from app.schemas.conversations import MessageCreate
 
 
 class ChatsService:
-
     @staticmethod
     def create_or_get_conversation(
         db: Session,
         patient_id: uuid.UUID,
         nutritionist_id: uuid.UUID,
     ) -> Conversation:
-
         conversation = (
             db.query(Conversation)
             .filter(
@@ -48,7 +46,6 @@ class ChatsService:
         db: Session,
         user_id: uuid.UUID,
     ):
-
         conversations = (
             db.query(Conversation)
             .options(
@@ -68,7 +65,6 @@ class ChatsService:
         response = []
 
         for conversation in conversations:
-
             participant = (
                 conversation.nutritionist
                 if conversation.patient_id == user_id
@@ -117,7 +113,6 @@ class ChatsService:
         db: Session,
         conversation_id: uuid.UUID,
     ):
-
         return (
             db.query(Message)
             .filter(Message.conversation_id == conversation_id)
@@ -133,7 +128,6 @@ class ChatsService:
         sender_role: MessageSenderRole,
         data: MessageCreate,
     ) -> Message:
-
         message = Message(
             conversation_id=conversation_id,
             sender_id=sender_id,
@@ -153,7 +147,6 @@ class ChatsService:
         db: Session,
         conversation_id: uuid.UUID,
     ) -> Conversation | None:
-
         return db.query(Conversation).filter(Conversation.id == conversation_id).first()
 
     @staticmethod
@@ -161,7 +154,6 @@ class ChatsService:
         conversation: Conversation,
         user_id: uuid.UUID,
     ) -> bool:
-
         return conversation.patient_id == user_id or conversation.nutritionist_id == user_id
 
     @staticmethod
@@ -169,7 +161,6 @@ class ChatsService:
         db: Session,
         message_id: uuid.UUID,
     ):
-
         message = db.query(Message).filter(Message.id == message_id).first()
 
         if not message:
@@ -206,7 +197,6 @@ class ChatsService:
         db: Session,
         conversation_id: uuid.UUID,
     ) -> Message | None:
-
         return (
             db.query(Message)
             .filter(Message.conversation_id == conversation_id)

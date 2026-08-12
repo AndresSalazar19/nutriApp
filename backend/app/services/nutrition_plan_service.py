@@ -41,7 +41,6 @@ _PLAN_EAGER_OPTIONS = (
 
 
 class NutritionPlanService:
-
     @staticmethod
     def _save_image(file: UploadFile) -> str:
         if not file.content_type or not file.content_type.startswith("image/"):

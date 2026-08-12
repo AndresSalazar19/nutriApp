@@ -38,7 +38,6 @@ def create_conversation(
         nutritionist_id = current_user.id
 
     else:
-
         resp = error_response(
             ["Rol no permitido para crear conversaciones"],
             status_code=403,
@@ -70,7 +69,6 @@ def get_conversations(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
     conversations = ChatsService.get_conversations(
         db,
         current_user.id,
@@ -101,7 +99,6 @@ def get_messages(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-
     conversation = get_conversation_by_id(
         db,
         conversation_id,

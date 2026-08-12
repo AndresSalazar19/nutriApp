@@ -16,7 +16,6 @@ _WEIGHT_HISTORY_LIMIT = 30
 
 
 class PatientService:
-
     @staticmethod
     def _get_or_create_profile(db: Session, user_id: uuid.UUID) -> PatientProfile:
         profile = db.query(PatientProfile).filter(PatientProfile.user_id == user_id).first()

@@ -6,7 +6,6 @@ from app.db.models.subscription import Subscription, SubscriptionPlanEnum, Subsc
 
 
 class SubscriptionService:
-
     @staticmethod
     def get_current(db: Session, user_id: uuid.UUID) -> Subscription | None:
         return (

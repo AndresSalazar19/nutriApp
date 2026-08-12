@@ -29,7 +29,6 @@ def _is_all_day(start_time, end_time) -> bool:
 
 
 class AppointmentService:
-
     @staticmethod
     def _is_slot_available(
         db: Session,

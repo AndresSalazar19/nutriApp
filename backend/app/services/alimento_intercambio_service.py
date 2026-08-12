@@ -5,7 +5,6 @@ from app.schemas.alimento_intercambio import AlimentoIntercambioUpdate
 
 
 class AlimentoIntercambioService:
-
     @staticmethod
     def get_all(db: Session) -> list[AlimentoIntercambio]:
         return db.query(AlimentoIntercambio).order_by(AlimentoIntercambio.id).all()

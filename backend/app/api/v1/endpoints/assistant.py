@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user, get_ai_provider
+from app.core.dependencies import get_ai_provider, get_current_user
 from app.core.response import success_response
 from app.db.base import get_db
 from app.db.models.user import User

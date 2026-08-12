@@ -20,7 +20,6 @@ _EXTENSION_BY_CONTENT_TYPE = {
 
 
 class AnthropometricMeasurementService:
-
     @staticmethod
     def _save_bio_file(file: UploadFile) -> str:
         content_type = file.content_type or ""
