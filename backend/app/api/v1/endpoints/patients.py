@@ -17,7 +17,9 @@ from app.schemas.patient import (
     NotesUpdate,
     PatientAnthropometricUpdate,
     PatientDetailResponse,
+    PatientDietaryHistoryUpdate,
     PatientHealthUpdate,
+    PatientPathologicalHistoryUpdate,
     StatusUpdate,
 )
 from app.services.anthropometric_measurement_service import AnthropometricMeasurementService
@@ -41,6 +43,46 @@ def update_patient_health(
         resp = error_response(["Paciente no encontrado"], status_code=404)
         return JSONResponse(status_code=404, content=resp.model_dump())
     PatientService.update_health(db, patient_id, payload)
+    detail = PatientService.get_patient_detail(db, patient_id)
+    resp = success_response(data=PatientDetailResponse(**detail).model_dump(mode="json"))
+    return JSONResponse(status_code=200, content=resp.model_dump())
+
+
+@router.put("/{patient_id}/pathological-history", response_model=None)
+def update_patient_pathological_history(
+    patient_id: uuid.UUID,
+    payload: PatientPathologicalHistoryUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.id != patient_id:
+        raise HTTPException(
+            status_code=403, detail="Solo puedes actualizar tu propio perfil medico"
+        )
+    if not PatientService.get_patient_detail(db, patient_id):
+        resp = error_response(["Paciente no encontrado"], status_code=404)
+        return JSONResponse(status_code=404, content=resp.model_dump())
+    PatientService.update_pathological_history(db, patient_id, payload)
+    detail = PatientService.get_patient_detail(db, patient_id)
+    resp = success_response(data=PatientDetailResponse(**detail).model_dump(mode="json"))
+    return JSONResponse(status_code=200, content=resp.model_dump())
+
+
+@router.put("/{patient_id}/dietary-history", response_model=None)
+def update_patient_dietary_history(
+    patient_id: uuid.UUID,
+    payload: PatientDietaryHistoryUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.id != patient_id:
+        raise HTTPException(
+            status_code=403, detail="Solo puedes actualizar tu propio perfil medico"
+        )
+    if not PatientService.get_patient_detail(db, patient_id):
+        resp = error_response(["Paciente no encontrado"], status_code=404)
+        return JSONResponse(status_code=404, content=resp.model_dump())
+    PatientService.update_dietary_history(db, patient_id, payload)
     detail = PatientService.get_patient_detail(db, patient_id)
     resp = success_response(data=PatientDetailResponse(**detail).model_dump(mode="json"))
     return JSONResponse(status_code=200, content=resp.model_dump())

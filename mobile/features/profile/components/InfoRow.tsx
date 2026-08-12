@@ -12,7 +12,12 @@ interface InfoRowProps {
 
 export function InfoRow({ icon, label, value, onPress }: InfoRowProps) {
   return (
-    <TouchableOpacity style={styles.infoRow} activeOpacity={0.7} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.infoRow}
+      activeOpacity={onPress ? 0.7 : 1}
+      onPress={onPress}
+      disabled={!onPress}
+    >
       <View style={styles.infoIconWrap}>
         <MaterialCommunityIcons
           name={icon}
@@ -22,7 +27,7 @@ export function InfoRow({ icon, label, value, onPress }: InfoRowProps) {
       </View>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text style={styles.infoValue}>{value}</Text>
-      <Text style={styles.chevron}>›</Text>
+      {onPress ? <Text style={styles.chevron}>›</Text> : null}
     </TouchableOpacity>
   );
 }

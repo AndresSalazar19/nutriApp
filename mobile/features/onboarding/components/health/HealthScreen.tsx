@@ -14,8 +14,12 @@ import {
 import { useRouter } from 'expo-router';
 
 import { OnboardingHeader } from '../OnboardingHeader';
+import { SubStepBadge } from '../shared/SubStepBadge';
+import { FieldLabel, FieldError } from '../shared/FormField';
+import { YesNoToggle } from '../shared/YesNoToggle';
 import { BMICard } from './BMICard';
 import { AllergyChip } from './AllergyChip';
+import { ActivityLevelSelect } from './ActivityLevelSelect';
 import { useHealthForm } from '../../hooks/useHealthForm';
 import { submitHealthProfile } from '../../services/onboardingService';
 import { ALLERGIES } from '../../constants';
@@ -28,10 +32,12 @@ export default function HealthScreen() {
 
   const handleContinue = async () => {
     if (saving) return;
+    if (!form.validateAll()) return; // No dejar avanzar con el formulario incompleto.
+
     setSaving(true);
     try {
       await submitHealthProfile(form.getData());
-      router.push('/(onboarding)/plans');
+      router.push('/(onboarding)/history');
     } catch (error) {
       Alert.alert(
         'No se pudo guardar',
@@ -46,6 +52,7 @@ export default function HealthScreen() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       <OnboardingHeader currentStep={1} />
+      <SubStepBadge step={1} />
 
       <ScrollView
         style={styles.scrollView}
@@ -53,12 +60,15 @@ export default function HealthScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.sectionTitle}>Información de Salud Básica</Text>
+        <Text style={styles.sectionSubtitle}>
+          Estos datos son obligatorios: los usamos para calcular tu plan nutricional.
+        </Text>
 
         {/* Weight & Height */}
         <View style={styles.row}>
           <View style={styles.halfField}>
-            <Text style={styles.fieldLabel}>Peso Actual *</Text>
-            <View style={styles.inputWithUnit}>
+            <FieldLabel text="Peso Actual" />
+            <View style={[styles.inputWithUnit, form.errors.weight && styles.inputError]}>
               <TextInput
                 style={styles.input}
                 value={form.weight}
@@ -69,10 +79,11 @@ export default function HealthScreen() {
               />
               <Text style={styles.unitText}>kg</Text>
             </View>
+            <FieldError message={form.errors.weight} />
           </View>
           <View style={styles.halfField}>
-            <Text style={styles.fieldLabel}>Altura *</Text>
-            <View style={styles.inputWithUnit}>
+            <FieldLabel text="Altura" />
+            <View style={[styles.inputWithUnit, form.errors.height && styles.inputError]}>
               <TextInput
                 style={styles.input}
                 value={form.height}
@@ -83,16 +94,17 @@ export default function HealthScreen() {
               />
               <Text style={styles.unitText}>m</Text>
             </View>
+            <FieldError message={form.errors.height} />
           </View>
         </View>
 
         <BMICard weight={form.weight} height={form.height} />
 
         {/* Blood Pressure */}
-        <Text style={styles.fieldLabel}>Presión Arterial *</Text>
+        <FieldLabel text="Presión Arterial" />
         <View style={styles.row}>
           <View style={styles.halfField}>
-            <View style={styles.inputWithUnit}>
+            <View style={[styles.inputWithUnit, form.errors.systolic && styles.inputError]}>
               <TextInput
                 style={styles.input}
                 value={form.systolic}
@@ -103,9 +115,10 @@ export default function HealthScreen() {
               />
               <Text style={styles.unitText}>Sistólica</Text>
             </View>
+            <FieldError message={form.errors.systolic} />
           </View>
           <View style={styles.halfField}>
-            <View style={styles.inputWithUnit}>
+            <View style={[styles.inputWithUnit, form.errors.diastolic && styles.inputError]}>
               <TextInput
                 style={styles.input}
                 value={form.diastolic}
@@ -116,40 +129,28 @@ export default function HealthScreen() {
               />
               <Text style={styles.unitText}>Diastólica</Text>
             </View>
+            <FieldError message={form.errors.diastolic} />
           </View>
         </View>
 
         {/* Hypertension toggle */}
-        <Text style={[styles.fieldLabel, { marginTop: 16 }]}>
-          ¿Tienes diagnóstico de hipertensión? *
-        </Text>
-        <View style={styles.row}>
-          <TouchableOpacity
-            style={[styles.radioOption, form.hasHypertension && styles.radioOptionSelected]}
-            onPress={() => form.setHasHypertension(true)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.radioCircle, form.hasHypertension && styles.radioCircleFilled]} />
-            <Text style={[styles.radioText, form.hasHypertension && styles.radioTextSelected]}>
-              Sí
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.radioOption, !form.hasHypertension && styles.radioOptionSelected]}
-            onPress={() => form.setHasHypertension(false)}
-            activeOpacity={0.7}
-          >
-            <View
-              style={[styles.radioCircle, !form.hasHypertension && styles.radioCircleFilled]}
-            />
-            <Text style={[styles.radioText, !form.hasHypertension && styles.radioTextSelected]}>
-              No
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <YesNoToggle
+          label="¿Tienes diagnóstico de hipertensión?"
+          value={form.hasHypertension}
+          onChange={form.setHasHypertension}
+          error={form.errors.hasHypertension}
+          style={{ marginTop: 16 }}
+        />
+
+        {/* Activity level */}
+        <ActivityLevelSelect
+          value={form.activityLevel}
+          onChange={form.setActivityLevel}
+          error={form.errors.activityLevel}
+        />
 
         {/* Medications */}
-        <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Medicamentos Actuales</Text>
+        <FieldLabel text="Medicamentos Actuales" required={false} style={{ marginTop: 16 }} />
         <TextInput
           style={styles.inputFull}
           value={form.medications}
@@ -159,7 +160,7 @@ export default function HealthScreen() {
         />
 
         {/* Allergies */}
-        <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Alergias Alimentarias</Text>
+        <FieldLabel text="Alergias Alimentarias" required={false} style={{ marginTop: 16 }} />
         <Text style={styles.fieldHint}>Selecciona todas las que apliquen</Text>
         <View style={styles.chipsContainer}>
           {ALLERGIES.map((allergy) => (
@@ -170,13 +171,10 @@ export default function HealthScreen() {
               onPress={() => form.toggleAllergy(allergy)}
             />
           ))}
-          <TouchableOpacity style={styles.addChip} activeOpacity={0.7}>
-            <Text style={styles.addChipText}>+ Agregar otra</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Dietary Restrictions */}
-        <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Restricciones Dietéticas</Text>
+        <FieldLabel text="Restricciones Dietéticas" required={false} style={{ marginTop: 16 }} />
         <TextInput
           style={styles.inputFull}
           value={form.dietaryRestrictions}
@@ -206,10 +204,10 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F5F5F5' },
   scrollView: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 40 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A1A', marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A1A', marginBottom: 4 },
+  sectionSubtitle: { fontSize: 12.5, color: '#888', marginBottom: 16, lineHeight: 17 },
   row: { flexDirection: 'row', gap: 12 },
   halfField: { flex: 1 },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#333', marginBottom: 6 },
   fieldHint: { fontSize: 12, color: '#888', marginBottom: 8, marginTop: -4 },
   inputWithUnit: {
     flexDirection: 'row',
@@ -221,6 +219,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 48,
   },
+  inputError: { borderColor: COLORS.error, backgroundColor: COLORS.errorLight },
   input: { flex: 1, fontSize: 15, color: '#1A1A1A', fontWeight: '500' },
   inputFull: {
     borderWidth: 1.5,
@@ -233,40 +232,7 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
   },
   unitText: { fontSize: 13, color: '#999', marginLeft: 4 },
-  radioOption: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#DDD',
-    borderRadius: 10,
-    padding: 12,
-    gap: 10,
-    backgroundColor: '#fff',
-  },
-  radioOptionSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primaryLight },
-  radioCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#CCC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioCircleFilled: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
-  radioText: { fontSize: 15, color: '#555', fontWeight: '500' },
-  radioTextSelected: { color: COLORS.primary, fontWeight: '700' },
   chipsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  addChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#CCC',
-    backgroundColor: '#fff',
-  },
-  addChipText: { fontSize: 13, color: '#555', fontWeight: '500' },
   continueButton: {
     backgroundColor: COLORS.primary,
     borderRadius: 14,

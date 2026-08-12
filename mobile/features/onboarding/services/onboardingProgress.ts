@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type OnboardingStep = 'health' | 'plans' | 'payment' | 'completed';
+export type OnboardingStep = 'health' | 'history' | 'dietary' | 'plans' | 'payment' | 'completed';
+
+const VALID_STEPS: OnboardingStep[] = ['health', 'history', 'dietary', 'plans', 'payment', 'completed'];
 
 const KEY_PREFIX = 'onboarding_step:';
 
@@ -11,8 +13,8 @@ function keyFor(userId: string) {
 export const OnboardingProgress = {
   async get(userId: string): Promise<OnboardingStep | null> {
     const value = await AsyncStorage.getItem(keyFor(userId));
-    if (value === 'health' || value === 'plans' || value === 'payment' || value === 'completed') {
-      return value;
+    if (VALID_STEPS.includes(value as OnboardingStep)) {
+      return value as OnboardingStep;
     }
     return null;
   },

@@ -34,6 +34,8 @@ export default function IndexRoute() {
           if (!mounted) return;
 
           if (step === 'health') router.replace('/(onboarding)/health');
+          else if (step === 'history') router.replace('/(onboarding)/history');
+          else if (step === 'dietary') router.replace('/(onboarding)/dietary');
           else if (step === 'plans') router.replace('/(onboarding)/plans');
           else if (step === 'payment') router.replace('/(onboarding)/payment');
           else {
