@@ -173,6 +173,47 @@ class NutritionPlanService:
         return query.order_by(Food.name.asc()).limit(limit).all()
 
     @classmethod
+    def create_manual_plan(
+        cls,
+        db: Session,
+        patient_id: uuid.UUID,
+        nutritionist_id: uuid.UUID,
+        title: str,
+        description: Optional[str],
+        start_date: date,
+        end_date: Optional[date],
+        meals: list[dict],
+        is_admin: bool,
+    ) -> NutritionPlan:
+        if not is_admin:
+            assigned = (
+                db.query(PatientNutritionist)
+                .filter(
+                    PatientNutritionist.patient_id == patient_id,
+                    PatientNutritionist.nutritionist_id == nutritionist_id,
+                    PatientNutritionist.is_active.is_(True),
+                )
+                .first()
+            )
+            if not assigned:
+                raise ValueError("Este paciente no está asignado a tu cuenta")
+
+        return cls.create_plan(
+            db,
+            patient_id=patient_id,
+            nutritionist_id=nutritionist_id,
+            title=title,
+            description=description,
+            start_date=start_date,
+            end_date=end_date,
+            meals=meals,
+            is_ai_generated=False,
+            status=NutritionPlanStatus.approved,
+            is_active=True,
+            reviewed_by=nutritionist_id,
+        )
+
+    @classmethod
     async def generate_from_request(
         cls, db: Session, patient: User, text: str, image: UploadFile
     ) -> NutritionPlan:
