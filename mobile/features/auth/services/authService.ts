@@ -20,6 +20,16 @@ export interface LoginPayload {
   password: string;
 }
 
+// Campos que el backend sabe chequear por duplicado en GET /users/availability.
+// "identification" es el nombre que usa el frontend para la cédula.
+export type DuplicateCheckField = 'email' | 'identification' | 'phone';
+
+interface AvailabilityResponse {
+  field: string;
+  value: string;
+  available: boolean;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -129,6 +139,17 @@ export const AuthService = {
     // devuelve access_token igual que /login), para que el resto del
     // onboarding pueda llamar endpoints protegidos sin login manual.
     return persistSession(body);
+  },
+
+  /**
+   * Consulta al backend si un valor de cédula/correo/teléfono ya está
+   * registrado, sin enviar el resto del formulario. Pensada para llamarse
+   * en el onBlur del campo, una vez que su formato ya es válido.
+   */
+  async checkAvailability(field: DuplicateCheckField, value: string): Promise<boolean> {
+    const query = `field=${encodeURIComponent(field)}&value=${encodeURIComponent(value)}`;
+    const body = await request<AvailabilityResponse>(`/users/availability?${query}`);
+    return body.available;
   },
 
   async login(payload: LoginPayload): Promise<{ user: AuthUser }> {
