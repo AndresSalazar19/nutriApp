@@ -1,11 +1,68 @@
-import React, { useEffect } from 'react';
-import { scheduleHealthReminders } from '@/services/notification-service';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { useRouter } from 'expo-router';
+
 import WelcomeScreen from '@/features/auth/components/WelcomeScreen';
+import { AuthService } from '@/features/auth/services/authService';
+import { OnboardingProgress } from '@/features/onboarding/services/onboardingProgress';
+import { COLORS } from '@/constants/colors';
 
 export default function IndexRoute() {
+  const router = useRouter();
+  const [checkingSession, setCheckingSession] = useState(true);
+
   useEffect(() => {
-    scheduleHealthReminders();
+    let mounted = true;
+
+    void Promise.all([AuthService.isAuthenticated(), AuthService.getUser()]).then(
+      async ([isAuthenticated, user]) => {
+        if (!mounted) return;
+
+        if (isAuthenticated && user?.id) {
+          const step = await OnboardingProgress.get(user.id);
+          if (!mounted) return;
+
+          if (step === 'health') router.replace('/(onboarding)/health');
+          else if (step === 'plans') router.replace('/(onboarding)/plans');
+          else if (step === 'payment') router.replace('/(onboarding)/payment');
+          else router.replace('/(tabs)');
+          return;
+        }
+
+        setCheckingSession(false);
+      }
+    );
+
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
+
+  useEffect(() => {
+    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return;
+
+    void import('@/services/notification-service').then(({ scheduleHealthReminders }) =>
+      scheduleHealthReminders()
+    );
   }, []);
+
+  if (checkingSession) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color={COLORS.primary} />
+      </View>
+    );
+  }
 
   return <WelcomeScreen />;
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.background,
+  },
+});

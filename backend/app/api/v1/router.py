@@ -16,6 +16,7 @@ from app.api.v1.endpoints import (
     nutritionist,
     patient_nutritionist,
     patients,
+    progress,
     report,
     subscription,
     users,
@@ -32,6 +33,7 @@ router.include_router(catalog.router)
 router.include_router(nutritionist.router)
 router.include_router(appointment.router)
 router.include_router(patients.router)
+router.include_router(progress.router)
 router.include_router(nutrition_plan.router)
 router.include_router(consent.router)
 router.include_router(report.router)

@@ -1,210 +1,247 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
+  Dimensions,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   StatusBar,
+  Text,
+  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
-import ProgressHeader from './components/ProgressHeader';
-import HealthMetricsCard from './components/HealthMetricsCard'; 
-import PeriodStats from './components/PeriodStats';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { COLORS } from '@/constants/colors';
+import { Radius, Shadows, Spacing } from '@/constants/theme';
 import { AuthService } from '@/features/auth/services/authService';
-import { BloodPressureLog, ProgressService } from './services/progressService';
+import ProgressHeader from './components/ProgressHeader';
+import ProgressLineChart from './components/ProgressLineChart';
+import { ProgressData, ProgressPeriod, ProgressService } from './services/progressService';
 
-interface ProgressScreenProps {
-  navigation?: any;
-}
+type DisplayPeriod = 'Día' | 'Semana' | 'Mes';
 
-// --- Mock data actualizado con soporte para gráficos de doble línea y micronutrientes ---
-const MOCK_DATA = {
-  Semana: {
-    dateLabel: '23 - 29 de Octubre, 2025',
-    // Datos de presión histórica (Sístole y Diástole) para la semana
-    bpSystolic: [120, 122, 119, 125, 121, 118, 120],
-    bpDiastolic: [80, 81, 79, 84, 80, 78, 79],
-    // Micronutrientes correspondientes al periodo semanal
-    nutrients: [
-      { label: 'Hierro', current: 15, target: 18, unit: 'mg', color: COLORS.primary },
-      { label: 'Calcio', current: 850, target: 1000, unit: 'mg', color: COLORS.primaryMedium },
-      { label: 'Magnesio', current: 310, target: 400, unit: 'mg', color: COLORS.primaryAccent },
-    ],
-    stats: {
-      hydration: { value: '8.5', unit: 'L', subtitle: 'Promedio: 1.2L/día' },
-      calories: { value: '10,500', subtitle: 'Promedio: 1,500/día' },
-      activity: { value: '5', unit: 'días', subtitle: 'Meta: 30 min/día' },
-      adherence: { value: '86', subtitle: '¡Muy bien!' },
-    },
-  },
-  Mes: {
-    dateLabel: 'Octubre 2025',
-    bpSystolic: [118, 120, 121, 119, 122, 120, 118],
-    bpDiastolic: [78, 79, 80, 77, 81, 79, 78],
-    nutrients: [
-      { label: 'Hierro', current: 16, target: 18, unit: 'mg', color: COLORS.primary },
-      { label: 'Calcio', current: 910, target: 1000, unit: 'mg', color: COLORS.primaryMedium },
-      { label: 'Magnesio', current: 340, target: 400, unit: 'mg', color: COLORS.primaryAccent },
-    ],
-    stats: {
-      hydration: { value: '38', unit: 'L', subtitle: 'Promedio: 1.3L/día' },
-      calories: { value: '46,200', subtitle: 'Promedio: 1,540/día' },
-      activity: { value: '22', unit: 'días', subtitle: 'Meta: 30 min/día' },
-      adherence: { value: '88', subtitle: '¡Excelente!' },
-    },
-  },
-  Año: {
-    dateLabel: '2025',
-    bpSystolic: [122, 124, 121, 123, 120, 119, 122],
-    bpDiastolic: [81, 82, 80, 83, 79, 78, 81],
-    nutrients: [
-      { label: 'Hierro', current: 14, target: 18, unit: 'mg', color: COLORS.primary },
-      { label: 'Calcio', current: 790, target: 1000, unit: 'mg', color: COLORS.primaryMedium },
-      { label: 'Magnesio', current: 295, target: 400, unit: 'mg', color: COLORS.primaryAccent },
-    ],
-    stats: {
-      hydration: { value: '456', unit: 'L', subtitle: 'Promedio: 1.3L/día' },
-      calories: { value: '554k', subtitle: 'Promedio: 1,520/día' },
-      activity: { value: '248', unit: 'días', subtitle: 'Meta: 30 min/día' },
-      adherence: { value: '82', subtitle: '¡Muy bien!' },
-    },
-  },
-  Todo: {
-    dateLabel: 'Todo el tiempo',
-    bpSystolic: [120, 121, 119, 122, 120, 121, 120],
-    bpDiastolic: [79, 80, 78, 81, 79, 80, 79],
-    nutrients: [
-      { label: 'Hierro', current: 15, target: 18, unit: 'mg', color: COLORS.primary },
-      { label: 'Calcio', current: 840, target: 1000, unit: 'mg', color: COLORS.primaryMedium },
-      { label: 'Magnesio', current: 320, target: 400, unit: 'mg', color: COLORS.primaryAccent },
-    ],
-    stats: {
-      hydration: { value: '912', unit: 'L', subtitle: 'Promedio: 1.3L/día' },
-      calories: { value: '1.1M', subtitle: 'Promedio: 1,510/día' },
-      activity: { value: '496', unit: 'días', subtitle: 'Meta: 30 min/día' },
-      adherence: { value: '80', subtitle: '¡Bien!' },
-    },
-  },
+const API_PERIOD: Record<DisplayPeriod, ProgressPeriod> = {
+  Día: 'day',
+  Semana: 'week',
+  Mes: 'month',
 };
 
-type Period = 'Semana' | 'Mes' | 'Año' | 'Todo';
+const CHART_WIDTH = Dimensions.get('window').width - Spacing.md * 4;
 
-const LIMIT_BY_PERIOD: Record<Period, number> = {
-  Semana: 7,
-  Mes: 4,
-  Año: 5,
-  Todo: 7,
-};
-
-function sortPressureHistory(history: BloodPressureLog[]) {
-  return [...history].sort((a, b) => {
-    const aTime = a.measured_at ?? a.created_at ?? a.log_date;
-    const bTime = b.measured_at ?? b.created_at ?? b.log_date;
-    return aTime.localeCompare(bTime);
-  });
+function SummaryCard({
+  icon,
+  label,
+  value,
+  subtitle,
+}: {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  label: string;
+  value: string;
+  subtitle: string;
+}) {
+  return (
+    <View style={styles.summaryCard}>
+      <View style={styles.summaryLabelRow}>
+        <MaterialCommunityIcons name={icon} size={18} color={COLORS.primary} />
+        <Text style={styles.summaryLabel}>{label}</Text>
+      </View>
+      <Text style={styles.summaryValue}>{value}</Text>
+      <Text style={styles.summarySubtitle}>{subtitle}</Text>
+    </View>
+  );
 }
 
-function pressureSeries(
-  history: BloodPressureLog[],
-  period: Period,
-  fallbackSys: number[],
-  fallbackDia: number[]
-) {
-  const selected = sortPressureHistory(history).slice(-LIMIT_BY_PERIOD[period]);
+function ChartCard({
+  title,
+  subtitle,
+  labels,
+  series,
+  legend,
+}: {
+  title: string;
+  subtitle: string;
+  labels: string[];
+  series: Array<{ color: string; values: Array<number | null> }>;
+  legend: Array<{ label: string; color: string }>;
+}) {
+  return (
+    <View style={styles.chartCard}>
+      <Text style={styles.chartTitle}>{title}</Text>
+      <Text style={styles.chartSubtitle}>{subtitle}</Text>
+      <ProgressLineChart labels={labels} series={series} width={CHART_WIDTH} />
+      <View style={styles.legend}>
+        {legend.map(item => (
+          <View key={item.label} style={styles.legendItem}>
+            <View style={[styles.legendLine, { backgroundColor: item.color }]} />
+            <Text style={styles.legendText}>{item.label}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
 
-  if (selected.length === 0) {
-    return { systolic: fallbackSys, diastolic: fallbackDia };
-  }
-
-  const systolic = selected.map(item => item.systolic);
-  const diastolic = selected.map(item => item.diastolic);
-
-  if (selected.length === 1) {
+function weightSummary(data: ProgressData | null) {
+  if (!data?.weight.current_kg) return { label: 'Cambio de peso', value: '--', subtitle: 'Sin registros' };
+  const change = data.weight.change_kg;
+  if (change === null) {
     return {
-      systolic: [systolic[0], systolic[0]],
-      diastolic: [diastolic[0], diastolic[0]],
+      label: 'Peso actual',
+      value: `${data.weight.current_kg.toFixed(1)} kg`,
+      subtitle: 'Se necesita otra medición para comparar',
     };
   }
-
-  return { systolic, diastolic };
+  const direction = change < 0 ? 'Perdida de peso' : change > 0 ? 'Aumento de peso' : 'Peso estable';
+  const sign = change > 0 ? '+' : '';
+  return {
+    label: direction,
+    value: `${sign}${change.toFixed(1)} kg`,
+    subtitle: `${sign}${data.weight.change_percent?.toFixed(1) ?? '0.0'}% en el periodo`,
+  };
 }
 
-function latestDateLabel(history: BloodPressureLog[], fallback: string) {
-  const latest = sortPressureHistory(history).at(-1);
-  if (!latest) return fallback;
-  return `Ultimo registro: ${latest.log_date}`;
-}
+export default function ProgressScreen() {
+  const [selectedPeriod, setSelectedPeriod] = useState<DisplayPeriod>('Semana');
+  const [data, setData] = useState<ProgressData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export default function ProgressScreen({ navigation } : ProgressScreenProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<Period>('Semana');
-  const [pressureHistory, setPressureHistory] = useState<BloodPressureLog[]>([]);
-  const data = MOCK_DATA[selectedPeriod];
-  const pressureData = useMemo(
-    () => pressureSeries(pressureHistory, selectedPeriod, data.bpSystolic, data.bpDiastolic),
-    [pressureHistory, selectedPeriod, data.bpSystolic, data.bpDiastolic]
-  );
+  const load = useCallback(async (refresh = false) => {
+    refresh ? setRefreshing(true) : setLoading(true);
+    setError(null);
+    try {
+      const user = await AuthService.getUser();
+      if (!user?.id) throw new Error('Inicia sesion para consultar tu progreso.');
+      setData(await ProgressService.getProgress(user.id, API_PERIOD[selectedPeriod]));
+    } catch (requestError) {
+      setData(null);
+      setError(requestError instanceof Error ? requestError.message : 'No se pudo cargar el progreso.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [selectedPeriod]);
 
   useFocusEffect(
     useCallback(() => {
-      async function loadPressureHistory() {
-      const user = await AuthService.getUser();
-      if (!user?.id) return;
-      const history = await ProgressService.getBloodPressureHistory(user.id, 100).catch(() => []);
-      setPressureHistory(history);
-    }
-
-    void loadPressureHistory();
-    }, [])
+      void load();
+    }, [load])
   );
+
+  const weight = weightSummary(data);
+  const pressureValue = data?.pressure.systolic
+    ? `${data.pressure.systolic}/${data.pressure.diastolic}`
+    : '--/--';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Estilo de la barra de estado adaptado al header verde */}
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+      <ProgressHeader selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} />
 
-      <ProgressHeader 
-        selectedPeriod={selectedPeriod} 
-        onPeriodChange={setSelectedPeriod} 
-      />
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.centerText}>Cargando progreso...</Text>
+        </View>
+      ) : error ? (
+        <ScrollView
+          contentContainerStyle={styles.center}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} />}
+        >
+          <MaterialCommunityIcons name="alert-circle-outline" size={36} color={COLORS.danger} />
+          <Text style={styles.errorText}>{error}</Text>
+          <Text style={styles.centerText}>Desliza hacia abajo para reintentar.</Text>
+        </ScrollView>
+      ) : (
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} />}
+        >
+          <View style={styles.summaryGrid}>
+            <SummaryCard icon="scale-bathroom" {...weight} />
+            <SummaryCard
+              icon="heart-pulse"
+      label="Presión arterial actual"
+              value={pressureValue}
+              subtitle={data?.pressure.category ?? 'Sin registros'}
+            />
+          </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <HealthMetricsCard
-          period={selectedPeriod}
-          dateLabel={latestDateLabel(pressureHistory, data.dateLabel)}
-          systolicData={pressureData.systolic}
-          diastolicData={pressureData.diastolic}
-          nutrients={data.nutrients}
-        />
+          <ChartCard
+            title="Evolución del peso"
+            subtitle="Registros de peso en el periodo seleccionado"
+            labels={data?.weight_series.map(point => point.label) ?? []}
+            series={[
+              {
+                color: COLORS.primary,
+                values: data?.weight_series.map(point => point.value) ?? [],
+              },
+            ]}
+            legend={[{ label: 'Peso (kg)', color: COLORS.primary }]}
+          />
 
-        <PeriodStats
-          period={selectedPeriod}
-          hydration={data.stats.hydration}
-          calories={data.stats.calories}
-          activity={data.stats.activity}
-          adherence={data.stats.adherence}
-        />
-      </ScrollView>
-
-      <BottomTabBar activeTab="progreso"/>
+          <ChartCard
+            title="Evolución de presión arterial"
+            subtitle="Sistólica y diastólica (mmHg)"
+            labels={data?.pressure_series.map(point => point.label) ?? []}
+            series={[
+              {
+                color: COLORS.danger,
+                values: data?.pressure_series.map(point => point.systolic) ?? [],
+              },
+              {
+                color: COLORS.chartOrange,
+                values: data?.pressure_series.map(point => point.diastolic) ?? [],
+              },
+            ]}
+            legend={[
+              { label: 'Sistólica', color: COLORS.danger },
+              { label: 'Diastólica', color: COLORS.chartOrange },
+            ]}
+          />
+        </ScrollView>
+      )}
+      <BottomTabBar activeTab="progreso" />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS.background,
+  safe: { flex: 1, backgroundColor: COLORS.background },
+  scroll: { flex: 1 },
+  scrollContent: { paddingVertical: Spacing.md, paddingBottom: 100 },
+  center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 30 },
+  centerText: { marginTop: 10, color: COLORS.textMuted, textAlign: 'center' },
+  errorText: { marginTop: 10, color: COLORS.danger, fontWeight: '600', textAlign: 'center' },
+  summaryGrid: { gap: 12, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm },
+  summaryCard: {
+    backgroundColor: COLORS.surface,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    ...Shadows.sm,
   },
-  scroll: {
-    flex: 1,
+  summaryLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  summaryLabel: { color: COLORS.textSecondary, fontSize: 13 },
+  summaryValue: { color: COLORS.textPrimary, fontSize: 30, fontWeight: '800', marginTop: 10 },
+  summarySubtitle: { color: COLORS.success, fontSize: 12, marginTop: 4 },
+  chartCard: {
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: COLORS.surface,
+    borderRadius: Radius.lg,
+    ...Shadows.md,
   },
-  scrollContent: {
-    paddingTop: 4,
-    paddingBottom: 24,
-  },
+  chartTitle: { color: COLORS.textPrimary, fontSize: 17, fontWeight: '700' },
+  chartSubtitle: { color: COLORS.textMuted, fontSize: 12, marginTop: 3, marginBottom: 8 },
+  legend: { flexDirection: 'row', gap: 18, marginTop: 4 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendLine: { width: 16, height: 3, borderRadius: 2 },
+  legendText: { color: COLORS.textSecondary, fontSize: 12 },
 });
