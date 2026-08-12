@@ -5,6 +5,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel
 
 RangeKey = Literal["3m", "6m", "1y"]
+ReportType = Literal["progress", "clinical_history", "soap", "evolution", "meal_plan"]
 
 
 class TimePointSchema(BaseModel):
@@ -59,6 +60,7 @@ class GeneratedReportResponse(BaseModel):
     file_url: str
     file_name: str
     range_key: RangeKey
+    report_type: ReportType
     created_at: datetime
 
     class Config:

@@ -14,9 +14,9 @@ export default function RootLayout() {
     if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return;
 
     void import('@/services/notification-service').then(
-      ({ configureNotificationHandler, requestNotificationPermissions }) => {
+      ({ configureNotificationHandler, ensureAndroidChannel }) => {
         configureNotificationHandler();
-        return requestNotificationPermissions();
+        return ensureAndroidChannel();
       }
     );
   }, []);

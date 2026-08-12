@@ -38,7 +38,16 @@ export default function IndexRoute() {
           else if (step === 'dietary') router.replace('/(onboarding)/dietary');
           else if (step === 'plans') router.replace('/(onboarding)/plans');
           else if (step === 'payment') router.replace('/(onboarding)/payment');
-          else router.replace('/(tabs)');
+          else {
+            // Solo con sesión válida y onboarding completo. scheduleHealthReminders
+            // es idempotente: cancela las anteriores antes de reprogramar.
+            if (Constants.executionEnvironment !== ExecutionEnvironment.StoreClient) {
+              void import('@/services/notification-service').then(({ scheduleHealthReminders }) =>
+                scheduleHealthReminders(),
+              );
+            }
+            router.replace('/(tabs)');
+          }
           return;
         }
 
@@ -50,14 +59,6 @@ export default function IndexRoute() {
       mounted = false;
     };
   }, [router]);
-
-  useEffect(() => {
-    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return;
-
-    void import('@/services/notification-service').then(({ scheduleHealthReminders }) =>
-      scheduleHealthReminders()
-    );
-  }, []);
 
   if (checkingSession) {
     return (
