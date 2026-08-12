@@ -35,27 +35,36 @@ class AssistantService:
         """
 
         conversation = cls._get_or_create_conversation(db=db, patient_id=user.id)
-        cls._save_user_message(
-            db=db, conversation_id=conversation.id, user_id=user.id, content=message
-        )
+
+        # El historial se arma ANTES de guardar el mensaje actual: el proveedor
+        # de IA vuelve a agregar `message` al final del payload, así que si ya
+        # estuviera en el historial quedaría duplicado.
         history = cls._build_history(db=db, conversation_id=conversation.id)
 
-        prompt = Prompts.PREMIUM if premium else Prompts.BASIC
+        user_message = cls._save_user_message(
+            db=db, conversation_id=conversation.id, user_id=user.id, content=message
+        )
 
+        prompt = Prompts.PREMIUM if premium else Prompts.BASIC
         prompt_data = {"prompt": prompt, "history": history, "message": message}
 
-        assistant_response = await ai_provider.generate_meal_plan(prompt_data)
+        try:
+            assistant_response = await ai_provider.generate_meal_plan(prompt_data)
+        except Exception:
+            # Sin respuesta del modelo, el mensaje del usuario no debe quedar huérfano
+            db.delete(user_message)
+            db.commit()
+            raise
 
         # support providers that return either a dict with 'content' or a plain string
         if isinstance(assistant_response, dict):
             assistant_text = assistant_response.get("content", "")
         else:
             assistant_text = str(assistant_response)
-        assistant_message = cls._save_assistant_message(
+
+        return cls._save_assistant_message(
             db=db, conversation_id=conversation.id, content=assistant_text
         )
-
-        return assistant_message
 
     @staticmethod
     def _get_or_create_conversation(*, db: Session, patient_id: uuid.UUID) -> Conversation:

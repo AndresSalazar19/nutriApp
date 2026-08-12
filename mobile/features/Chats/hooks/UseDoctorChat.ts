@@ -17,7 +17,7 @@ export interface UseDoctorChatResult {
     error: string | null;
     otherTyping: boolean;
     otherOnline: boolean;
-    sendMessage: (content: string) => void;
+    sendMessage: (content: string) => Promise<void>;
     notifyTyping: () => void;
     notifyStopTyping: () => void;
     notifyRead: () => void;
@@ -46,6 +46,12 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
             setOtherOnline(false);
             setOtherTyping(false);
 
+            if (!nutritionistId) {
+                setLoading(false);
+                setError('Aún no tienes un nutricionista asignado.');
+                return;
+            }
+
             try {
                 // 1. Reutiliza la conversación si ya existe, si no la crea
                 const existing = await ChatService.getConversations().catch(() => []);
@@ -59,8 +65,6 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
 
                 if (cancelled) return;
                 setConversation(conv);
-                console.log("nutricionista", nutritionistId)
-                console.log("conversation_id:", conv);
 
                 // 2. Carga el historial por REST
                 const { messages: history } = await ChatService.getMessages(conv.id);
@@ -69,10 +73,9 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
 
                 // 3. Conecta el WebSocket para lo que llegue después
                 const socket = new ChatSocket();
-                socketRef.current = socket;
                 const convId = conv.id;
 
-                socket.connect(convId, (data: SocketMessage) => {
+                await socket.connect(convId, (data: SocketMessage) => {
                     if (cancelled) return;
 
                     if (data.type === 'message' && data.id) {
@@ -140,6 +143,11 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
                     }
                 });
 
+                if (cancelled) {
+                    socket.disconnect();
+                    return;
+                }
+
                 socketRef.current = socket;
             } catch (err: any) {
                 if (!cancelled) setError(err?.message ?? 'No se pudo cargar la conversación');
@@ -159,26 +167,35 @@ export function useDoctorChat({ nutritionistId }: UseDoctorChatParams): UseDocto
     }, [nutritionistId]);
 
     const sendMessage = useCallback(
-        (content: string) => {
+        async (content: string) => {
             const trimmed = content.trim();
             if (!trimmed || !conversation) return;
 
-            // Mensaje optimista: aparece de inmediato, se reconcilia cuando el socket
-            // devuelve la versión real (con id del backend)
+            const localId = `local-${Date.now()}`;
             const optimistic: MessageResponse = {
-                id: `local-${Date.now()}`,
+                id: localId,
                 conversation_id: conversation.id,
                 sender_id: 'me',
                 sender_role: 'patient',
                 content: trimmed,
                 sent_at: new Date().toISOString(),
             };
+
             setMessages((prev) => [...prev, optimistic]);
+            setError(null);
 
             if (socketRef.current?.isConnected()) {
                 socketRef.current.sendMessage(trimmed);
-            } else {
-                setError('Sin conexión en tiempo real. Intenta de nuevo.');
+                return;
+            }
+
+            // Socket caído: se envía por REST y el backend hace broadcast
+            try {
+                const saved = await ChatService.sendMessage(conversation.id, trimmed);
+                setMessages((prev) => prev.map((m) => (m.id === localId ? saved : m)));
+            } catch {
+                setMessages((prev) => prev.filter((m) => m.id !== localId));
+                setError('No se pudo enviar el mensaje. Revisa tu conexión.');
             }
         },
         [conversation],

@@ -17,6 +17,16 @@ export interface SocketMessage {
 
 export class ChatSocket {
   private socket?: WebSocket;
+  private conversationId?: string;
+  private onMessage?: (data: SocketMessage) => void;
+  private onOpen?: () => void;
+  private onClose?: () => void;
+  private onError?: (event: Event) => void;
+
+  private closedByUser = false;
+  private retries = 0;
+  private retryTimer?: ReturnType<typeof setTimeout>;
+  private queue: object[] = [];
 
   async connect(
     conversationId: string,
@@ -25,76 +35,85 @@ export class ChatSocket {
     onClose?: () => void,
     onError?: (event: Event) => void,
   ) {
+    this.conversationId = conversationId;
+    this.onMessage = onMessage;
+    this.onOpen = onOpen;
+    this.onClose = onClose;
+    this.onError = onError;
+    this.closedByUser = false;
+    await this.open();
+  }
+
+  private async open() {
     const token = await tokenStorage.get();
+    if (!token || !this.conversationId) return;
 
-    if (!token) {
-      throw new Error('No existe token de autenticación');
-    }
-
-    this.socket = new WebSocket(`${WS_URL}/ws/${conversationId}?token=${token}`);
+    this.socket = new WebSocket(`${WS_URL}/ws/${this.conversationId}?token=${token}`);
 
     this.socket.onopen = () => {
-      console.log('WebSocket conectado');
-      onOpen?.();
+      this.retries = 0;
+      // Reenvía lo que se escribió mientras la conexión estaba caída
+      const pending = [...this.queue];
+      this.queue = [];
+      pending.forEach((m) => this.socket?.send(JSON.stringify(m)));
+      this.onOpen?.();
     };
 
     this.socket.onmessage = (event: MessageEvent) => {
       try {
-        const data: SocketMessage = JSON.parse(event.data);
-        onMessage(data);
+        this.onMessage?.(JSON.parse(event.data));
       } catch (err) {
         console.error('Error parseando mensaje', err);
       }
     };
 
-    this.socket.onerror = (event: Event) => {
-      console.error('WebSocket error');
-      onError?.(event);
-    };
+    this.socket.onerror = (event: Event) => this.onError?.(event);
 
-    this.socket.onclose = () => {
-      console.log('WebSocket desconectado');
-      onClose?.();
+    this.socket.onclose = (event: CloseEvent) => {
+      this.onClose?.();
+      if (this.closedByUser) return;
+      // 1008 = token inválido o expirado: reintentar sería un bucle infinito
+      if (event.code === 1008) return;
+      this.scheduleReconnect();
     };
+  }
+
+  private scheduleReconnect() {
+    if (this.retries >= 6) return;
+    const delay = Math.min(1000 * 2 ** this.retries, 15000);
+    this.retries += 1;
+    this.retryTimer = setTimeout(() => void this.open(), delay);
   }
 
   sendMessage(content: string) {
-    this.send({
-      type: 'message',
-      content,
-    });
+    this.send({ type: 'message', content });
   }
 
   sendTyping() {
-    this.send({
-      type: 'typing',
-    });
+    this.send({ type: 'typing' });
   }
 
   sendStopTyping() {
-    this.send({
-      type: 'stop_typing',
-    });
+    this.send({ type: 'stop_typing' });
   }
 
   sendRead() {
-    this.send({
-      type: 'read',
-    });
+    this.send({ type: 'read' });
   }
 
   private send(data: object) {
-    if (!this.socket) return;
-
-    if (this.socket.readyState !== WebSocket.OPEN) {
-      console.warn('WebSocket aún no está conectado');
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify(data));
       return;
     }
-
-    this.socket.send(JSON.stringify(data));
+    // Solo los mensajes se encolan; typing/read caducados no tienen sentido
+    if ((data as any).type === 'message') this.queue.push(data);
   }
 
   disconnect() {
+    this.closedByUser = true;
+    if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.queue = [];
     this.socket?.close();
     this.socket = undefined;
   }

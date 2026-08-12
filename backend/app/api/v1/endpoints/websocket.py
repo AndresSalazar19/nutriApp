@@ -79,65 +79,90 @@ async def websocket_chat(
         )
 
         while True:
-            data = await websocket.receive_json()
+            try:
+                data = await websocket.receive_json()
+            except WebSocketDisconnect:
+                raise
+            except Exception:
+                await websocket.send_json({"type": "error", "detail": "Formato inválido"})
+                continue
+
             event_type = data.get("type")
-            if event_type == "message":
-                role = (
-                    MessageSenderRole.patient
-                    if current_user.role == UserRole.patient
-                    else MessageSenderRole.nutritionist
-                )
+            try:
+                if event_type == "message":
+                    content = (data.get("content") or "").strip()
 
-                message = ChatsService.send_message(
-                    db=db,
-                    conversation_id=conversation_id,
-                    sender_id=current_user.id,
-                    sender_role=role,
-                    data=MessageCreate(content=data["content"]),
-                )
+                    if not content:
+                        await websocket.send_json(
+                            {"type": "error", "detail": "El mensaje no puede estar vacío"}
+                        )
+                        continue
 
-                await manager.broadcast(
-                    conversation_id,
-                    {
-                        "type": "message",
-                        "id": str(message.id),
-                        "conversation_id": str(conversation_id),
-                        "sender_id": str(message.sender_id),
-                        "sender_role": (message.sender_role.value),
-                        "content": message.content,
-                        "sent_at": (message.sent_at.isoformat() if message.sent_at else None),
-                    },
-                )
+                    role = (
+                        MessageSenderRole.patient
+                        if current_user.role == UserRole.patient
+                        else MessageSenderRole.nutritionist
+                    )
 
-            elif event_type == "typing":
-                await manager.broadcast_except_sender(
-                    conversation_id,
-                    current_user.id,
-                    {"type": "typing", "user_id": str(current_user.id)},
-                )
+                    message = ChatsService.send_message(
+                        db=db,
+                        conversation_id=conversation_id,
+                        sender_id=current_user.id,
+                        sender_role=role,
+                        data=MessageCreate(content=content),
+                    )
 
-            elif event_type == "stop_typing":
-                await manager.broadcast_except_sender(
-                    conversation_id,
-                    current_user.id,
-                    {"type": "stop_typing", "user_id": str(current_user.id)},
-                )
+                    await manager.broadcast(
+                        conversation_id,
+                        {
+                            "type": "message",
+                            "id": str(message.id),
+                            "conversation_id": str(conversation_id),
+                            "sender_id": str(message.sender_id),
+                            "sender_role": message.sender_role.value,
+                            "content": message.content,
+                            "sent_at": (message.sent_at.isoformat() if message.sent_at else None),
+                        },
+                    )
 
-            elif event_type == "read":
-                ChatsService.mark_conversation_as_read(
-                    db=db,
-                    conversation_id=conversation_id,
-                    user_id=current_user.id,
-                )
+                elif event_type == "typing":
+                    await manager.broadcast_except_sender(
+                        conversation_id,
+                        current_user.id,
+                        {"type": "typing", "user_id": str(current_user.id)},
+                    )
 
-                await manager.broadcast_except_sender(
-                    conversation_id,
-                    current_user.id,
-                    {
-                        "type": "read",
-                        "conversation_id": str(conversation_id),
-                        "read_by": datetime.now(timezone.utc).isoformat(),
-                    },
+                elif event_type == "stop_typing":
+                    await manager.broadcast_except_sender(
+                        conversation_id,
+                        current_user.id,
+                        {"type": "stop_typing", "user_id": str(current_user.id)},
+                    )
+
+                elif event_type == "read":
+                    ChatsService.mark_conversation_as_read(
+                        db=db,
+                        conversation_id=conversation_id,
+                        user_id=current_user.id,
+                    )
+
+                    await manager.broadcast_except_sender(
+                        conversation_id,
+                        current_user.id,
+                        {
+                            "type": "read",
+                            "conversation_id": str(conversation_id),
+                            "read_by": datetime.now(timezone.utc).isoformat(),
+                        },
+                    )
+
+            except WebSocketDisconnect:
+                raise
+            except Exception as e:
+                db.rollback()
+                print("Error procesando evento WS:", e)
+                await websocket.send_json(
+                    {"type": "error", "detail": "No se pudo procesar el mensaje"}
                 )
 
     except WebSocketDisconnect:

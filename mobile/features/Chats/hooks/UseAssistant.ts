@@ -16,9 +16,10 @@ export interface AssistantChatMessage {
 export function useAssistant() {
     const [messages, setMessages] = useState<AssistantChatMessage[]>([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        loadMessages();
+        void loadMessages();
     }, []);
 
     const loadMessages = async () => {
@@ -27,39 +28,41 @@ export function useAssistant() {
             setMessages(data);
         } catch (e) {
             console.error(e);
+            setError('No se pudo cargar el historial.');
         }
     };
 
     const sendMessage = async (content: string) => {
-        if (!content.trim()) return;
+        const trimmed = content.trim();
+        if (!trimmed || loading) return;
 
+        setError(null);
         setLoading(true);
 
+        const localId = `local-${Date.now()}`;
+        const userMessage: AssistantChatMessage = {
+            id: localId,
+            sender_role: 'patient',
+            content: trimmed,
+            sent_at: new Date().toISOString(),
+            pending: true,
+        };
+
+        setMessages((prev) => [...prev, userMessage]);
+
         try {
-            // mensaje del usuario (optimista)
-            const userMessage: AssistantChatMessage = {
-                id: Date.now().toString(),
-                sender_role: "patient",
-                content,
-                sent_at: new Date().toISOString(),
-                pending: true,
-            };
-
-            setMessages(prev => [...prev, userMessage]);
-
-            const assistantMessage =
-                await AssistantService.sendMessage(content);
-
-            setMessages(prev => [...prev, assistantMessage]);
+            const assistantMessage = await AssistantService.sendMessage(trimmed);
+            setMessages((prev) => [
+                ...prev.map((m) => (m.id === localId ? { ...m, pending: false } : m)),
+                assistantMessage,
+            ]);
+        } catch (e: any) {
+            setMessages((prev) => prev.filter((m) => m.id !== localId));
+            setError(e?.message ?? 'El asistente no respondió. Intenta de nuevo.');
         } finally {
             setLoading(false);
         }
     };
 
-    return {
-        messages,
-        loading,
-        sendMessage,
-        reload: loadMessages,
-    };
+    return { messages, loading, error, sendMessage, reload: loadMessages };
 }

@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import Any
 
@@ -94,19 +95,32 @@ class OpenAIService:
             "stream": False,
         }
 
-        try:
-            async with httpx.AsyncClient(timeout=60) as client:
-                response = await client.post(
-                    cls.BASE_URL,
-                    headers=headers,
-                    json=payload,
-                )
+        last_error = None
 
-            response.raise_for_status()
+        for intento in range(3):
+            try:
+                async with httpx.AsyncClient(timeout=60) as client:
+                    response = await client.post(
+                        cls.BASE_URL,
+                        headers=headers,
+                        json=payload,
+                    )
 
-            data = response.json()
+                if response.status_code == 429:
+                    last_error = f"Blackbox 429: {response.text}"
+                    await asyncio.sleep(2**intento)  # 1s, 2s, 4s
+                    continue
 
-            return data["choices"][0]["message"]["content"].strip()
+                if response.status_code >= 400:
+                    raise RuntimeError(f"Blackbox {response.status_code}: {response.text}")
 
-        except Exception as ex:
-            raise RuntimeError(f"Error comunicándose con Blackbox AI: {ex}") from ex
+                data = response.json()
+                return data["choices"][0]["message"]["content"].strip()
+
+            except RuntimeError:
+                raise
+            except Exception as ex:
+                last_error = str(ex)
+                await asyncio.sleep(2**intento)
+
+        raise RuntimeError(f"Error comunicándose con Blackbox AI: {last_error}")
