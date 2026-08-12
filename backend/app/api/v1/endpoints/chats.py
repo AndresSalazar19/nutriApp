@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from app.core.dependencies import get_current_user
 from app.core.response import error_response, success_response
 from app.db.base import get_db
-from app.db.models.conversations import Conversation
 from app.db.models.message import MessageSenderRole
 from app.db.models.user import User, UserRole
 from app.schemas.conversations import (
@@ -19,6 +18,7 @@ from app.schemas.conversations import (
     MessageResponse,
 )
 from app.services.conversations_service import ChatsService
+from app.services.websocket_manager import manager
 
 router = APIRouter(prefix="/chats", tags=["chats"])
 
@@ -85,21 +85,13 @@ def get_conversations(
     )
 
 
-@staticmethod
-def get_conversation_by_id(
-    db: Session,
-    conversation_id: uuid.UUID,
-) -> Conversation | None:
-    return db.query(Conversation).filter(Conversation.id == conversation_id).first()
-
-
 @router.get("/{conversation_id}/messages")
 def get_messages(
     conversation_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    conversation = get_conversation_by_id(
+    conversation = ChatsService.get_conversation_by_id(
         db,
         conversation_id,
     )
@@ -153,13 +145,13 @@ def get_messages(
 
 
 @router.post("/{conversation_id}/messages")
-def send_message(
+async def send_message(
     conversation_id: uuid.UUID,
     data: MessageCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    conversation = get_conversation_by_id(
+    conversation = ChatsService.get_conversation_by_id(
         db=db,
         conversation_id=conversation_id,
     )
@@ -211,6 +203,19 @@ def send_message(
         sender_id=current_user.id,
         sender_role=sender_role,
         data=data,
+    )
+
+    await manager.broadcast(
+        conversation_id,
+        {
+            "type": "message",
+            "id": str(message.id),
+            "conversation_id": str(conversation_id),
+            "sender_id": str(message.sender_id),
+            "sender_role": message.sender_role.value,
+            "content": message.content,
+            "sent_at": message.sent_at.isoformat() if message.sent_at else None,
+        },
     )
 
     resp = success_response(data=MessageResponse.model_validate(message).model_dump(mode="json"))

@@ -14,6 +14,7 @@ from app.schemas.report import (
     HistoryEntrySummary,
     PatientReportDataResponse,
     RangeKey,
+    ReportType,
 )
 from app.services.report_service import ReportService
 
@@ -27,6 +28,7 @@ def _report_to_response(report) -> dict:
         file_url=file_url,
         file_name=report.file_name,
         range_key=report.range_key,
+        report_type=report.report_type,
         created_at=report.created_at,
     ).model_dump(mode="json")
 
@@ -59,10 +61,18 @@ def get_report_data(
 def generate_report_pdf(
     patient_id: uuid.UUID,
     range: RangeKey = Query("3m"),
+    report_type: ReportType = Query("progress"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_nutritionist_or_admin),
 ):
-    report = ReportService.generate_pdf(db, patient_id, range, generated_by=current_user.id)
+    try:
+        report = ReportService.generate_pdf(
+            db, patient_id, range, generated_by=current_user.id, report_type=report_type
+        )
+    except ValueError as exc:
+        resp = error_response([str(exc)], status_code=422)
+        return JSONResponse(status_code=422, content=resp.model_dump())
+
     if report is None:
         resp = error_response(["Paciente no encontrado"], status_code=404)
         return JSONResponse(status_code=404, content=resp.model_dump())

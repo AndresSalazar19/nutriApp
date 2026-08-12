@@ -123,6 +123,15 @@ export const NutritionPlanService = {
     return handleResponse<NutritionPlanResponse[]>(res);
   },
 
+  async listForPatient(patientId: string): Promise<NutritionPlanResponse[]> {
+    const res = await fetch(`${API_URL}/nutrition-plans/patient/${patientId}`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+
+    return handleResponse<NutritionPlanResponse[]>(res);
+  },
+
   async getById(planId: string): Promise<NutritionPlanResponse> {
     const res = await fetch(`${API_URL}/nutrition-plans/${planId}`, {
       method: 'GET',

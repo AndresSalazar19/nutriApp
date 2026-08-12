@@ -54,6 +54,11 @@ class User(Base):
 class GenderEnum(str, enum.Enum):
     masculino = "masculino"
     femenino = "femenino"
+    # "Otro" already exists in persons.gender data (the column is a plain
+    # VARCHAR, not a real DB-level enum) — without this member, SQLAlchemy
+    # raises LookupError deserializing ANY query that touches those rows,
+    # which is what was breaking the whole admin patient list.
+    otro = "Otro"
 
 
 class Person(Base):
@@ -67,7 +72,13 @@ class Person(Base):
     last_name = Column(String(100), nullable=False)
     cedula = Column(String(20), nullable=True, unique=True)
     date_of_birth = Column(Date, nullable=True)
-    gender = Column(SQLEnum(GenderEnum), nullable=True)
+    # values_callable: without it, SQLAlchemy maps DB strings to enum members
+    # by *member name*, not by .value — "otro"'s name wouldn't match the
+    # stored "Otro" and reading would still raise LookupError.
+    gender = Column(
+        SQLEnum(GenderEnum, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        nullable=True,
+    )
     phone = Column(String(20), nullable=True)
     avatar_url = Column(Text, nullable=True)
 

@@ -17,6 +17,7 @@ class PatientReport(Base):
     )
     generated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     range_key = Column(String(10), nullable=False)
+    report_type = Column(String(30), nullable=False, default="progress")
     file_path = Column(String(500), nullable=False)
     file_name = Column(String(255), nullable=False)
     file_size = Column(Integer, nullable=True)

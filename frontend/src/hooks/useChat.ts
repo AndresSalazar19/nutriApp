@@ -8,7 +8,8 @@ interface UseChatReturn {
   connected: boolean;
   otherTyping: boolean;
   otherOnline: boolean;
-  sendMessage: (content: string) => void;
+  sendMessage: (content: string) => Promise<void>;
+  sendError: string | null;
   notifyTyping: () => void;
   notifyStopTyping: () => void;
   notifyRead: () => void;
@@ -26,6 +27,7 @@ export const useChat = (
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [loading, setLoading] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const socketRef = useRef<ChatSocket | null>(null);
   const otherParticipantIdRef = useRef(otherParticipantId);
@@ -176,14 +178,14 @@ export const useChat = (
   }, [conversationId, loadMessages]);
 
   const sendMessage = useCallback(
-    (content: string) => {
+    async (content: string) => {
       const trimmed = content.trim();
+      if (!trimmed || !conversationId) return;
 
-      if (!trimmed) return;
-
+      const localId = `local-${Date.now()}`;
       const optimistic: MessageResponse = {
-        id: `local-${Date.now()}`,
-        conversation_id: conversationId!,
+        id: localId,
+        conversation_id: conversationId,
         sender_id: 'me',
         sender_role: 'nutritionist',
         content: trimmed,
@@ -191,14 +193,24 @@ export const useChat = (
         read_at: null,
       };
 
-      if (!socketRef.current?.isConnected()) {
+      setMessages((prev) => [...prev, optimistic]);
+      handleIncomingMessageRef.current?.(optimistic);
+      setSendError(null);
+
+      if (socketRef.current?.isConnected()) {
+        socketRef.current.sendMessage(trimmed);
         return;
       }
 
-      setMessages((prev) => [...prev, optimistic]);
-      handleIncomingMessageRef.current?.(optimistic);
-
-      socketRef.current?.sendMessage(trimmed);
+      // Socket caído: se envía por REST. El backend hace broadcast igual,
+      // así que el otro lado lo recibe en tiempo real.
+      try {
+        const saved = await ChatService.sendMessage(conversationId, trimmed);
+        setMessages((prev) => prev.map((m) => (m.id === localId ? saved : m)));
+      } catch {
+        setMessages((prev) => prev.filter((m) => m.id !== localId));
+        setSendError('No se pudo enviar el mensaje. Revisa tu conexión.');
+      }
     },
     [conversationId],
   );
@@ -222,6 +234,7 @@ export const useChat = (
     otherTyping,
     otherOnline,
     sendMessage,
+    sendError,
     notifyTyping,
     notifyStopTyping,
     reloadMessages: loadMessages,
