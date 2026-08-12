@@ -13,7 +13,7 @@ export interface ConversationResponse {
   nutritionist_id?: string | null;
   participant_id: string;
   participant_name: string;
-  participant_avatar_url?: string | null;
+  participant_avatar?: string | null;
   last_message?: string | null;
   last_message_time?: string | null;
   unread_count: number;
@@ -84,7 +84,6 @@ export const ChatService = {
     });
 
     const response = await handleResponse<any>(res);
-    console.log('Conversations response:', response);
     return response.data ?? [];
   },
 
@@ -95,6 +94,17 @@ export const ChatService = {
     });
 
     const response = await handleResponse<any>(res);
-    return response.data ?? [];
+    return response.data ?? { conversation_id, messages: [] };
+  },
+
+  async sendMessage(conversation_id: string, content: string): Promise<MessageResponse> {
+    const res = await fetch(`${API}/chats/${conversation_id}/messages`, {
+      method: 'POST',
+      headers: await authHeaders(),
+      body: JSON.stringify({ content }),
+    });
+
+    const response = await handleResponse<any>(res);
+    return response.data;
   },
 };

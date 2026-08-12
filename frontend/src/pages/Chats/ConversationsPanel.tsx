@@ -100,9 +100,9 @@ const ConversationsPanel = ({
             >
               {/* Avatar */}
 
-              {conversation.participant_avatar_url ? (
+              {conversation.participant_avatar ? (
                 <img
-                  src={conversation.participant_avatar_url}
+                  src={conversation.participant_avatar}
                   alt={conversation.participant_name}
                   className="h-12 w-12 rounded-full object-cover"
                 />
