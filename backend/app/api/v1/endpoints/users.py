@@ -2,6 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.response import error_response, success_response
@@ -13,14 +14,51 @@ from app.services.user_service import UserService
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+def _field_error(message: str, field: str, status_code: int = 400) -> JSONResponse:
+    """Arma una respuesta de error indicando explícitamente qué campo falló,
+    para que el frontend pueda resaltar el input correcto."""
+    resp = error_response([message], status_code=status_code)
+    content = resp.model_dump()
+    content["field"] = field
+    return JSONResponse(status_code=status_code, content=content)
+
+
 @router.post("/", response_model=None)
 def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
     if UserService.email_exists(db, user_data.email):
-        resp = error_response(["El email ya está registrado"], status_code=400)
-        return JSONResponse(status_code=400, content=resp.model_dump())
+        return _field_error("El correo ya está registrado", "email")
 
-    user = UserService.create(db, user_data)
-    resp = success_response(data=UserResponse.model_validate(user).model_dump(mode="json"))
+    if UserService.cedula_exists(db, user_data.cedula):
+        return _field_error("La cédula ya está registrada", "identification")
+
+    if UserService.phone_exists(db, user_data.phone):
+        return _field_error("El teléfono ya está registrado", "phone")
+
+    try:
+        user = UserService.create(db, user_data)
+    except IntegrityError:
+        # Defensa en profundidad: si dos requests llegan casi simultáneas y
+        # ambas pasan las validaciones de arriba, el constraint UNIQUE de la
+        # BDD es la última barrera. Evita un 500 sin mensaje claro.
+        db.rollback()
+        resp = error_response(
+            ["Alguno de los datos ingresados ya está registrado (correo, cédula o teléfono)"],
+            status_code=409,
+        )
+        return JSONResponse(status_code=409, content=resp.model_dump())
+
+    # El registro ahora deja al usuario autenticado de inmediato, igual que
+    # /login, para que el resto del onboarding (salud, plan, pago) tenga
+    # token disponible sin necesitar un login manual intermedio.
+    token = create_access_token(user.id, user.role)
+
+    resp = success_response(
+        data={
+            "access_token": token,
+            "token_type": "bearer",
+            "user": UserResponse.model_validate(user).model_dump(mode="json"),
+        }
+    )
     return JSONResponse(status_code=200, content=resp.model_dump())
 
 

@@ -1,6 +1,6 @@
 import { tokenStorage } from '@/utils/tokenStorage';
 import { ApiResponse } from '@/models/ApiResponse';
-import { API_URL } from './userService';
+import { API_URL } from '@/services/userservice';
 
 export interface Plan {
   id: string;

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PersonalInfo, HealthInfo, UserProfile } from '../types';
 import { UserService, UserAccount } from '@/services/userservice';
+import { useAssignedNutritionist } from './useAssignedNutritionist';
+import { avatarStorage } from '../utils/avatarStorage';
 
 const EMPTY_PROFILE: UserProfile = {
   name: '',
@@ -68,6 +70,8 @@ export function useProfileForm(userId: string) {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
 
+  const { nutritionist: assignedNutritionist } = useAssignedNutritionist(userId || undefined);
+
   const load = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
@@ -85,6 +89,53 @@ export function useProfileForm(userId: string) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Carga la foto de perfil guardada localmente (no viene del backend).
+  // Se re-ejecuta si cambia el usuario logueado, para no mostrar la foto de
+  // una sesión anterior mientras carga la del usuario actual.
+  useEffect(() => {
+    if (!userId) {
+      setImageUri(null);
+      return;
+    }
+    let cancelled = false;
+    avatarStorage.get(userId).then((uri) => {
+      if (!cancelled) setImageUri(uri);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  // Persiste la nueva foto localmente cada vez que el usuario elige una,
+  // además de actualizar el estado que ya usa AvatarPicker.
+  const updateImageUri = useCallback(
+    (uri: string) => {
+      setImageUri(uri);
+      if (userId) {
+        avatarStorage.set(userId, uri).catch(() => {
+          // Falla silenciosa: la foto igual se ve en esta sesión de la app
+          // (queda en el estado), solo no sobrevivirá a cerrar la app.
+        });
+      }
+    },
+    [userId],
+  );
+
+  // Se combina por separado del resto del perfil: el nutricionista tiene su
+  // propio fetch/estado de carga (useAssignedNutritionist), así que no
+  // bloquea ni depende del resto de mapUserToProfile.
+  useEffect(() => {
+    if (!assignedNutritionist) return;
+    setProfile((prev) => ({
+      ...prev,
+      nutritionist: {
+        id: assignedNutritionist.id,
+        name: assignedNutritionist.name,
+        specialty: assignedNutritionist.specialty ?? '',
+      },
+    }));
+  }, [assignedNutritionist]);
 
   const activeValue = activeModal
     ? activeModal.section === 'personal'
@@ -131,11 +182,12 @@ export function useProfileForm(userId: string) {
     error,
     reload: load,
     imageUri,
-    setImageUri,
+    setImageUri: updateImageUri,
     activeModal,
     activeValue,
     openModal,
     closeModal,
     saveField,
+    assignedNutritionist,
   };
 }

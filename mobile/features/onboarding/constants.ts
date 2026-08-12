@@ -13,6 +13,7 @@ export const ALLERGIES = ['Lácteos', 'Gluten', 'Mariscos', 'Soya', 'Huevos'];
 export const PLANS: Plan[] = [
   {
     id: 'basic',
+    code: 'basic',
     name: 'Plan Básico',
     price: '$19.99',
     period: '/mes',
@@ -28,6 +29,7 @@ export const PLANS: Plan[] = [
   },
   {
     id: 'standard',
+    code: 'standard',
     name: 'Plan Estándar',
     price: '$34.99',
     period: '/mes',
@@ -46,6 +48,7 @@ export const PLANS: Plan[] = [
   },
   {
     id: 'premium',
+    code: 'premium',
     name: 'Plan Premium',
     price: '$49.99',
     period: '/mes',

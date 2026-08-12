@@ -26,7 +26,7 @@ import {
   WeightLog,
 } from '@/features/progress/services/progressService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { PatientNutritionistService } from '../services/patientNutritionistService';
+import { PatientNutritionistService } from '@/services/patientNutritionistService';
 import DoctorChatScreen from '@/features/Chats/DoctorChatsSceen';
 import AIChatScreen from '@/features/Chats/AiChatsScreen';
 import { DailyMetricModal, DailyMetricMode } from './DailyMetricModal';
@@ -224,7 +224,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerGreeting}>Hola, {user?.first_name ?? 'Paciente'}</Text>
+          <Text style={styles.headerGreeting}>Hola, {user?.person?.first_name ?? 'Paciente'}</Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
