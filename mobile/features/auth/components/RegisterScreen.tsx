@@ -1,8 +1,7 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -17,6 +16,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useRegister } from '@/features/auth/hooks/useAuth';
+import { AuthService, DuplicateCheckField } from '@/features/auth/services/authService';
+import {
+  getValidationErrors,
+  useRegisterValidation,
+  AsyncFieldValidator,
+  RegisterField,
+  RegisterFormValues,
+} from '@/features/auth/hooks/useRegisterValidation';
 import { DatePickerField } from '@/components/ui/DatePickerField';
 import { Picker } from '@react-native-picker/picker';
 import { PasswordField } from '@/components/ui/PasswordField';
@@ -98,77 +105,142 @@ const dpStyles = StyleSheet.create({
   btnSaveText: { fontSize: 15, fontWeight: '700', color: COLORS.textOnPrimary },
 });
 
-// Nombres de campo que puede devolver el backend en la respuesta de error,
-// para saber cuál TextInput resaltar.
-type ErrorField = 'email' | 'identification' | 'phone' | null;
+// Label con asterisco rojo para campos obligatorios.
+function FieldLabel({ text }: { text: string }) {
+  return (
+    <Text style={styles.label}>
+      {text} <Text style={styles.requiredMark}>*</Text>
+    </Text>
+  );
+}
+
+// Mensaje de error en rojo debajo del campo (nunca un Alert). Si no hay
+// error pero se está corriendo el validador asíncrono de duplicados,
+// muestra un hint neutro en su lugar.
+function FieldError({ message, validating }: { message?: string; validating?: boolean }) {
+  if (message) return <Text style={styles.fieldErrorText}>{message}</Text>;
+  if (validating) return <Text style={styles.fieldHintText}>Verificando disponibilidad…</Text>;
+  return null;
+}
+
+const DUPLICATE_CHECK_FIELDS = new Set<RegisterField>(['identification', 'email', 'phone']);
+
+const DUPLICATE_MESSAGES: Record<string, string> = {
+  identification: 'Esta cédula ya está registrada.',
+  email: 'Este correo ya está registrado.',
+  phone: 'Este teléfono ya está registrado.',
+};
+
+// Validador asíncrono de duplicados: se dispara en el onBlur de
+// cédula/correo/teléfono (una vez que el formato ya es válido) y consulta
+// GET /users/availability. Si la llamada falla (sin conexión, etc.) no
+// bloqueamos al usuario aquí: el backend igual vuelve a validar duplicados
+// al enviar el formulario completo.
+const checkDuplicates: AsyncFieldValidator = async (field, value) => {
+  if (!DUPLICATE_CHECK_FIELDS.has(field)) return null;
+  try {
+    const available = await AuthService.checkAvailability(field as DuplicateCheckField, value.trim());
+    return available ? null : DUPLICATE_MESSAGES[field];
+  } catch {
+    return null;
+  }
+};
+
+const INITIAL_FORM: RegisterFormValues = {
+  fullName: '',
+  identification: '',
+  email: '',
+  phone: '',
+  birthDate: '',
+  gender: '',
+  password: '',
+  confirmPassword: '',
+};
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, loading, error, errorField } = useRegister();
 
-  const [form, setForm] = useState({
-    fullName: '',
-    identification: '',
-    email: '',
-    phone: '',
-    birthDate: '',
-    password: '',
-    confirmPassword: '',
-    gender: '',
-  });
+  const [form, setForm] = useState<RegisterFormValues>(INITIAL_FORM);
   const [acceptTerms, setAcceptTerms]       = useState(false);
   const [acceptPrivacy, setAcceptPrivacy]   = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const updateField = (field: string, value: string) =>
+  // Validación de cédula/correo/teléfono duplicados contra el backend,
+  // enchufada vía el slot asíncrono del hook.
+  const validation = useRegisterValidation(checkDuplicates);
+  const { errors, touched, validating, validateField, validateAll, markTouched, runAsyncValidation, setFieldError } = validation;
+
+  const updateField = (field: RegisterField, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
+  // Errores "en vivo" recalculados en cada cambio, independientes de si el
+  // usuario ya tocó cada campo. Se usan solo para decidir si el botón de
+  // continuar puede habilitarse, no para pintar mensajes (eso depende de
+  // `touched`, para no mostrar "obligatorio" antes de que el usuario escriba).
+  const liveErrors = useMemo(() => getValidationErrors(form), [form]);
+  const hasClientErrors = Object.keys(liveErrors).length > 0;
+  // `errors` (a diferencia de `liveErrors`) también incluye los duplicados
+  // detectados por el validador asíncrono (cédula/correo/teléfono ya
+  // registrados), así que el botón se mantiene bloqueado hasta que se
+  // resuelvan o el usuario corrija el valor.
+  const hasAsyncErrors = Object.values(errors).some(Boolean);
+  const isValidating = Object.values(validating).some(Boolean);
+  const canSubmit = !hasClientErrors && !hasAsyncErrors && !isValidating && acceptTerms && acceptPrivacy && !loading;
+
+  const handleChange = (field: RegisterField, value: string) => {
+    updateField(field, value);
+    if (touched[field]) {
+      // Revalida en vivo solo si el usuario ya salió del campo una vez,
+      // para que el error desaparezca apenas corrige el valor.
+      validateField(field, { ...form, [field]: value });
+    }
+  };
+
+  const handleBlur = (field: RegisterField) => {
+    markTouched(field);
+    validateField(field, form);
+    if (DUPLICATE_CHECK_FIELDS.has(field)) {
+      runAsyncValidation(field, form);
+    }
+  };
+
+  const handleSelect = (field: RegisterField, value: string) => {
+    updateField(field, value);
+    markTouched(field);
+    validateField(field, { ...form, [field]: value });
+  };
+
+  // Si el backend rechaza cédula/email/teléfono por duplicado (u otra
+  // razón), lo mostramos con el mismo slot visual que los errores de
+  // cliente, pegado al campo correspondiente.
+  useEffect(() => {
+    if (errorField === 'identification' || errorField === 'email' || errorField === 'phone') {
+      setFieldError(errorField, error);
+      markTouched(errorField);
+    }
+  }, [error, errorField, setFieldError, markTouched]);
+
   const handleRegister = async () => {
-    const { fullName, email, phone, birthDate, password, confirmPassword, gender, identification } = form;
+    const valid = validateAll(form);
+    if (!valid || !acceptTerms || !acceptPrivacy) return;
 
-    if (!fullName.trim() || !email.trim() || !phone.trim() || !birthDate.trim() ||
-        !password.trim() || !confirmPassword.trim()) {
-      Alert.alert('Campos requeridos', 'Por favor completa todos los campos.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert('Contraseñas', 'Las contraseñas no coinciden.');
-      return;
-    }
-    if (!acceptTerms || !acceptPrivacy) {
-      Alert.alert('Términos', 'Debes aceptar los términos y la política de privacidad.');
-      return;
-    }
-
-    const nameParts  = fullName.trim().split(' ');
+    const nameParts  = form.fullName.trim().split(/\s+/);
     const first_name = nameParts[0] ?? '';
     const last_name  = nameParts.slice(1).join(' ') || first_name;
 
-    const date_of_birth = parseDateToISO(birthDate);
-    if (!date_of_birth) {
-      Alert.alert('Fecha inválida', 'Selecciona tu fecha de nacimiento.');
-      return;
-    }
-
-    if (gender.trim() === '') {
-      Alert.alert('Género', 'Selecciona tu género.');
-      return;
-    }
-
-    if (identification.trim().length !== 10 ) {
-      Alert.alert('Cédula inválida', 'La cédula debe tener exactamente 10 caracteres.');
-      return;
-    }
+    const date_of_birth = parseDateToISO(form.birthDate);
+    if (!date_of_birth) return;
 
     const user = await register({
       first_name,
       last_name,
-      email: email.trim(),
-      phone: phone.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
       date_of_birth,
-      password,
-      gender,
-      cedula: identification.trim(),
+      password: form.password,
+      gender: form.gender,
+      cedula: form.identification.trim(),
     });
 
     if (user) router.replace('/(onboarding)/health');
@@ -178,7 +250,8 @@ export default function RegisterScreen() {
   // indicó un campo específico (p. ej. error de conexión). Si sí lo indicó,
   // el mensaje aparece pegado al input correspondiente.
   const showGenericError = !!error && !errorField;
-  const fieldHasError = (field: ErrorField) => !!error && errorField === field;
+  const fieldError = (field: RegisterField) => (touched[field] ? errors[field] : undefined);
+  const fieldHasError = (field: RegisterField) => !!fieldError(field);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -210,35 +283,37 @@ export default function RegisterScreen() {
               </View>
             ) : null}
 
-            <Text style={styles.label}>Nombre Completo</Text>
+            <FieldLabel text="Nombre Completo" />
             <TextInput
-              style={styles.input}
+              style={[styles.input, fieldHasError('fullName') && styles.inputError]}
               placeholder="Juan Pérez García"
               placeholderTextColor={COLORS.placeholder}
               value={form.fullName}
-              onChangeText={(v) => updateField('fullName', v)}
+              onChangeText={(v) => handleChange('fullName', v)}
+              onBlur={() => handleBlur('fullName')}
               editable={!loading}
             />
+            <FieldError message={fieldError('fullName')} />
 
-            <Text style={styles.label}>Cédula</Text>
+            <FieldLabel text="Cédula" />
             <TextInput
               style={[styles.input, fieldHasError('identification') && styles.inputError]}
               placeholder="0934567890"
-              keyboardType="phone-pad"
+              keyboardType="number-pad"
+              maxLength={10}
               placeholderTextColor={COLORS.placeholder}
               value={form.identification}
-              onChangeText={(v) => updateField('identification', v)}
+              onChangeText={(v) => handleChange('identification', v)}
+              onBlur={() => handleBlur('identification')}
               editable={!loading}
             />
-            {fieldHasError('identification') && (
-              <Text style={styles.fieldErrorText}>{error}</Text>
-            )}
+            <FieldError message={fieldError('identification')} validating={validating.identification} />
 
-            <Text style={styles.label}>Género</Text>
-            <View style={styles.pickerContainer}>
+            <FieldLabel text="Género" />
+            <View style={[styles.pickerContainer, fieldHasError('gender') && styles.inputError]}>
               <Picker
                 selectedValue={form.gender}
-                onValueChange={(value) => updateField('gender', value)}
+                onValueChange={(value) => handleSelect('gender', value)}
                 enabled={!loading}
                 style={styles.picker}
                 dropdownIconColor={COLORS.textPrimary}
@@ -248,8 +323,9 @@ export default function RegisterScreen() {
                 <Picker.Item label="Masculino" value="masculino" color={COLORS.textPrimary} style={styles.pickerItem} />
               </Picker>
             </View>
+            <FieldError message={fieldError('gender')} />
 
-            <Text style={styles.label}>Correo Electrónico</Text>
+            <FieldLabel text="Correo Electrónico" />
             <TextInput
               style={[styles.input, fieldHasError('email') && styles.inputError]}
               placeholder="juan@ejemplo.com"
@@ -257,30 +333,29 @@ export default function RegisterScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               value={form.email}
-              onChangeText={(v) => updateField('email', v)}
+              onChangeText={(v) => handleChange('email', v)}
+              onBlur={() => handleBlur('email')}
               editable={!loading}
             />
-            {fieldHasError('email') && (
-              <Text style={styles.fieldErrorText}>{error}</Text>
-            )}
+            <FieldError message={fieldError('email')} validating={validating.email} />
 
-            <Text style={styles.label}>Teléfono</Text>
+            <FieldLabel text="Teléfono" />
             <TextInput
               style={[styles.input, fieldHasError('phone') && styles.inputError]}
-              placeholder="0999 999 999"
+              placeholder="0999999999"
               placeholderTextColor={COLORS.placeholder}
-              keyboardType="phone-pad"
+              keyboardType="number-pad"
+              maxLength={10}
               value={form.phone}
-              onChangeText={(v) => updateField('phone', v)}
+              onChangeText={(v) => handleChange('phone', v)}
+              onBlur={() => handleBlur('phone')}
               editable={!loading}
             />
-            {fieldHasError('phone') && (
-              <Text style={styles.fieldErrorText}>{error}</Text>
-            )}
+            <FieldError message={fieldError('phone')} validating={validating.phone} />
 
-            <Text style={styles.label}>Fecha de Nacimiento</Text>
+            <FieldLabel text="Fecha de Nacimiento" />
             <TouchableOpacity
-              style={styles.dateButton}
+              style={[styles.dateButton, fieldHasError('birthDate') && styles.inputError]}
               onPress={() => setShowDatePicker(true)}
               disabled={loading}
               activeOpacity={0.7}
@@ -291,20 +366,25 @@ export default function RegisterScreen() {
               </Text>
               <MaterialCommunityIcons name="chevron-down" size={20} color={COLORS.textSecondary} />
             </TouchableOpacity>
+            <FieldError message={fieldError('birthDate')} />
 
-            <Text style={styles.label}>Contraseña</Text>
+            <FieldLabel text="Contraseña" />
             <PasswordField
               value={form.password}
-              onChangeText={(v) => updateField('password', v)}
+              onChangeText={(v) => handleChange('password', v)}
+              onBlur={() => handleBlur('password')}
               placeholder="••••••••"
             />
+            <FieldError message={fieldError('password')} />
 
-            <Text style={styles.label}>Confirmar Contraseña</Text>
+            <FieldLabel text="Confirmar Contraseña" />
             <PasswordField
               value={form.confirmPassword}
-              onChangeText={(v) => updateField('confirmPassword', v)}
+              onChangeText={(v) => handleChange('confirmPassword', v)}
+              onBlur={() => handleBlur('confirmPassword')}
               placeholder="••••••••"
             />
+            <FieldError message={fieldError('confirmPassword')} />
 
             <View style={styles.termsSection}>
               <Checkbox
@@ -330,12 +410,15 @@ export default function RegisterScreen() {
                   </Text>
                 </Text>
               </Checkbox>
+              {(!acceptTerms || !acceptPrivacy) && (
+                <Text style={styles.termsHint}>Debes aceptar ambos para continuar.</Text>
+              )}
             </View>
 
             <TouchableOpacity
-              style={[styles.btnPrimary, loading && styles.btnDisabled]}
+              style={[styles.btnPrimary, !canSubmit && styles.btnDisabled]}
               onPress={handleRegister}
-              disabled={loading}
+              disabled={!canSubmit}
             >
               {loading
                 ? <ActivityIndicator color={COLORS.textOnPrimary} />
@@ -357,7 +440,7 @@ export default function RegisterScreen() {
         visible={showDatePicker}
         value={form.birthDate}
         onChange={(val) => updateField('birthDate', val)}
-        onConfirm={(val) => updateField('birthDate', val)}
+        onConfirm={(val) => handleSelect('birthDate', val)}
         onClose={() => setShowDatePicker(false)}
       />
 
@@ -397,6 +480,7 @@ const styles = StyleSheet.create({
   errorRow:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
   errorText:   { color: COLORS.error, fontSize: 13, flex: 1 },
   label:       { fontSize: 13, fontWeight: '600', color: COLORS.textPrimary, marginBottom: 6 },
+  requiredMark: { color: COLORS.error },
   input: {
     borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 13,
@@ -407,6 +491,9 @@ const styles = StyleSheet.create({
   },
   fieldErrorText: {
     color: COLORS.error, fontSize: 12, marginTop: -2, marginBottom: 14,
+  },
+  fieldHintText: {
+    color: COLORS.textMuted, fontSize: 12, marginTop: -2, marginBottom: 14,
   },
   pickerContainer: {
     borderWidth: 1,
@@ -446,6 +533,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     gap: 14,
   },
+  termsHint: {
+    fontSize: 12, color: COLORS.textMuted, marginTop: -6,
+  },
   checkbox: {
     width: 20, height: 20, borderRadius: 5,
     borderWidth: 2, borderColor: COLORS.primary,
@@ -461,7 +551,7 @@ const styles = StyleSheet.create({
     shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
   },
-  btnDisabled:     { opacity: 0.7 },
+  btnDisabled:     { opacity: 0.5 },
   btnPrimaryText:  { color: COLORS.textOnPrimary, fontSize: 16, fontWeight: 'bold' },
   loginText:       { textAlign: 'center', fontSize: 13, color: COLORS.textMuted },
   loginLink:       { color: COLORS.primary, fontWeight: 'bold' },

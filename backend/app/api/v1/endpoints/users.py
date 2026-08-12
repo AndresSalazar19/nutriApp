@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -12,6 +12,16 @@ from app.schemas.user import ChangePasswordRequest, UserCreate, UserRequest, Use
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+# Checkers de duplicados reutilizados tanto por /availability (validación
+# en vivo mientras se llena el formulario) como por create_user (validación
+# final antes de crear la cuenta). "identification" es el nombre de campo
+# que usa el frontend para la cédula.
+_DUPLICATE_CHECKERS = {
+    "email": UserService.email_exists,
+    "identification": UserService.cedula_exists,
+    "phone": UserService.phone_exists,
+}
 
 
 def _field_error(message: str, field: str, status_code: int = 400) -> JSONResponse:
@@ -59,6 +69,24 @@ def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
             "user": UserResponse.model_validate(user).model_dump(mode="json"),
         }
     )
+    return JSONResponse(status_code=200, content=resp.model_dump())
+
+
+@router.get("/availability", response_model=None)
+def check_availability(
+    field: str = Query(..., pattern="^(email|identification|phone)$"),
+    value: str = Query(..., min_length=1),
+    db: Session = Depends(get_db),
+):
+    """Chequeo liviano de duplicados para validar un campo del formulario de
+    registro en vivo (p. ej. al salir del input de cédula/correo/teléfono),
+    sin tener que enviar el formulario completo.
+
+    IMPORTANTE: se registra ANTES de GET /{user_id} para que FastAPI no
+    intente interpretar "availability" como un uuid de usuario.
+    """
+    exists = _DUPLICATE_CHECKERS[field](db, value)
+    resp = success_response(data={"field": field, "value": value, "available": not exists})
     return JSONResponse(status_code=200, content=resp.model_dump())
 
 

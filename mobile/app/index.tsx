@@ -20,6 +20,16 @@ export default function IndexRoute() {
         if (!mounted) return;
 
         if (isAuthenticated && user?.id) {
+          // Guard de rol: si por algún motivo quedó guardada una sesión que
+          // no es de paciente (p. ej. login previo a este guard), se limpia
+          // en vez de dejar pasar directo a la app.
+          if (!AuthService.isPatient(user)) {
+            await AuthService.logout();
+            if (!mounted) return;
+            setCheckingSession(false);
+            return;
+          }
+
           const step = await OnboardingProgress.get(user.id);
           if (!mounted) return;
 

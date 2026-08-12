@@ -20,6 +20,16 @@ export interface LoginPayload {
   password: string;
 }
 
+// Campos que el backend sabe chequear por duplicado en GET /users/availability.
+// "identification" es el nombre que usa el frontend para la cédula.
+export type DuplicateCheckField = 'email' | 'identification' | 'phone';
+
+interface AvailabilityResponse {
+  field: string;
+  value: string;
+  available: boolean;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -46,6 +56,9 @@ interface AuthTokenResponse {
 }
 
 const USER_KEY = 'auth_user';
+
+// Esta app móvil es solo para pacientes; admin/nutricionista usan la web.
+export const PATIENT_ROLE = 'patient';
 
 /**
  * Error de API que además de un mensaje legible, puede traer el nombre del
@@ -131,6 +144,17 @@ export const AuthService = {
     return persistSession(body);
   },
 
+  /**
+   * Consulta al backend si un valor de cédula/correo/teléfono ya está
+   * registrado, sin enviar el resto del formulario. Pensada para llamarse
+   * en el onBlur del campo, una vez que su formato ya es válido.
+   */
+  async checkAvailability(field: DuplicateCheckField, value: string): Promise<boolean> {
+    const query = `field=${encodeURIComponent(field)}&value=${encodeURIComponent(value)}`;
+    const body = await request<AvailabilityResponse>(`/users/availability?${query}`);
+    return body.available;
+  },
+
   async login(payload: LoginPayload): Promise<{ user: AuthUser }> {
     const body = await request<AuthTokenResponse>('/users/login', {
       method: 'POST',
@@ -152,5 +176,9 @@ export const AuthService = {
 
   async isAuthenticated(): Promise<boolean> {
     return !!(await AsyncStorage.getItem(USER_KEY));
+  },
+
+  isPatient(user: Pick<AuthUser, 'role'> | null | undefined): boolean {
+    return user?.role === PATIENT_ROLE;
   },
 };
