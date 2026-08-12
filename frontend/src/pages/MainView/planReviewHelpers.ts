@@ -1,4 +1,8 @@
-import { MealMacros, MealType, NutritionPlanMeal } from '../../services/NutritionPlans/NutritionPlanService';
+import {
+  MealMacros,
+  MealType,
+  NutritionPlanMeal,
+} from '../../services/NutritionPlans/NutritionPlanService';
 
 export const MACRO_FIELDS: (keyof MealMacros)[] = [
   'calories',
@@ -83,7 +87,9 @@ export function groupMealsByDay(
       label: DAY_LABELS[day],
       meals: meals
         .filter((m) => m.day_of_week === day)
-        .sort((a, b) => MEAL_TYPE_ORDER.indexOf(a.meal_type) - MEAL_TYPE_ORDER.indexOf(b.meal_type)),
+        .sort(
+          (a, b) => MEAL_TYPE_ORDER.indexOf(a.meal_type) - MEAL_TYPE_ORDER.indexOf(b.meal_type),
+        ),
     }))
     .filter((group) => group.meals.length > 0);
 }

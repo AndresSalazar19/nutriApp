@@ -139,9 +139,7 @@ function ReviewModal({
             <p className="text-base font-bold text-gray-900">{plan.patient?.name}</p>
             <p className="text-xs text-gray-500">{plan.patient?.email}</p>
             <p className="text-sm font-semibold text-gray-800 mt-1">{plan.title}</p>
-            {plan.description && (
-              <p className="text-sm text-gray-500 mt-0.5">{plan.description}</p>
-            )}
+            {plan.description && <p className="text-sm text-gray-500 mt-0.5">{plan.description}</p>}
           </div>
         </div>
 
@@ -219,40 +217,41 @@ function ReviewModal({
           {dayGroups.map((group) => {
             const dayTotals = plan.nutrition_summary.by_day[String(group.day)];
             return (
-            <div key={group.day}>
-              <div className="flex items-baseline justify-between mb-2">
-                <h4 className="text-sm font-bold text-gray-800">{group.label}</h4>
-                {dayTotals && (
-                  <span className="text-xs text-gray-400">
-                    {formatMacro(dayTotals.calories, '')} kcal · P {formatMacro(dayTotals.protein_g, 'g')} ·
-                    {' '}C {formatMacro(dayTotals.carbs_g, 'g')} · G {formatMacro(dayTotals.fat_g, 'g')}
-                  </span>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                {group.meals.map((meal) => (
-                  <div
-                    key={meal.id}
-                    className="flex items-center justify-between bg-white border border-gray-100 rounded-lg px-3 py-2"
-                  >
-                    <div className="min-w-0">
-                      <span className="text-xs font-semibold text-nutri-dark mr-2">
-                        {MEAL_TYPE_LABELS[meal.meal_type]}
-                      </span>
-                      <span className="text-sm text-gray-700">{mealFoodLabel(meal)}</span>
-                      {meal.instructions && (
-                        <p className="text-xs text-gray-400">{meal.instructions}</p>
+              <div key={group.day}>
+                <div className="flex items-baseline justify-between mb-2">
+                  <h4 className="text-sm font-bold text-gray-800">{group.label}</h4>
+                  {dayTotals && (
+                    <span className="text-xs text-gray-400">
+                      {formatMacro(dayTotals.calories, '')} kcal · P{' '}
+                      {formatMacro(dayTotals.protein_g, 'g')} · C{' '}
+                      {formatMacro(dayTotals.carbs_g, 'g')} · G {formatMacro(dayTotals.fat_g, 'g')}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  {group.meals.map((meal) => (
+                    <div
+                      key={meal.id}
+                      className="flex items-center justify-between bg-white border border-gray-100 rounded-lg px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <span className="text-xs font-semibold text-nutri-dark mr-2">
+                          {MEAL_TYPE_LABELS[meal.meal_type]}
+                        </span>
+                        <span className="text-sm text-gray-700">{mealFoodLabel(meal)}</span>
+                        {meal.instructions && (
+                          <p className="text-xs text-gray-400">{meal.instructions}</p>
+                        )}
+                      </div>
+                      {formatQuantity(meal) && (
+                        <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                          {formatQuantity(meal)}
+                        </span>
                       )}
                     </div>
-                    {formatQuantity(meal) && (
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                        {formatQuantity(meal)}
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
             );
           })}
         </div>
@@ -280,7 +279,11 @@ function ReviewModal({
       <div className="flex items-center justify-end gap-2 mt-5 pt-4 border-t border-gray-100">
         {!showRejectForm ? (
           <>
-            <Button variant="outline-danger" onClick={() => setShowRejectForm(true)} disabled={submitting}>
+            <Button
+              variant="outline-danger"
+              onClick={() => setShowRejectForm(true)}
+              disabled={submitting}
+            >
               Rechazar
             </Button>
             <Button variant="success" onClick={handleApprove} disabled={submitting}>
@@ -289,7 +292,11 @@ function ReviewModal({
           </>
         ) : (
           <>
-            <Button variant="outline" onClick={() => setShowRejectForm(false)} disabled={submitting}>
+            <Button
+              variant="outline"
+              onClick={() => setShowRejectForm(false)}
+              disabled={submitting}
+            >
               Cancelar
             </Button>
             <Button variant="danger" onClick={handleReject} disabled={submitting}>

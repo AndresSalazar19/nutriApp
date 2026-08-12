@@ -13,7 +13,11 @@ import {
   NutritionPlanResponse,
   NutritionPlanService,
 } from '../../services/NutritionPlans/NutritionPlanService';
-import { DAY_LABELS, MEAL_TYPE_LABELS, MEAL_TYPE_ORDER } from '../../pages/MainView/planReviewHelpers';
+import {
+  DAY_LABELS,
+  MEAL_TYPE_LABELS,
+  MEAL_TYPE_ORDER,
+} from '../../pages/MainView/planReviewHelpers';
 
 interface MealRow {
   clientId: string;
@@ -109,7 +113,9 @@ function FoodPickerInput({
             >
               <span className="truncate">{food.name}</span>
               {food.calories != null && (
-                <span className="text-xs text-gray-400 flex-shrink-0">{Math.round(food.calories)} kcal</span>
+                <span className="text-xs text-gray-400 flex-shrink-0">
+                  {Math.round(food.calories)} kcal
+                </span>
               )}
             </button>
           ))}

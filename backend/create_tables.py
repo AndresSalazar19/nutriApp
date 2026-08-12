@@ -128,7 +128,10 @@ def seed_foods_from_food_items():
     from datetime import datetime
 
     inspector = inspect(engine)
-    if "foods" not in inspector.get_table_names() or "food_items" not in inspector.get_table_names():
+    if (
+        "foods" not in inspector.get_table_names()
+        or "food_items" not in inspector.get_table_names()
+    ):
         return
 
     with engine.begin() as connection:
@@ -136,17 +139,21 @@ def seed_foods_from_food_items():
         if foods_count:
             return
 
-        rows = connection.execute(
-            text(
-                """
+        rows = (
+            connection.execute(
+                text(
+                    """
                 SELECT name, category, calories_kcal, protein_g, carbs_g, fat_g,
                        sodium_mg, calcium_mg, vitamin_c_mg,
                        COALESCE(serving_per_unit_g, serving_per_cup_g, serving_per_tbsp_g, 100) AS serving_size_g
                 FROM food_items
                 WHERE is_active IS DISTINCT FROM FALSE
                 """
+                )
             )
-        ).mappings().all()
+            .mappings()
+            .all()
+        )
 
         if not rows:
             return

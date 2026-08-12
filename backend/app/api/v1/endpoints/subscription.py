@@ -8,7 +8,11 @@ from app.core.dependencies import get_current_user, require_nutritionist_or_admi
 from app.core.response import error_response, success_response
 from app.db.base import get_db
 from app.db.models.user import User
-from app.schemas.subscription import SubscriptionCreate, SubscriptionResponse, SubscriptionStatusUpdate
+from app.schemas.subscription import (
+    SubscriptionCreate,
+    SubscriptionResponse,
+    SubscriptionStatusUpdate,
+)
 from app.services.subscription_service import SubscriptionService
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])

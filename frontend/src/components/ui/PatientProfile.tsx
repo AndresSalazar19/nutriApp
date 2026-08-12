@@ -169,9 +169,7 @@ function InfoTab({
         {weightHistory.length > 0 ? (
           <WeightChart data={weightHistory} goal={patient.weightGoal} />
         ) : (
-          <p className="text-sm text-gray-400 text-center py-8">
-            Sin registros de peso todavía.
-          </p>
+          <p className="text-sm text-gray-400 text-center py-8">Sin registros de peso todavía.</p>
         )}
       </div>
 
@@ -224,7 +222,9 @@ function InfoTab({
           />
           <Metric
             label="% Grasa"
-            value={latestMeasurement?.fat_percent != null ? `${latestMeasurement.fat_percent}` : '—'}
+            value={
+              latestMeasurement?.fat_percent != null ? `${latestMeasurement.fat_percent}` : '—'
+            }
             sub="%"
           />
         </div>
@@ -250,7 +250,11 @@ function InfoTab({
             Los planes de este paciente se revisan y aprueban desde la bandeja de Planes
             Nutricionales.
           </p>
-          <Button variant="outline" onClick={() => navigate(ROUTES.PLANS)} className="flex-shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => navigate(ROUTES.PLANS)}
+            className="flex-shrink-0"
+          >
             Ir a Planes →
           </Button>
         </div>
@@ -651,7 +655,11 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
           />
           {notesError && <p className="text-sm text-admin-accent">{notesError}</p>}
           <div className="flex justify-end gap-2 border-t border-gray-100 pt-3">
-            <Button variant="outline" onClick={() => setShowNotesForm(false)} disabled={savingNotes}>
+            <Button
+              variant="outline"
+              onClick={() => setShowNotesForm(false)}
+              disabled={savingNotes}
+            >
               Cancelar
             </Button>
             <Button variant="primary" onClick={handleSaveNotes} disabled={savingNotes}>

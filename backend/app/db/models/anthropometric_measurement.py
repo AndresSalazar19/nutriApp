@@ -11,9 +11,7 @@ class AnthropometricMeasurement(Base):
     __tablename__ = "anthropometric_measurements"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     log_date = Column(Date, nullable=False)
 
     fat_percent = Column(Numeric(5, 2), nullable=True)

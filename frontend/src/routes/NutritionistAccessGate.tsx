@@ -111,9 +111,9 @@ export function NutritionistAccessGate() {
             </ul>
 
             <p className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3 mb-4">
-              Toda la información registrada en esta plataforma es confidencial y de uso
-              exclusivo del profesional de salud autorizado. El nutricionista es responsable
-              del manejo ético y profesional de los datos del paciente.
+              Toda la información registrada en esta plataforma es confidencial y de uso exclusivo
+              del profesional de salud autorizado. El nutricionista es responsable del manejo ético
+              y profesional de los datos del paciente.
             </p>
 
             <label className="text-xs font-semibold text-gray-500 uppercase">

@@ -45,7 +45,9 @@ export const ConsentService = {
     return handleResponse<ConsentStatus>(res);
   },
 
-  async accept(signatureName: string): Promise<{ consent_type: string; version: string; accepted_at: string }> {
+  async accept(
+    signatureName: string,
+  ): Promise<{ consent_type: string; version: string; accepted_at: string }> {
     const res = await fetch(`${API_URL}/consents/accept`, {
       method: 'POST',
       headers: authHeaders(),

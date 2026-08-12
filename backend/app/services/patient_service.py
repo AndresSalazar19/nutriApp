@@ -199,7 +199,9 @@ class PatientService:
         if weight_kg is not None:
             WeightLogService.create(
                 db,
-                WeightLogCreate(user_id=user_id, weight_kg=weight_kg, log_date=log_date, notes=notes),
+                WeightLogCreate(
+                    user_id=user_id, weight_kg=weight_kg, log_date=log_date, notes=notes
+                ),
             )
             parts.append(f"peso {weight_kg} kg")
 

@@ -28,4 +28,8 @@ def migrate() -> list[str]:
 
 if __name__ == "__main__":
     migrated = migrate()
-    print("Columnas agregadas: " + ", ".join(migrated) if migrated else "La migracion ya estaba aplicada")
+    print(
+        "Columnas agregadas: " + ", ".join(migrated)
+        if migrated
+        else "La migracion ya estaba aplicada"
+    )

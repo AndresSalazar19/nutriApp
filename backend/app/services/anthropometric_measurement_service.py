@@ -101,7 +101,9 @@ class AnthropometricMeasurementService:
         )
 
     @staticmethod
-    def get_history(db: Session, user_id: uuid.UUID, limit: int = 50) -> list[AnthropometricMeasurement]:
+    def get_history(
+        db: Session, user_id: uuid.UUID, limit: int = 50
+    ) -> list[AnthropometricMeasurement]:
         return (
             db.query(AnthropometricMeasurement)
             .filter(AnthropometricMeasurement.user_id == user_id)
