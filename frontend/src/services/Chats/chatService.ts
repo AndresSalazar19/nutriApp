@@ -2,7 +2,9 @@ import { API_URL } from '../../config/api';
 import { tokenStorage } from '../../utils/tokenStorage';
 
 export interface ConversationCreateRequest {
-  nutritionist_id: string;
+  /** The id of the other side of the conversation — a patient_id when called
+   * as a nutritionist, or a nutritionist_id when called as a patient. */
+  participant_id: string;
 }
 
 export interface ConversationResponse {

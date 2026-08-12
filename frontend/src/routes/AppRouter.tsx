@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { ROUTES } from './routes';
 import { PublicRoute } from '../components/auth/PublicRoute';
 import { PrivateRoute } from '../components/auth/ProtectedRoute';
-import { NutritionistStatusGuard } from './NutritionistStatusGuard';
+import { NutritionistAccessGate } from './NutritionistAccessGate';
 import { AuthProvider, useAuth, AuthUser } from '../hooks/useAuth';
 
 const LoginPage = lazy(() => import('../pages/Login/LoginPage'));
@@ -128,9 +128,9 @@ function AppRoutes() {
           }
         />
 
-        {/* ── Nutricionista (requiere rol + guard de estado) ── */}
+        {/* ── Nutricionista (requiere rol + consentimiento + guard de estado) ── */}
         <Route element={<PrivateRoute allowedRoles={['nutritionist']} />}>
-          <Route element={<NutritionistStatusGuard />}>
+          <Route element={<NutritionistAccessGate />}>
             {/* pending → MainView (pantalla de verificación) */}
             <Route path={ROUTES.DASHBOARD} element={<MainView />} />
             {/* verified → acceso completo */}

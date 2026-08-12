@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   MdCalendarMonth,
   MdConstruction,
@@ -10,12 +11,15 @@ import {
   MdPhone,
   MdSms,
 } from 'react-icons/md';
-import { Patient } from '../../components/mock/patientsMock';
+import { Patient, WeightEntry } from '../../components/mock/patientsMock';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { WeightChart } from '../../components/charts/WeightChart';
 import { Modal } from './Modal';
 import { AnthropometricForm, AnthropometricRecord } from './AnthropometricForm';
+import { PatientDetail, PatientService } from '../../services/Patients/PatientService';
+import { API_ORIGIN } from '../../services/NutritionPlans/NutritionPlanService';
+import { ROUTES } from '../../routes/routes';
 
 function bmiColor(bmi: number) {
   if (bmi < 18.5) return 'text-blue-500';
@@ -38,21 +42,21 @@ function Metric({
   label,
   value,
   sub,
-  highlight,
+  bmiValue,
 }: {
   label: string;
   value: string;
   sub?: string;
-  highlight?: boolean;
+  /** When set, colors the value by BMI range instead of the default gray. */
+  bmiValue?: number | null;
 }) {
+  const colorClass =
+    bmiValue != null && !Number.isNaN(bmiValue) ? bmiColor(bmiValue) : 'text-gray-800';
+
   return (
     <div className="bg-gray-50 rounded-xl p-4 text-center">
       <p className="text-xs text-gray-400 mb-1">{label}</p>
-      <p
-        className={`text-2xl font-bold ${highlight ? bmiColor(parseFloat(value)) : 'text-gray-800'}`}
-      >
-        {value}
-      </p>
+      <p className={`text-2xl font-bold ${colorClass}`}>{value}</p>
       {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
     </div>
   );
@@ -62,18 +66,33 @@ function Metric({
 
 function InfoTab({
   patient,
+  detail,
   onAddMeasurement,
+  onEditNotes,
 }: {
   patient: Patient;
+  detail: PatientDetail | null;
   onAddMeasurement: () => void;
+  onEditNotes: () => void;
 }) {
+  const weight = detail?.weight_kg ?? null;
+  const height = detail?.height_m ?? null;
+  const bmi = detail?.bmi ?? null;
+  const latestMeasurement = detail?.latest_measurement ?? null;
+  const weightHistory: WeightEntry[] =
+    detail?.weight_history.map((w) => ({ date: w.log_date, value: w.weight_kg })) ?? [];
+  const navigate = useNavigate();
+
   return (
     <div className="grid grid-cols-2 gap-6">
       {/* Información médica */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h4 className="font-bold text-gray-800 text-sm">Información Médica</h4>
-          <button className="text-green-600 text-xs hover:underline flex items-center gap-1">
+          <button
+            onClick={onEditNotes}
+            className="text-green-600 text-xs hover:underline flex items-center gap-1"
+          >
             <MdEdit className="w-3.5 h-3.5" />
             Editar
           </button>
@@ -81,27 +100,52 @@ function InfoTab({
         <div className="space-y-3 text-sm">
           <div>
             <p className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">
-              Diagnóstico Principal
+              Notas clínicas
             </p>
-            <p className="text-gray-600">{patient.diagnosis}</p>
+            <p className="text-gray-600">{detail?.clinical_notes || 'Sin notas registradas.'}</p>
           </div>
-          {patient.additionalConditions.length > 0 && (
-            <div>
-              <p className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">
-                Condiciones adicionales
-              </p>
+          <div>
+            <p className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">
+              Hipertensión
+            </p>
+            <p className="text-gray-600">
+              {detail?.hypertension_diagnosed ? 'Diagnosticada' : 'No diagnosticada'}
+              {detail?.systolic && detail?.diastolic
+                ? ` · ${detail.systolic}/${detail.diastolic} mmHg`
+                : ''}
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">
+              Medicamentos
+            </p>
+            {detail?.medications.length ? (
               <ul className="text-gray-600 space-y-0.5">
-                {patient.additionalConditions.map((c) => (
-                  <li key={c}>• {c}</li>
+                {detail.medications.map((m) => (
+                  <li key={m}>• {m}</li>
                 ))}
               </ul>
-            </div>
-          )}
+            ) : (
+              <p className="text-gray-600">Ninguno registrado.</p>
+            )}
+          </div>
           <div>
             <p className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">
               Alergias e intolerancias
             </p>
-            <p className="text-gray-600">{patient.allergies}</p>
+            <p className="text-gray-600">
+              {detail?.allergies.length ? detail.allergies.join(', ') : 'Ninguna registrada.'}
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">
+              Restricciones dietéticas
+            </p>
+            <p className="text-gray-600">
+              {detail?.dietary_restrictions.length
+                ? detail.dietary_restrictions.join(', ')
+                : 'Ninguna registrada.'}
+            </p>
           </div>
         </div>
       </div>
@@ -122,7 +166,11 @@ function InfoTab({
             ))}
           </div>
         </div>
-        <WeightChart data={patient.weightHistory} goal={patient.weightGoal} />
+        {weightHistory.length > 0 ? (
+          <WeightChart data={weightHistory} goal={patient.weightGoal} />
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-8">Sin registros de peso todavía.</p>
+        )}
       </div>
 
       {/* Datos antropométricos */}
@@ -140,48 +188,75 @@ function InfoTab({
         <div className="grid grid-cols-6 gap-3">
           <Metric
             label="Peso"
-            value={`${patient.weight}`}
-            sub={`${patient.weightChange > 0 ? '+' : ''}${patient.weightChange} kg`}
+            value={weight != null ? `${weight} kg` : '—'}
+            sub={weight == null ? 'Sin registro' : undefined}
           />
-          <Metric label="Estatura" value={`${patient.height.toFixed(2)}`} sub="metros" />
-          <Metric label="IMC" value={`${patient.bmi}`} sub={bmiLabel(patient.bmi)} highlight />
-          <Metric label="Cintura" value={`${patient.waist}`} sub="cm" />
-          <Metric label="Cadera" value={`${patient.hip}`} sub="cm" />
-          <Metric label="% Grasa" value={`${patient.fatPercent}`} sub="%" />
+          <Metric
+            label="Estatura"
+            value={height != null ? `${height.toFixed(2)} m` : '—'}
+            sub={height == null ? 'Sin registro' : undefined}
+          />
+          <Metric
+            label="IMC"
+            value={bmi != null ? `${bmi}` : '—'}
+            sub={bmi != null ? bmiLabel(bmi) : 'Faltan peso/estatura'}
+            bmiValue={bmi}
+          />
+          <Metric
+            label="Cintura"
+            value={
+              latestMeasurement?.circumference_waist_cm != null
+                ? `${latestMeasurement.circumference_waist_cm}`
+                : '—'
+            }
+            sub="cm"
+          />
+          <Metric
+            label="Cadera"
+            value={
+              latestMeasurement?.circumference_hip_cm != null
+                ? `${latestMeasurement.circumference_hip_cm}`
+                : '—'
+            }
+            sub="cm"
+          />
+          <Metric
+            label="% Grasa"
+            value={
+              latestMeasurement?.fat_percent != null ? `${latestMeasurement.fat_percent}` : '—'
+            }
+            sub="%"
+          />
         </div>
+        {latestMeasurement?.bioimpedance_file_path && (
+          <a
+            href={`${API_ORIGIN}/${latestMeasurement.bioimpedance_file_path.replace(/^\/+/, '')}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block mt-3 text-xs text-green-600 hover:underline"
+          >
+            Ver resultado de bioimpedancia adjunto
+          </a>
+        )}
       </div>
 
       {/* Plan nutricional */}
       <div className="col-span-2">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="font-bold text-gray-800 text-sm">Plan Nutricional Actual</h4>
-          <button type="button" className="text-green-600 text-xs hover:underline">
-            Ver detalles →
-          </button>
+          <h4 className="font-bold text-gray-800 text-sm">Plan Nutricional</h4>
         </div>
-        <div className="bg-gray-50 rounded-xl p-4">
-          <p className="font-semibold text-gray-800 text-sm mb-1">{patient.nutritionalPlan.name}</p>
-          <p className="text-gray-400 text-xs mb-3">Creado: {patient.nutritionalPlan.startDate}</p>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <p className="text-xs text-gray-400 mb-0.5">Calorías/día</p>
-              <p className="text-lg font-bold text-green-700">
-                {patient.nutritionalPlan.calories.toLocaleString()} kcal
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-gray-400 mb-0.5">Sodio/día</p>
-              <p className="text-lg font-bold text-green-700">
-                &lt; {patient.nutritionalPlan.sodium.toLocaleString()} mg
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-gray-400 mb-0.5">Cumplimiento</p>
-              <p className="text-lg font-bold text-green-700">
-                {patient.nutritionalPlan.compliance}%
-              </p>
-            </div>
-          </div>
+        <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            Los planes de este paciente se revisan y aprueban desde la bandeja de Planes
+            Nutricionales.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => navigate(ROUTES.PLANS)}
+            className="flex-shrink-0"
+          >
+            Ir a Planes →
+          </Button>
         </div>
       </div>
     </div>
@@ -208,17 +283,145 @@ interface PatientProfileProps {
 
 export function PatientProfile({ patient, onBack }: PatientProfileProps) {
   const [activeTab, setActiveTab] = useState<Tab>('Información');
+  const navigate = useNavigate();
 
   const [showAnthropometricForm, setShowAnthropometricForm] = useState(false);
+  const [detail, setDetail] = useState<PatientDetail | null>(null);
+  const [savingMeasurement, setSavingMeasurement] = useState(false);
+  const [measurementError, setMeasurementError] = useState<string | null>(null);
 
-  const handleSaveAnthropometric = (record: AnthropometricRecord) => {
-    console.log('Medición antropométrica guardada:', record);
-    // TODO: conectar con el backend cuando el endpoint esté listo
-    setShowAnthropometricForm(false);
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
+
+  const [showNotesForm, setShowNotesForm] = useState(false);
+  const [notesDraft, setNotesDraft] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
+
+  const fetchDetail = React.useCallback(() => {
+    PatientService.getDetail(patient.id)
+      .then(setDetail)
+      .catch((err) => console.error('Error cargando datos del paciente:', err));
+  }, [patient.id]);
+
+  useEffect(() => {
+    fetchDetail();
+  }, [fetchDetail]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(e.target as Node)) {
+        setShowActionsMenu(false);
+      }
+    }
+    if (showActionsMenu) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showActionsMenu]);
+
+  const handleToggleFlag = async () => {
+    setUpdatingStatus(true);
+    try {
+      await PatientService.updateFlag(patient.id, !detail?.priority_flag);
+      fetchDetail();
+    } catch (err) {
+      console.error('Error actualizando prioridad:', err);
+    } finally {
+      setUpdatingStatus(false);
+      setShowActionsMenu(false);
+    }
   };
 
+  const handleChangeStatus = async (status: 'active' | 'inactive' | 'at_risk') => {
+    setUpdatingStatus(true);
+    try {
+      await PatientService.updateStatus(patient.id, status);
+      fetchDetail();
+    } catch (err) {
+      console.error('Error actualizando estado:', err);
+    } finally {
+      setUpdatingStatus(false);
+      setShowActionsMenu(false);
+    }
+  };
+
+  const openNotesForm = () => {
+    setNotesDraft(detail?.clinical_notes ?? '');
+    setNotesError(null);
+    setShowNotesForm(true);
+  };
+
+  const handleSaveNotes = async () => {
+    setSavingNotes(true);
+    setNotesError(null);
+    try {
+      await PatientService.updateNotes(patient.id, notesDraft);
+      fetchDetail();
+      setShowNotesForm(false);
+    } catch (err: any) {
+      setNotesError(err.message);
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
+  const handleSaveAnthropometric = async (record: AnthropometricRecord) => {
+    setSavingMeasurement(true);
+    setMeasurementError(null);
+    try {
+      const weight_kg = record.weight.trim() ? parseFloat(record.weight) : undefined;
+      const height_m = record.height.trim() ? parseFloat(record.height) : undefined;
+
+      await PatientService.updateAnthropometrics(patient.id, {
+        log_date: record.date,
+        weight_kg,
+        height_m,
+        notes: record.notes.trim() || undefined,
+      });
+
+      const toNum = (v: string) => (v.trim() ? parseFloat(v) : undefined);
+      const hasExtendedData =
+        record.bioFile ||
+        record.fatPercent.trim() ||
+        record.muscleMass.trim() ||
+        Object.values(record.skinfolds).some((v) => v.trim()) ||
+        Object.values(record.circumferences).some((v) => v.trim());
+
+      if (hasExtendedData) {
+        await PatientService.saveAnthropometricMeasurement(patient.id, {
+          log_date: record.date,
+          fat_percent: toNum(record.fatPercent),
+          muscle_mass_kg: toNum(record.muscleMass),
+          skinfold_triceps: toNum(record.skinfolds.triceps),
+          skinfold_subscapular: toNum(record.skinfolds.subscapular),
+          skinfold_suprailiac: toNum(record.skinfolds.suprailiac),
+          skinfold_abdominal: toNum(record.skinfolds.abdominal),
+          skinfold_thigh: toNum(record.skinfolds.thigh),
+          circumference_waist: toNum(record.circumferences.waist),
+          circumference_hip: toNum(record.circumferences.hip),
+          circumference_arm: toNum(record.circumferences.arm),
+          circumference_thigh: toNum(record.circumferences.thigh),
+          circumference_calf: toNum(record.circumferences.calf),
+          circumference_neck: toNum(record.circumferences.neck),
+          notes: record.notes.trim() || undefined,
+          bioimpedanceFile: record.bioFile,
+        });
+      }
+
+      fetchDetail();
+      setShowAnthropometricForm(false);
+    } catch (err: any) {
+      setMeasurementError(err.message);
+    } finally {
+      setSavingMeasurement(false);
+    }
+  };
+
+  const currentStatus = detail?.status ?? patient.status;
   const statusVariant =
-    patient.status === 'active' ? 'active' : patient.status === 'inactive' ? 'inactive' : 'pending';
+    currentStatus === 'active' ? 'active' : currentStatus === 'inactive' ? 'inactive' : 'pending';
+  const statusLabel =
+    currentStatus === 'active' ? 'Activo' : currentStatus === 'inactive' ? 'Inactivo' : 'En riesgo';
 
   return (
     <div className="flex flex-col h-full">
@@ -239,15 +442,54 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
           Perfil del Paciente
         </button>
         <div className="flex items-center gap-2">
-          <Button variant="outline" icon={<MdSms className="w-4 h-4" />}>
+          <Button
+            variant="outline"
+            icon={<MdSms className="w-4 h-4" />}
+            onClick={() => navigate(ROUTES.MESSAGES, { state: { patientId: patient.id } })}
+          >
             Mensaje
           </Button>
-          <Button variant="primary" icon={<MdCalendarMonth className="w-4 h-4" />}>
+          <Button
+            variant="primary"
+            icon={<MdCalendarMonth className="w-4 h-4" />}
+            onClick={() => navigate(ROUTES.AGENDA, { state: { patientId: patient.id } })}
+          >
             Agendar
           </Button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 transition text-lg">
-            <MdMoreVert className="w-5 h-5" />
-          </button>
+          <div className="relative" ref={actionsMenuRef}>
+            <button
+              onClick={() => setShowActionsMenu((v) => !v)}
+              aria-label="Más acciones"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 transition text-lg"
+            >
+              <MdMoreVert className="w-5 h-5" />
+            </button>
+            {showActionsMenu && (
+              <div className="absolute right-0 top-full mt-1 z-20 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1">
+                <button
+                  onClick={handleToggleFlag}
+                  disabled={updatingStatus}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+                >
+                  {detail?.priority_flag ? 'Quitar prioridad' : 'Marcar como prioritario'}
+                </button>
+                <div className="my-1 border-t border-gray-100" />
+                <p className="px-4 pt-1 pb-0.5 text-[11px] font-semibold text-gray-400 uppercase">
+                  Cambiar estado
+                </p>
+                {(['active', 'at_risk', 'inactive'] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => handleChangeStatus(s)}
+                    disabled={updatingStatus || currentStatus === s}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition disabled:opacity-40"
+                  >
+                    {s === 'active' ? 'Activo' : s === 'at_risk' ? 'En riesgo' : 'Inactivo'}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -283,16 +525,8 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
                       {patient.phone}
                     </span>
                   </div>
-                  <Badge
-                    variant={statusVariant}
-                    label={
-                      patient.status === 'active'
-                        ? 'Activo'
-                        : patient.status === 'inactive'
-                          ? 'Inactivo'
-                          : 'Pendiente'
-                    }
-                  />
+                  <Badge variant={statusVariant} label={statusLabel} />
+                  {detail?.priority_flag && <Badge variant="revision" label="Prioritario" />}
                 </div>
 
                 {/* Stats */}
@@ -358,8 +592,8 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
                 </button>
               ))}
             </div>
-            <Button variant="primary" icon={<MdNotifications className="w-4 h-4" />}>
-              Enviar Recordatorio
+            <Button variant="primary" icon={<MdNotifications className="w-4 h-4" />} disabled>
+              Enviar Recordatorio (próximamente)
             </Button>
           </div>
         </div>
@@ -367,7 +601,12 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
         {/* ── Tab content ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           {activeTab === 'Información' ? (
-            <InfoTab patient={patient} onAddMeasurement={() => setShowAnthropometricForm(true)} />
+            <InfoTab
+              patient={patient}
+              detail={detail}
+              onAddMeasurement={() => setShowAnthropometricForm(true)}
+              onEditNotes={openNotesForm}
+            />
           ) : (
             <PlaceholderTab label={activeTab} />
           )}
@@ -377,15 +616,57 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
       {/* Modal de registro antropométrico */}
       <Modal
         isOpen={showAnthropometricForm}
-        onClose={() => setShowAnthropometricForm(false)}
+        onClose={() => {
+          setShowAnthropometricForm(false);
+          setMeasurementError(null);
+        }}
         title="Registro de Datos Antropométricos"
         size="lg"
       >
         <AnthropometricForm
           patientName={`${patient.firstName} ${patient.lastName}`}
-          onCancel={() => setShowAnthropometricForm(false)}
+          onCancel={() => {
+            setShowAnthropometricForm(false);
+            setMeasurementError(null);
+          }}
           onSave={handleSaveAnthropometric}
+          submitting={savingMeasurement}
+          error={measurementError}
         />
+      </Modal>
+
+      {/* Modal de edición de notas clínicas */}
+      <Modal
+        isOpen={showNotesForm}
+        onClose={() => setShowNotesForm(false)}
+        title="Editar Información Médica"
+        size="md"
+      >
+        <div className="space-y-3">
+          <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+            Notas clínicas
+          </label>
+          <textarea
+            value={notesDraft}
+            onChange={(e) => setNotesDraft(e.target.value)}
+            rows={5}
+            placeholder="Diagnóstico, condiciones, observaciones relevantes..."
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-500 transition bg-white resize-none"
+          />
+          {notesError && <p className="text-sm text-admin-accent">{notesError}</p>}
+          <div className="flex justify-end gap-2 border-t border-gray-100 pt-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowNotesForm(false)}
+              disabled={savingNotes}
+            >
+              Cancelar
+            </Button>
+            <Button variant="primary" onClick={handleSaveNotes} disabled={savingNotes}>
+              {savingNotes ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

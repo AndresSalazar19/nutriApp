@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MdBarChart, MdCalendarMonth, MdDescription, MdGroup, MdSms } from 'react-icons/md';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button';
 import { BarChart } from '../../components/charts/BarChart';
 import { useAuth } from '../../hooks/useAuth';
 import { ROUTES } from '../../routes/routes';
+import { NutritionPlanService } from '../../services/NutritionPlans/NutritionPlanService';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -123,10 +124,17 @@ const statusBadgeVariant: Record<PatientStatus, 'active' | 'pending' | 'inactive
 
 export default function HomePage() {
   const [search, setSearch] = useState('');
+  const [pendingPlansCount, setPendingPlansCount] = useState<number | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const greeting = user?.email ? `Bienvenido, ${user.email.split('@')[0]}` : 'Bienvenido';
+
+  useEffect(() => {
+    NutritionPlanService.listPending()
+      .then((plans) => setPendingPlansCount(plans.length))
+      .catch(() => setPendingPlansCount(null));
+  }, []);
 
   const filteredPatients = recentPatients.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()),
@@ -197,7 +205,7 @@ export default function HomePage() {
           <h3 className="font-bold text-gray-800 text-sm mb-4">Acciones Rápidas</h3>
           <div className="flex items-center gap-3 flex-wrap">
             <Button variant="primary" onClick={() => navigate(ROUTES.PATIENTS)}>
-              + Nuevo Paciente
+              Ver Pacientes
             </Button>
             <Button
               variant="outline"
@@ -211,7 +219,7 @@ export default function HomePage() {
               icon={<MdDescription className="w-4 h-4" />}
               onClick={() => navigate(ROUTES.PLANS)}
             >
-              Crear Plan
+              Revisar Planes{pendingPlansCount ? ` (${pendingPlansCount})` : ''}
             </Button>
             <Button
               variant="outline"

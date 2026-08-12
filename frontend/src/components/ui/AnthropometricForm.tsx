@@ -25,7 +25,7 @@ export interface AnthropometricRecord {
   date: string;
   weight: string;
   height: string;
-  bioimpedanceFileName: string | null;
+  bioFile: File | null;
   fatPercent: string;
   muscleMass: string;
   skinfolds: SkinfoldData;
@@ -37,6 +37,8 @@ interface AnthropometricFormProps {
   patientName: string;
   onCancel: () => void;
   onSave: (record: AnthropometricRecord) => void;
+  submitting?: boolean;
+  error?: string | null;
 }
 
 // ─── Helpers de UI (siguen el estilo del proyecto) ──────────────────────────────
@@ -89,7 +91,13 @@ function SectionTitle({ icon, children }: { icon: React.ReactNode; children: Rea
 
 // ─── Componente principal ───────────────────────────────────────────────────────
 
-export function AnthropometricForm({ patientName, onCancel, onSave }: AnthropometricFormProps) {
+export function AnthropometricForm({
+  patientName,
+  onCancel,
+  onSave,
+  submitting = false,
+  error = null,
+}: AnthropometricFormProps) {
   const today = new Date().toISOString().split('T')[0];
 
   const [date, setDate] = useState(today);
@@ -99,6 +107,7 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
   const [muscleMass, setMuscleMass] = useState('');
   const [notes, setNotes] = useState('');
   const [bioFile, setBioFile] = useState<File | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const [skinfolds, setSkinfolds] = useState<SkinfoldData>({
     triceps: '',
@@ -127,11 +136,16 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
   };
 
   const handleSubmit = () => {
+    if (!weight.trim() && !height.trim()) {
+      setValidationError('Registra al menos el peso o la estatura.');
+      return;
+    }
+    setValidationError(null);
     onSave({
       date,
       weight,
       height,
-      bioimpedanceFileName: bioFile ? bioFile.name : null,
+      bioFile,
       fatPercent,
       muscleMass,
       skinfolds,
@@ -289,13 +303,23 @@ export function AnthropometricForm({ patientName, onCancel, onSave }: Anthropome
       </div>
 
       {/* ── Acciones ── */}
-      <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
-        <Button variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button variant="primary" icon={<MdSave className="w-4 h-4" />} onClick={handleSubmit}>
-          Guardar Medición
-        </Button>
+      <div className="border-t border-gray-100 pt-4">
+        {(validationError || error) && (
+          <p className="text-sm text-admin-accent mb-3">{validationError || error}</p>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onCancel} disabled={submitting}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            icon={<MdSave className="w-4 h-4" />}
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? 'Guardando...' : 'Guardar Medición'}
+          </Button>
+        </div>
       </div>
     </div>
   );

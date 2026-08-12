@@ -1,13 +1,16 @@
 from sqlalchemy import inspect, text
 
 from app.db.base import Base, engine
+from app.db.models.anthropometric_measurement import AnthropometricMeasurement
 from app.db.models.blood_pressure_log import BloodPressureLog
+from app.db.models.consent import UserConsent
 from app.db.models.daily_tracking import DailyTrackingLog
 from app.db.models.food import Food
 from app.db.models.nutrition_plan import NutritionPlan
 from app.db.models.nutrition_plan_meal import NutritionPlanMeal
 from app.db.models.patient import PatientHistory, PatientProfile
 from app.db.models.report import PatientReport
+from app.db.models.subscription import Subscription
 from app.db.models.user import Person, User  # noqa: F401 (registers "users" table for FKs)
 
 Base.metadata.create_all(
@@ -21,6 +24,9 @@ Base.metadata.create_all(
         Food.__table__,
         NutritionPlan.__table__,
         NutritionPlanMeal.__table__,
+        UserConsent.__table__,
+        AnthropometricMeasurement.__table__,
+        Subscription.__table__,
     ],
 )
 
@@ -89,6 +95,32 @@ def ensure_nutrition_plan_columns():
             connection.execute(text(f"ALTER TABLE nutrition_plans {statement}"))
 
 
+def ensure_food_micros_columns():
+    inspector = inspect(engine)
+    if "foods" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("foods")}
+    columns_sql = {
+        "potassium_mg": "ADD COLUMN IF NOT EXISTS potassium_mg NUMERIC(7, 2)",
+        "zinc_mg": "ADD COLUMN IF NOT EXISTS zinc_mg NUMERIC(7, 2)",
+        "vitamin_a_ug": "ADD COLUMN IF NOT EXISTS vitamin_a_ug NUMERIC(7, 2)",
+        "folate_ug": "ADD COLUMN IF NOT EXISTS folate_ug NUMERIC(7, 2)",
+    }
+
+    missing_statements = [
+        statement
+        for column_name, statement in columns_sql.items()
+        if column_name not in existing_columns
+    ]
+    if not missing_statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in missing_statements:
+            connection.execute(text(f"ALTER TABLE foods {statement}"))
+
+
 def seed_foods_from_food_items():
     """One-time backfill: nutrition_plan_meals.food_id references foods, but foods
     starts empty while food_items already holds the real, populated catalog."""
@@ -96,7 +128,10 @@ def seed_foods_from_food_items():
     from datetime import datetime
 
     inspector = inspect(engine)
-    if "foods" not in inspector.get_table_names() or "food_items" not in inspector.get_table_names():
+    if (
+        "foods" not in inspector.get_table_names()
+        or "food_items" not in inspector.get_table_names()
+    ):
         return
 
     with engine.begin() as connection:
@@ -104,17 +139,21 @@ def seed_foods_from_food_items():
         if foods_count:
             return
 
-        rows = connection.execute(
-            text(
-                """
+        rows = (
+            connection.execute(
+                text(
+                    """
                 SELECT name, category, calories_kcal, protein_g, carbs_g, fat_g,
                        sodium_mg, calcium_mg, vitamin_c_mg,
                        COALESCE(serving_per_unit_g, serving_per_cup_g, serving_per_tbsp_g, 100) AS serving_size_g
                 FROM food_items
                 WHERE is_active IS DISTINCT FROM FALSE
                 """
+                )
             )
-        ).mappings().all()
+            .mappings()
+            .all()
+        )
 
         if not rows:
             return
@@ -162,9 +201,10 @@ def seed_foods_from_food_items():
 
 ensure_blood_pressure_columns()
 ensure_nutrition_plan_columns()
+ensure_food_micros_columns()
 seed_foods_from_food_items()
 
 print(
     "Tablas patient_profiles, patient_history, blood_pressure_logs, daily_tracking_logs, patient_reports, "
-    "foods, nutrition_plans y nutrition_plan_meals listas"
+    "foods, nutrition_plans, nutrition_plan_meals y user_consents listas"
 )

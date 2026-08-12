@@ -371,12 +371,18 @@ interface NewModalProps {
   onSave: () => void;
   prefillDay?: number;
   prefillWeekStart?: Date;
+  prefillPatientId?: string;
 }
 
-export function NewAppointmentModal({ onClose, onSave, prefillWeekStart }: NewModalProps) {
+export function NewAppointmentModal({
+  onClose,
+  onSave,
+  prefillWeekStart,
+  prefillPatientId,
+}: NewModalProps) {
   const [form, setForm] = useState({
     patientName: '',
-    patientId: '',
+    patientId: prefillPatientId ?? '',
     startTime: '09:00',
     endTime: '10:00',
     date: todayLocalISO(),
@@ -440,12 +446,18 @@ export function NewAppointmentModal({ onClose, onSave, prefillWeekStart }: NewMo
           user.userId,
         );
         setPatients(loadedPatients);
+
+        if (prefillPatientId) {
+          const preselected = loadedPatients.find((p) => p.id === prefillPatientId);
+          if (preselected) update('patientName', preselected.fullName);
+        }
       } catch (error) {
         console.error('Error cargando pacientes del nutricionista:', error);
       }
     }
 
     void loadPatients();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userId]);
 
   return (
