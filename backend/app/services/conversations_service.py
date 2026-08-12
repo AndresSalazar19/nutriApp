@@ -57,13 +57,16 @@ class ChatsService:
                 joinedload(Conversation.messages),
             )
             .filter(
+                Conversation.conversation_type == ConversationType.human,
                 or_(
                     Conversation.patient_id == user_id,
                     Conversation.nutritionist_id == user_id,
-                )
+                ),
             )
             .all()
         )
+
+        min_dt = datetime.min.replace(tzinfo=timezone.utc)
 
         response = []
 
@@ -75,19 +78,25 @@ class ChatsService:
                 else conversation.patient
             )
 
+            if participant is None or participant.person is None:
+                continue
+
+            real_messages = [
+                m for m in conversation.messages if m.sender_role != MessageSenderRole.assistant
+            ]
+
             last_message = (
-                max(
-                    conversation.messages,
-                    key=lambda x: x.sent_at,
-                )
-                if conversation.messages
-                else None
+                max(real_messages, key=lambda x: x.sent_at or min_dt) if real_messages else None
             )
 
             unread = sum(
                 1
-                for message in conversation.messages
-                if (message.sender_id != user_id and message.read_at is None)
+                for message in real_messages
+                if (
+                    message.sender_id is not None
+                    and message.sender_id != user_id
+                    and message.read_at is None
+                )
             )
 
             response.append(
@@ -106,7 +115,7 @@ class ChatsService:
             )
 
         response.sort(
-            key=lambda x: x["last_message_time"] or datetime.min,
+            key=lambda x: x["last_message_time"] or min_dt,
             reverse=True,
         )
 

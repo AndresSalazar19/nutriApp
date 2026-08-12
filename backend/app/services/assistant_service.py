@@ -29,20 +29,30 @@ class AssistantService:
         """
 
         conversation = cls._get_or_create_conversation(db=db, patient_id=user.id)
-        cls._save_user_message(
-            db=db, conversation_id=conversation.id, user_id=user.id, content=message
-        )
+
+        # El historial se arma ANTES de guardar el mensaje actual porque
+        # OpenAIService._build_messages ya lo agrega al final del payload.
         history = cls._build_history(db=db, conversation_id=conversation.id)
 
-        prompt = Prompts.PREMIUM if premium else Prompts.BASIC
-        assistant_response = await OpenAIService.get_response(
-            prompt=prompt, history=history, message=message
-        )
-        assistant_message = cls._save_assistant_message(
-            db=db, conversation_id=conversation.id, content=assistant_response
+        user_message = cls._save_user_message(
+            db=db, conversation_id=conversation.id, user_id=user.id, content=message
         )
 
-        return assistant_message
+        prompt = Prompts.PREMIUM if premium else Prompts.BASIC
+
+        try:
+            assistant_response = await OpenAIService.get_response(
+                prompt=prompt, history=history, message=message
+            )
+        except Exception:
+            # Sin respuesta del modelo, el mensaje del usuario no debe quedar huérfano
+            db.delete(user_message)
+            db.commit()
+            raise
+
+        return cls._save_assistant_message(
+            db=db, conversation_id=conversation.id, content=assistant_response
+        )
 
     @staticmethod
     def _get_or_create_conversation(*, db: Session, patient_id: uuid.UUID) -> Conversation:

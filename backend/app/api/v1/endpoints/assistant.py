@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user
-from app.core.response import success_response
+from app.core.response import error_response, success_response
 from app.db.base import get_db
 from app.db.models.user import User
 from app.schemas.conversations import MessageCreate, MessageResponse
@@ -40,9 +40,17 @@ async def send_message(
     # TODO: Implementar verificación de suscripción premium para habilitar el prompt premium.
     premium = False
 
-    assistant_message = await AssistantService.send_message(
-        db=db, user=current_user, message=data.content, premium=premium
-    )
+    try:
+        assistant_message = await AssistantService.send_message(
+            db=db, user=current_user, message=data.content, premium=premium
+        )
+    except Exception as ex:
+        print("Error del asistente:", ex)
+        resp = error_response(
+            ["El asistente no está disponible en este momento. Intenta de nuevo."],
+            status_code=503,
+        )
+        return JSONResponse(status_code=503, content=resp.model_dump())
 
     resp = success_response(
         data=MessageResponse.model_validate(assistant_message).model_dump(mode="json")

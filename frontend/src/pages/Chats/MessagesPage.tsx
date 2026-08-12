@@ -39,6 +39,7 @@ const MessagesPage = () => {
     otherTyping,
     otherOnline,
     sendMessage,
+    sendError,
     notifyTyping,
     notifyStopTyping,
     notifyRead,
@@ -119,6 +120,7 @@ const MessagesPage = () => {
             otherTyping={otherTyping}
             otherOnline={otherOnline}
             sendMessage={sendMessage}
+            sendError={sendError}
             notifyTyping={notifyTyping}
             notifyStopTyping={notifyStopTyping}
             notifyRead={notifyRead}

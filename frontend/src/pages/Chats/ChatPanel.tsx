@@ -10,7 +10,8 @@ interface Props {
   connected?: boolean;
   otherTyping: boolean;
   otherOnline: boolean;
-  sendMessage: (content: string) => void;
+  sendMessage: (content: string) => Promise<void>;
+  sendError: string | null;
   notifyTyping: () => void;
   notifyStopTyping: () => void;
   notifyRead: () => void;
@@ -24,6 +25,7 @@ const ChatPanel = ({
   otherTyping,
   otherOnline,
   sendMessage,
+  sendError,
   notifyTyping,
   notifyStopTyping,
   notifyRead,
@@ -154,9 +156,9 @@ const ChatPanel = ({
     <div className="flex flex-1 flex-col bg-[#F4F7F1]">
       <div className="flex items-center justify-between border-b border-[#E1E8DC] bg-white px-6 py-4">
         <div className="flex items-center gap-4">
-          {conversation.participant_avatar_url ? (
+          {conversation.participant_avatar ? (
             <img
-              src={conversation.participant_avatar_url}
+              src={conversation.participant_avatar}
               alt={conversation.participant_name}
               className="h-12 w-12 rounded-full object-cover"
             />
@@ -214,6 +216,8 @@ const ChatPanel = ({
       </div>
 
       <div className="border-t border-[#E1E8DC] bg-white p-5">
+        {sendError && <p className="mb-2 text-sm text-red-600">{sendError}</p>}
+
         <div className="flex items-center gap-3 rounded-full border border-[#E1E8DC] bg-[#FAFBF8] px-4 py-2">
           <input
             value={message}

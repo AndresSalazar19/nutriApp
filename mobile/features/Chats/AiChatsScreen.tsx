@@ -22,13 +22,14 @@ type Tab = 'ingesta' | 'plan';
 export default function AIChatScreen({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('ingesta');
-  const {messages, sendMessage, loading} = useAssistant();
+  const { messages, sendMessage, loading, error } = useAssistant();
   const [draft, setDraft] = useState('');
 
   const handleSend = async () => {
-    if (!draft.trim()) return;
-    await sendMessage(draft);
+    if (!draft.trim() || loading) return;
+    const text = draft;
     setDraft('');
+    await sendMessage(text);
   };
 
   return (
@@ -85,6 +86,9 @@ export default function AIChatScreen({ onClose }: { onClose: () => void }) {
           ))}
         </ScrollView>
 
+        {loading && <Text style={styles.statusText}>El asistente está escribiendo...</Text>}
+        {error && <Text style={styles.errorText}>{error}</Text>}
+
         <ChatInput value={draft} onChangeText={setDraft} onSend={handleSend} />
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -133,6 +137,18 @@ const styles = StyleSheet.create({
   textOther: {
     color: COLORS.textPrimary,
     fontSize: 14,
+  },
+  statusText: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+  },
+  errorText: {
+    fontSize: 12,
+    color: COLORS.error,
+    paddingHorizontal: 16,
+    paddingBottom: 6,
   },
   actionsWrap: {
     gap: 8,
