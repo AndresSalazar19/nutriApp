@@ -7,7 +7,6 @@ from app.schemas.blood_pressure_log import BloodPressureLogCreate
 
 
 class BloodPressureLogService:
-
     @staticmethod
     def create(db: Session, data: BloodPressureLogCreate) -> BloodPressureLog:
         log = BloodPressureLog(

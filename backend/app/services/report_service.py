@@ -17,7 +17,6 @@ _UPLOAD_DIR = "uploads/reports"
 
 
 class ReportService:
-
     _range_start_date = staticmethod(range_start_date)
     _classify_blood_pressure = staticmethod(classify_blood_pressure)
 

@@ -46,7 +46,6 @@ def approval_nutritionist(
     payload: NutritionistStatusUpdate,
     db: Session = Depends(get_db),
 ):
-
     updated = NutritionistService.review_profile(
         db, profile_id, payload.status, payload.verified_by
     )

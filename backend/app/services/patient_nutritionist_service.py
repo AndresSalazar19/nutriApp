@@ -14,12 +14,10 @@ from app.services.user_service import UserRole, UserService
 
 
 class PatientNutritionistService:
-
     @staticmethod
     def get_all(
         db: Session, q: PatientNutritionistQueryParams | None = None
     ) -> list[PatientNutritionistResponse]:
-
         query = db.query(PatientNutritionist)
 
         if q:
@@ -42,7 +40,6 @@ class PatientNutritionistService:
 
     @staticmethod
     def create(db: Session, data: PatientNutritionistRequest):
-
         patient = UserService.get_by_id(db, data.patient_id)
         if not patient:
             raise HTTPException(status_code=404, detail="Paciente no existe")
