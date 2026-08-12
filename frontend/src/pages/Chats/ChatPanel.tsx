@@ -223,14 +223,13 @@ const ChatPanel = ({
             value={message}
             onChange={(e) => handleChangeMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={!connected}
             className="flex-1 bg-transparent outline-none placeholder:text-[#9AA396]"
-            placeholder={connected ? 'Escribe un mensaje...' : 'Esperando conexión...'}
+            placeholder="Escribe un mensaje..."
           />
 
           <button
             onClick={handleSend}
-            disabled={!connected}
+            disabled={!message.trim()}
             className="rounded-full bg-[#1F4D3A] p-3 text-white transition hover:bg-[#173B2C] disabled:opacity-50"
           >
             <FiSend />
