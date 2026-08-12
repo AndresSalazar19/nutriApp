@@ -49,6 +49,7 @@ class NutritionistProfileSummary(BaseModel):
     Vive aquí (no en schemas/nutritionist.py) para evitar import circular:
     nutritionist.py ya importa UserResponse desde este módulo.
     """
+
     specialty: NutritionistSpecialtySummary | None = None
     years_experience: int | None = None
 

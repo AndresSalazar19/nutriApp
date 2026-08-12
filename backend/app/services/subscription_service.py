@@ -23,9 +23,7 @@ class SubscriptionService:
         nuevas por cada cambio de plan (evita duplicados de 'suscripcion
         activa'): si ya existe una, se actualiza el plan y se reactiva.
         """
-        subscription = (
-            db.query(Subscription).filter(Subscription.user_id == user_id).first()
-        )
+        subscription = db.query(Subscription).filter(Subscription.user_id == user_id).first()
 
         if subscription:
             subscription.plan = plan
@@ -45,9 +43,7 @@ class SubscriptionService:
 
     @staticmethod
     def cancel(db: Session, subscription_id: uuid.UUID) -> Subscription | None:
-        subscription = (
-            db.query(Subscription).filter(Subscription.id == subscription_id).first()
-        )
+        subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
         if not subscription:
             return None
 

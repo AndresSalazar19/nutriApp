@@ -32,7 +32,7 @@ class UserService:
         if not cedula:
             return False
         return db.query(Person).filter(Person.cedula == cedula).first() is not None
- 
+
     @staticmethod
     def phone_exists(db: Session, phone: str | None) -> bool:
         if not phone:

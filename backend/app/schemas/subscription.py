@@ -15,6 +15,7 @@ class SubscriptionCreate(BaseModel):
 
 class SubscriptionStatusUpdate(BaseModel):
     """Para uso administrativo (nutricionista/admin), no del propio paciente."""
+
     status: SubscriptionStatusEnum
 
 
