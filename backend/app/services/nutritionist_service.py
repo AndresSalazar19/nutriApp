@@ -19,7 +19,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class NutritionistService:
-
     @staticmethod
     def get_all(db: Session, status: NutritionistStatus | None = None):
         query = db.query(NutritionistProfile)
@@ -47,7 +46,6 @@ class NutritionistService:
     def review_profile(
         db: Session, profile_id: uuid.UUID, status: NutritionistStatus, admin_id: uuid.UUID
     ) -> NutritionistProfile:
-
         profile = NutritionistService.get_by_id(db, profile_id)
 
         if not profile:
@@ -70,7 +68,6 @@ class NutritionistService:
 
     @staticmethod
     def create(db: Session, data) -> NutritionistProfile:
-
         user_data = UserCreate(
             email=data.email,
             cedula=data.cedula,

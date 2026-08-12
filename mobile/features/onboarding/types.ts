@@ -11,6 +11,10 @@ export interface HealthData {
 
 export interface Plan {
   id: string;
+  /** Code del plan en backend ('basic' | 'standard' | 'premium'). Es lo que
+   *  espera SubscriptionService.subscribe(), a diferencia de `id` (uuid) que
+   *  solo se usa para renderizar/seleccionar en la UI. */
+  code?: 'basic' | 'standard' | 'premium';
   name: string;
   price: string;
   period: string;

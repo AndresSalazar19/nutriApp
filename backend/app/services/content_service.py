@@ -8,7 +8,6 @@ from app.schemas.content import ContentCreate, ContentUpdate
 
 
 class ContentService:
-
     @staticmethod
     def get_published(
         db: Session,

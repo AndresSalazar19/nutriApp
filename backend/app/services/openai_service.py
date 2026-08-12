@@ -9,7 +9,6 @@ load_dotenv()
 
 
 class OpenAIService:
-
     BASE_URL = "https://api.blackbox.ai/chat/completions"
 
     @classmethod
@@ -20,7 +19,6 @@ class OpenAIService:
         history: list[dict[str, Any]],
         message: str,
     ) -> list[dict[str, Any]]:
-
         messages = [
             {
                 "role": "system",
@@ -49,7 +47,6 @@ class OpenAIService:
         history: list[dict[str, Any]],
         message: str,
     ) -> str:
-
         messages = cls._build_messages(
             prompt=prompt,
             history=history,
@@ -87,7 +84,6 @@ class OpenAIService:
 
     @classmethod
     async def _call(cls, messages: list[dict[str, Any]]) -> str:
-
         headers = {
             "Authorization": f"Bearer {os.getenv('BLACKBOX_API_KEY')}",
             "Content-Type": "application/json",

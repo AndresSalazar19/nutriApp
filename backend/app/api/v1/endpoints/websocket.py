@@ -32,7 +32,6 @@ async def websocket_chat(
     conversation_id: uuid.UUID,
     token: str = Query(...),
 ):
-
     db: Session = SessionLocal()
     current_user = None
 
@@ -89,7 +88,6 @@ async def websocket_chat(
                 continue
 
             event_type = data.get("type")
-
             try:
                 if event_type == "message":
                     content = (data.get("content") or "").strip()
@@ -168,7 +166,6 @@ async def websocket_chat(
                 )
 
     except WebSocketDisconnect:
-
         pass
 
     except Exception as e:

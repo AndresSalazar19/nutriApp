@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_ai_provider, get_current_user
 from app.core.response import error_response, success_response
 from app.db.base import get_db
 from app.db.models.user import User
@@ -33,6 +33,7 @@ async def send_message(
     data: MessageCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    ai_provider=Depends(get_ai_provider),
 ):
     """
     Envía un mensaje al asistente virtual.
@@ -42,7 +43,7 @@ async def send_message(
 
     try:
         assistant_message = await AssistantService.send_message(
-            db=db, user=current_user, message=data.content, premium=premium
+            db=db, user=current_user, message=data.content, ai_provider=ai_provider, premium=premium
         )
     except Exception as ex:
         print("Error del asistente:", ex)

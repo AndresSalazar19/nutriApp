@@ -1,30 +1,34 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 
-from app.db.models.subscription import SubscriptionPlan, SubscriptionStatus
+from app.db.models.subscription import SubscriptionPlanEnum, SubscriptionStatusEnum
 
 
 class SubscriptionCreate(BaseModel):
-    plan: SubscriptionPlan
-    auto_renew: bool = True
+    # `plan` ya viene mapeado al enum de BD ('free' | 'basic' | 'premium')
+    # desde el frontend (ver toSubscriptionPlanCode en subscriptionService.ts).
+    # No es el code visual del catalogo ('basic' | 'standard' | 'premium').
+    plan: SubscriptionPlanEnum
 
 
 class SubscriptionStatusUpdate(BaseModel):
-    status: SubscriptionStatus
+    """Para uso administrativo (nutricionista/admin), no del propio paciente."""
+
+    status: SubscriptionStatusEnum
 
 
 class SubscriptionResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
-    plan: SubscriptionPlan
-    status: SubscriptionStatus
-    auto_renew: bool
+    plan: SubscriptionPlanEnum
+    status: SubscriptionStatusEnum
     started_at: datetime
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
+    auto_renew: bool
     created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True

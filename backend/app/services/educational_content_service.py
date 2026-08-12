@@ -7,7 +7,6 @@ from app.schemas.educational_content import EducationalContentRequest
 
 
 class EducationalContentService:
-
     @staticmethod
     def create(
         db: Session, data: EducationalContentRequest, author_id: uuid.UUID
@@ -48,7 +47,6 @@ class EducationalContentService:
 
     @staticmethod
     def get_published(db: Session):  # Retona solo el contenido que ya está publicado y aprobado
-
         return (
             db.query(EducationalContent)
             .filter(

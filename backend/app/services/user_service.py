@@ -14,7 +14,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UserService:
-
     @staticmethod
     def hash_password(plain_password: str) -> str:
         return pwd_context.hash(plain_password)
@@ -26,6 +25,18 @@ class UserService:
     @staticmethod
     def email_exists(db: Session, email: str) -> bool:
         return db.query(User).filter(User.email == email).first() is not None
+
+    @staticmethod
+    def cedula_exists(db: Session, cedula: str | None) -> bool:
+        if not cedula:
+            return False
+        return db.query(Person).filter(Person.cedula == cedula).first() is not None
+
+    @staticmethod
+    def phone_exists(db: Session, phone: str | None) -> bool:
+        if not phone:
+            return False
+        return db.query(Person).filter(Person.phone == phone).first() is not None
 
     @staticmethod
     def get_by_id(db: Session, user_id: uuid.UUID):
