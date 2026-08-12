@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { tokenStorage } from '@/utils/tokenStorage';
-import { OnboardingProgress } from '@/features/onboarding/services/onboardingProgress';
 
 const API = `${process.env.EXPO_PUBLIC_API_URL}/api/v1`;
 
@@ -25,17 +24,43 @@ export interface AuthUser {
   id: string;
   email: string;
   role: string;
-  first_name: string;
-  last_name: string;
+  is_active?: boolean;
+  email_verified?: boolean;
+  avatar_url?: string | null;
+  // El backend anida first_name/last_name dentro de `person`
+  // (ver UserResponse en app/schemas/user.py), no a nivel raíz.
+  person: {
+    first_name: string;
+    last_name: string;
+    cedula?: string | null;
+    date_of_birth?: string | null;
+    gender?: string | null;
+    phone?: string | null;
+  } | null;
 }
 
-interface LoginResponse {
+interface AuthTokenResponse {
   access_token: string;
   token_type: string;
   user: AuthUser;
 }
 
 const USER_KEY = 'auth_user';
+
+/**
+ * Error de API que además de un mensaje legible, puede traer el nombre del
+ * campo (`field`) que provocó el error, cuando el backend lo indica
+ * (por ejemplo "email", "identification", "phone").
+ */
+export class ApiError extends Error {
+  field?: string;
+
+  constructor(message: string, field?: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.field = field;
+  }
+}
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API}${endpoint}`;
@@ -48,7 +73,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       ...options,
     });
   } catch {
-    throw new Error('No se pudo conectar al servidor. Verifica tu conexión.');
+    throw new ApiError('No se pudo conectar al servidor. Verifica tu conexión.');
   }
 
   const text = await response.text();
@@ -58,51 +83,60 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(text || `Error HTTP ${response.status}`);
+    throw new ApiError(text || `Error HTTP ${response.status}`);
   }
 
   if (!response.ok) {
-    if (Array.isArray(data?.errors) && data.errors.length > 0) throw new Error(data.errors[0]);
+    const field = typeof data?.field === 'string' ? data.field : undefined;
+
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      throw new ApiError(data.errors[0], field);
+    }
     const statusMsgs = data?.status?.messages;
-    if (Array.isArray(statusMsgs) && statusMsgs.length > 0) throw new Error(statusMsgs[0]);
+    if (Array.isArray(statusMsgs) && statusMsgs.length > 0) {
+      throw new ApiError(statusMsgs[0], field);
+    }
     const detail = data?.detail;
-    if (typeof detail === 'string') throw new Error(detail);
-    if (Array.isArray(detail)) throw new Error(detail[0]?.msg ?? 'Error desconocido');
-    throw new Error(`Error ${response.status}`);
+    if (typeof detail === 'string') {
+      throw new ApiError(detail, field);
+    }
+    if (Array.isArray(detail)) {
+      throw new ApiError(detail[0]?.msg ?? 'Error desconocido', field);
+    }
+    throw new ApiError(`Error ${response.status}`, field);
   }
 
   return (data?.data ?? data) as T;
 }
 
+async function persistSession(body: AuthTokenResponse): Promise<AuthUser> {
+  if (body.access_token) {
+    await tokenStorage.set(body.access_token);
+  }
+  const user = body.user;
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  return user;
+}
+
 export const AuthService = {
 
   async register(payload: RegisterPayload): Promise<AuthUser> {
-    return request<AuthUser>('/users/', {
+    const body = await request<AuthTokenResponse>('/users/', {
       method: 'POST',
       body: JSON.stringify({ ...payload, role: payload.role ?? 'patient' }),
     });
-  },
-
-  async registerAndLogin(payload: RegisterPayload): Promise<AuthUser> {
-    await this.register(payload);
-    const { user } = await this.login({ email: payload.email, password: payload.password });
-    await OnboardingProgress.set(user.id, 'health');
-    return user;
+    // El registro ahora deja la sesión iniciada de una vez (el backend
+    // devuelve access_token igual que /login), para que el resto del
+    // onboarding pueda llamar endpoints protegidos sin login manual.
+    return persistSession(body);
   },
 
   async login(payload: LoginPayload): Promise<{ user: AuthUser }> {
-    const body = await request<LoginResponse>('/users/login', {
+    const body = await request<AuthTokenResponse>('/users/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-
-    if (body.access_token) {
-      await tokenStorage.set(body.access_token);
-    }
-  
-    const user: AuthUser = body.user ?? (body as any);
-    await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-
+    const user = await persistSession(body);
     return { user };
   },
 
@@ -117,10 +151,6 @@ export const AuthService = {
   },
 
   async isAuthenticated(): Promise<boolean> {
-    const [storedUser, token] = await Promise.all([
-      AsyncStorage.getItem(USER_KEY),
-      tokenStorage.get(),
-    ]);
-    return !!storedUser && !!token;
+    return !!(await AsyncStorage.getItem(USER_KEY));
   },
 };

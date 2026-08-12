@@ -25,6 +25,7 @@ import {
   validateHeightInput,
 } from '../utils/validations';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import DoctorChatScreen from '@/features/Chats/DoctorChatsSceen';
 
 interface FieldConfig {
   title: string;
@@ -97,6 +98,7 @@ function Separator() {
 export default function ProfileScreen() {
   const { user: sessionUser, loading: sessionLoading } = useCurrentUser();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const {
     profile,
@@ -110,6 +112,7 @@ export default function ProfileScreen() {
     openModal,
     closeModal,
     saveField,
+    assignedNutritionist,
   } = useProfileForm(sessionUser?.id ?? '');
 
   const { personalInfo: pi, healthInfo: hi } = profile;
@@ -272,9 +275,18 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.doctorInfo}>
             <Text style={styles.doctorName}>{profile.nutritionist.name || '—'}</Text>
-            <Text style={styles.doctorSpecialty}>{profile.nutritionist.specialty || 'Sin asignar'}</Text>
+            <Text style={styles.doctorSpecialty}>
+              {profile.nutritionist.id
+                ? profile.nutritionist.specialty || 'Nutricionista asignado'
+                : 'Sin asignar'}
+            </Text>
           </View>
-          <TouchableOpacity style={styles.contactBtn} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={[styles.contactBtn, !assignedNutritionist && styles.contactBtnDisabled]}
+            activeOpacity={0.8}
+            disabled={!assignedNutritionist}
+            onPress={() => setChatOpen(true)}
+          >
             <Text style={styles.contactBtnText}>Contactar</Text>
           </TouchableOpacity>
         </View>
@@ -314,6 +326,19 @@ export default function ProfileScreen() {
           validate={modalConfig.validate}
           onSave={handleSave}
           onClose={closeModal}
+        />
+      )}
+
+      {chatOpen && assignedNutritionist && (
+        <DoctorChatScreen
+          nutritionist={{
+            id: assignedNutritionist.id,
+            person: {
+              first_name: assignedNutritionist.first_name,
+              last_name: assignedNutritionist.last_name,
+            },
+          }}
+          onClose={() => setChatOpen(false)}
         />
       )}
 
@@ -431,6 +456,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
+  contactBtnDisabled: { opacity: 0.5 },
   contactBtnText: { color: COLORS.textOnPrimary, fontSize: 13, fontWeight: '700' },
   logoutButton: {
     minHeight: 52,
