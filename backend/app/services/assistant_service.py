@@ -6,7 +6,7 @@ from app.ai.prompts import Prompts
 from app.db.models.conversations import Conversation, ConversationType
 from app.db.models.message import Message, MessageSenderRole
 from app.db.models.user import User
-from app.services.openai_service import OpenAIService
+from app.services.ai.base_provider import BaseAIProvider
 
 
 class AssistantService:
@@ -22,7 +22,13 @@ class AssistantService:
 
     @classmethod
     async def send_message(
-        cls, *, db: Session, user: User, message: str, premium: bool = False
+        cls,
+        *,
+        db: Session,
+        user: User,
+        message: str,
+        ai_provider: BaseAIProvider,
+        premium: bool = False,
     ) -> Message:
         """
         Procesa un mensaje enviado al asistente.
@@ -35,11 +41,18 @@ class AssistantService:
         history = cls._build_history(db=db, conversation_id=conversation.id)
 
         prompt = Prompts.PREMIUM if premium else Prompts.BASIC
-        assistant_response = await OpenAIService.get_response(
-            prompt=prompt, history=history, message=message
-        )
+
+        prompt_data = {"prompt": prompt, "history": history, "message": message}
+
+        assistant_response = await ai_provider.generate_meal_plan(prompt_data)
+
+        # support providers that return either a dict with 'content' or a plain string
+        if isinstance(assistant_response, dict):
+            assistant_text = assistant_response.get("content", "")
+        else:
+            assistant_text = str(assistant_response)
         assistant_message = cls._save_assistant_message(
-            db=db, conversation_id=conversation.id, content=assistant_response
+            db=db, conversation_id=conversation.id, content=assistant_text
         )
 
         return assistant_message
