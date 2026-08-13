@@ -91,7 +91,7 @@ function PendingStatusCard({ plan }: { plan: NutritionPlan }) {
       </View>
       <Text style={styles.statusTitle}>Tu plan está en revisión</Text>
       <Text style={styles.statusText}>
-        Tu nutricionista debe revisarlo y aprobarlo antes de que puedas verlo. Te avisaremos apenas
+        En menos de 24 horas un nutricionista aceptará tu plan nutricional. Te avisaremos apenas
         esté listo.
       </Text>
 
