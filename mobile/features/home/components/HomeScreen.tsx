@@ -227,9 +227,6 @@ export default function HomeScreen() {
           <Text style={styles.headerGreeting}>Hola, {user?.person?.first_name ?? 'Paciente'}</Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
-        <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
-          <MaterialCommunityIcons name="bell-outline" size={22} color={COLORS.textOnPrimary} />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.statsCardWrapper}>
@@ -399,15 +396,6 @@ const styles = StyleSheet.create({
     color: COLORS.overlayMedium,
     marginTop: 2,
   },
-  bellBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.overlay,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
   statsCardWrapper: {
     paddingHorizontal: 16,
     marginTop: -36,

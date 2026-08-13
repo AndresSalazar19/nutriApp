@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   View,
@@ -47,6 +48,7 @@ export default function DoctorChatScreen({ onClose, nutritionist }: DoctorChatSc
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
   const lastReadMessageRef = useRef<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     const lastUnread = [...messages]
@@ -65,6 +67,15 @@ export default function DoctorChatScreen({ onClose, nutritionist }: DoctorChatSc
 
     notifyRead();
   }, [messages, notifyRead]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [onClose]);
 
   const handleChangeDraft = (text: string) => {
     setDraft(text);
@@ -107,8 +118,9 @@ export default function DoctorChatScreen({ onClose, nutritionist }: DoctorChatSc
   };
 
   return (
-    <Modal visible animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <View style={styles.overlay}>
       <SafeAreaView style={styles.container} edges={['top']}>
+        <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
         <ChatHeader
           title={`${nutritionist?.person.first_name ?? 'Nutricionista'} ${nutritionist?.person.last_name ?? ''}`}
           subtitle={otherTyping ? 'Escribiendo...' : otherOnline ?'En línea' : 'Desconectado'}
@@ -126,7 +138,12 @@ export default function DoctorChatScreen({ onClose, nutritionist }: DoctorChatSc
               <ActivityIndicator size="small" color={COLORS.primary} />
             </View>
           ) : (
-            <ScrollView style={styles.list} contentContainerStyle={{ paddingVertical: 14 }}>
+            <ScrollView
+              ref={scrollRef}
+              style={styles.list}
+              contentContainerStyle={{ paddingVertical: 14 }}
+              onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
+            >
               {error && (
                 <View style={styles.errorBox}>
                   <Text style={styles.errorText}>{error}</Text>
@@ -152,11 +169,16 @@ export default function DoctorChatScreen({ onClose, nutritionist }: DoctorChatSc
           <ChatInput value={draft} onChangeText={handleChangeDraft} onSend={handleSend} />
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 20,
+    elevation: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.surface,

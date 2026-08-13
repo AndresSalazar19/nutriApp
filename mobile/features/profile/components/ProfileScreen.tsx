@@ -216,9 +216,9 @@ export default function ProfileScreen() {
           <MaterialCommunityIcons name="arrow-left" size={22} color={COLORS.textOnPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mi Perfil</Text>
-        <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8}>
-          <MaterialCommunityIcons name="map-marker-outline" size={22} color={COLORS.textOnPrimary} />
-        </TouchableOpacity>
+        {/* Spacer del mismo ancho que el botón de la izquierda: mantiene el
+            título centrado sin poner un botón que no hace nada. */}
+        <View style={styles.headerBtnSpacer} />
       </View>
 
       <View style={styles.avatarSection}>
@@ -389,6 +389,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerBtnSpacer: { width: 36, height: 36 },
   headerTitle: { fontSize: 17, fontWeight: '700', color: COLORS.textOnPrimary },
 
   avatarSection: {
