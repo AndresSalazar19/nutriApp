@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   ScrollView,
@@ -13,718 +13,290 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
+import { AuthService } from '@/features/auth/services/authService';
+import { PatientNutritionistService, AssignedNutritionist } from '@/services/patientNutritionistService';
+import {
+  Appointment,
+  AppointmentModality,
+  AppointmentService,
+} from '../services/appointmentService';
 
-interface AppointmentsModalProps {
-  visible: boolean;
-  onClose: () => void;
+interface Props { visible: boolean; onClose: () => void }
+
+const DURATION_MIN = 45;
+const WEEKDAYS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+
+function localDateKey(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
 }
 
-type AppointmentType = 'control' | 'nutricion' | 'examen';
-
-interface Appointment {
-  id: string;
-  title: string;
-  doctor: string;
-  year: number;
-  month: number;
-  day: number;
-  time: string;
-  type: AppointmentType;
-  status: 'confirmada' | 'pendiente';
+function calendarDate(year: number, month: number, day: number): Date {
+  return new Date(year, month, day, 12);
 }
 
-const TYPE_OPTIONS: { key: AppointmentType; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap; color: string }[] = [
-  { key: 'control', label: 'Control', icon: 'heart-pulse', color: COLORS.primary },
-  { key: 'nutricion', label: 'Nutrición', icon: 'food-apple', color: COLORS.primaryMedium },
-  { key: 'examen', label: 'Examen', icon: 'test-tube', color: COLORS.chartPurple },
-];
-
-const TYPE_MAP = Object.fromEntries(TYPE_OPTIONS.map(t => [t.key, t]));
-
-const now = new Date();
-
-const INITIAL_APPOINTMENTS: Appointment[] = [
-  { id: '1', title: 'Control de presión arterial', doctor: 'Dr. María López', year: now.getFullYear(), month: now.getMonth(), day: 28, time: '09:00', type: 'control', status: 'confirmada' },
-  { id: '2', title: 'Consulta nutricional', doctor: 'Lic. Carlos Méndez', year: now.getFullYear(), month: now.getMonth() + 1, day: 2, time: '14:30', type: 'nutricion', status: 'confirmada' },
-  { id: '3', title: 'Exámenes de laboratorio', doctor: 'Laboratorio Central', year: now.getFullYear(), month: now.getMonth() + 1, day: 10, time: '07:30', type: 'examen', status: 'pendiente' },
-];
-
-function dateKey(y: number, m: number, d: number) {
-  return `${y}-${m}-${d}`;
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function formatMonthLabel(year: number, month: number): string {
-  const d = new Date(year, month, 1);
-  const label = d.toLocaleDateString('es-EC', { month: 'long', year: 'numeric' });
-  return label.charAt(0).toUpperCase() + label.slice(1);
+function formatTime(value: string): string {
+  return new Date(value).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
 }
 
-function formatDateShort(y: number, m: number, d: number): string {
-  const dt = new Date(y, m, d);
-  return dt.toLocaleDateString('es-EC', { day: 'numeric', month: 'short', year: 'numeric' });
+function nutritionistName(appointment: Appointment): string {
+  const person = appointment.nutritionist?.person;
+  return person ? `${person.first_name} ${person.last_name}`.trim() : appointment.nutritionist?.email ?? 'Nutricionista';
 }
 
-export function AppointmentsModal({ visible, onClose }: AppointmentsModalProps) {
-  const [viewYear, setViewYear] = useState(now.getFullYear());
-  const [viewMonth, setViewMonth] = useState(now.getMonth());
+function canCancel(appointment: Appointment): boolean {
+  return new Date(appointment.scheduled_at).getTime() - Date.now() >= 24 * 60 * 60 * 1000;
+}
+
+export function AppointmentsModal({ visible, onClose }: Props) {
+  const today = new Date();
+  const [patientId, setPatientId] = useState<string | null>(null);
+  const [nutritionist, setNutritionist] = useState<AssignedNutritionist | null>(null);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
-  const [showNewForm, setShowNewForm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [description, setDescription] = useState('');
+  const [modality, setModality] = useState<AppointmentModality>('virtual');
+  const [slots, setSlots] = useState<string[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [newTitle, setNewTitle] = useState('');
-  const [newDoctor, setNewDoctor] = useState('');
-  const [newTime, setNewTime] = useState('');
-  const [newType, setNewType] = useState<AppointmentType>('control');
+  async function loadAppointments(id: string) {
+    setAppointments(await AppointmentService.list(id));
+  }
 
+  useEffect(() => {
+    if (!visible) return;
+    setLoading(true);
+    setError(null);
+    AuthService.getUser()
+      .then(async user => {
+        if (!user?.id) throw new Error('Inicia sesión para consultar tus citas.');
+        setPatientId(user.id);
+        const [assigned] = await Promise.all([
+          PatientNutritionistService.getAssigned(user.id),
+          loadAppointments(user.id),
+        ]);
+        setNutritionist(assigned);
+      })
+      .catch(err => setError(err?.message ?? 'No se pudieron cargar las citas.'))
+      .finally(() => setLoading(false));
+  }, [visible]);
+
+  const selectedDate = selectedDay == null ? null : calendarDate(viewYear, viewMonth, selectedDay);
+  const selectedDateKey = selectedDate ? localDateKey(selectedDate) : null;
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const firstDayOffset = new Date(viewYear, viewMonth, 1).getDay();
-  const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+  const currentMonthKey = viewYear * 12 + viewMonth;
+  const todayMonthKey = today.getFullYear() * 12 + today.getMonth();
 
-  const appointmentDays = useMemo(() => {
-    const set = new Set<string>();
-    for (const a of appointments) {
-      if (a.year === viewYear && a.month === viewMonth) {
-        set.add(dateKey(a.year, a.month, a.day));
+  const appointmentDays = useMemo(() => new Set(
+    appointments.filter(a => a.status !== 'cancelled').map(a => localDateKey(new Date(a.scheduled_at))),
+  ), [appointments]);
+
+  const visibleAppointments = useMemo(() => appointments
+    .filter(a => a.status !== 'cancelled')
+    .filter(a => selectedDateKey ? localDateKey(new Date(a.scheduled_at)) === selectedDateKey : new Date(a.scheduled_at) >= today)
+    .sort((a, b) => +new Date(a.scheduled_at) - +new Date(b.scheduled_at)),
+  [appointments, selectedDateKey]);
+
+  async function selectDay(day: number) {
+    const date = calendarDate(viewYear, viewMonth, day);
+    if (date < calendarDate(today.getFullYear(), today.getMonth(), today.getDate())) return;
+    setSelectedDay(day);
+    setSelectedSlot(null);
+    setSlots([]);
+    if (!nutritionist) return;
+    setSlotsLoading(true);
+    try {
+      setSlots(await AppointmentService.getAvailableSlots(nutritionist.id, localDateKey(date)));
+    } catch (err: any) {
+      setError(err?.message ?? 'No se pudo consultar la disponibilidad.');
+    } finally {
+      setSlotsLoading(false);
+    }
+  }
+
+  async function createAppointment() {
+    if (!patientId || !nutritionist || !selectedSlot || !description.trim()) {
+      Alert.alert('Datos incompletos', 'Selecciona una fecha, un horario y escribe una descripción.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await AppointmentService.create({
+        patient_id: patientId,
+        nutritionist_id: nutritionist.id,
+        scheduled_at: selectedSlot,
+        modality,
+        notes: description.trim(),
+      });
+      await loadAppointments(patientId);
+      setDescription('');
+      setSelectedSlot(null);
+      setShowForm(false);
+      Alert.alert('Cita agendada', 'Tu cita quedó agendada correctamente.');
+    } catch (err: any) {
+      Alert.alert('No se pudo agendar', err?.message ?? 'Intenta nuevamente.');
+      if (selectedDateKey) await selectDay(selectedDay!);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function requestCancellation(appointment: Appointment) {
+    if (!patientId) return;
+    if (!canCancel(appointment)) {
+      const message = 'Las citas solo pueden cancelarse con al menos 24 horas de anticipación.';
+      if (Platform.OS === 'web') window.alert(message);
+      else Alert.alert('Cancelación no disponible', message);
+      return;
+    }
+
+    const cancel = async () => {
+      try {
+        await AppointmentService.cancel(appointment.id, patientId);
+        await loadAppointments(patientId);
+      } catch (err: any) {
+        const message = err?.message ?? 'Intenta nuevamente.';
+        if (Platform.OS === 'web') window.alert(`No se pudo cancelar: ${message}`);
+        else Alert.alert('No se pudo cancelar', message);
       }
-    }
-    return set;
-  }, [appointments, viewYear, viewMonth]);
-
-  const filteredAppointments = useMemo(() => {
-    if (selectedDay != null) {
-      return appointments.filter(a => a.year === viewYear && a.month === viewMonth && a.day === selectedDay);
-    }
-    return appointments
-      .filter(a => {
-        const aDate = new Date(a.year, a.month, a.day);
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        return aDate >= today;
-      })
-      .sort((a, b) => new Date(a.year, a.month, a.day).getTime() - new Date(b.year, b.month, b.day).getTime());
-  }, [appointments, selectedDay, viewYear, viewMonth]);
-
-  function goToPrevMonth() {
-    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11); }
-    else { setViewMonth(m => m - 1); }
-    setSelectedDay(null);
-  }
-
-  function goToNextMonth() {
-    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0); }
-    else { setViewMonth(m => m + 1); }
-    setSelectedDay(null);
-  }
-
-  function handleDayPress(day: number) {
-    setSelectedDay(prev => prev === day ? null : day);
-  }
-
-  function resetForm() {
-    setNewTitle('');
-    setNewDoctor('');
-    setNewTime('');
-    setNewType('control');
-    setShowNewForm(false);
-  }
-
-  function handleCreateAppointment() {
-    if (!newTitle.trim()) {
-      Alert.alert('Campo requerido', 'Ingresa un título para la cita.');
-      return;
-    }
-    if (!newTime.trim()) {
-      Alert.alert('Campo requerido', 'Ingresa la hora de la cita.');
-      return;
-    }
-
-    const day = selectedDay ?? now.getDate();
-    const apt: Appointment = {
-      id: Date.now().toString(),
-      title: newTitle.trim(),
-      doctor: newDoctor.trim() || 'Por asignar',
-      year: selectedDay != null ? viewYear : now.getFullYear(),
-      month: selectedDay != null ? viewMonth : now.getMonth(),
-      day,
-      time: newTime.trim(),
-      type: newType,
-      status: 'pendiente',
     };
 
-    setAppointments(prev => [...prev, apt]);
-    Alert.alert('Cita agendada', `${apt.title}\n${formatDateShort(apt.year, apt.month, apt.day)} a las ${apt.time}`);
-    resetForm();
+    if (Platform.OS === 'web') {
+      if (window.confirm('¿Seguro que deseas cancelar esta cita?')) void cancel();
+      return;
+    }
+
+    Alert.alert('Cancelar cita', '¿Seguro que deseas cancelar esta cita?', [
+      { text: 'Volver', style: 'cancel' },
+      { text: 'Cancelar cita', style: 'destructive', onPress: () => void cancel() },
+    ]);
   }
 
-  function handleClose() {
-    resetForm();
+  function changeMonth(delta: number) {
+    const next = new Date(viewYear, viewMonth + delta, 1);
+    setViewYear(next.getFullYear());
+    setViewMonth(next.getMonth());
     setSelectedDay(null);
-    onClose();
+    setShowForm(false);
+    setSlots([]);
   }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.keyboardView}
-        >
-          <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-              <MaterialCommunityIcons name="calendar-month" size={24} color={COLORS.textOnPrimary} />
-              <Text style={styles.headerTitle}>Mis Citas</Text>
-              <TouchableOpacity onPress={handleClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                <MaterialCommunityIcons name="close" size={24} color={COLORS.textOnPrimary} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-              {/* Month navigation */}
-              <View style={styles.monthNav}>
-                <TouchableOpacity onPress={goToPrevMonth} style={styles.monthArrow}>
-                  <MaterialCommunityIcons name="chevron-left" size={26} color={COLORS.textPrimary} />
-                </TouchableOpacity>
-                <Text style={styles.monthLabel}>{formatMonthLabel(viewYear, viewMonth)}</Text>
-                <TouchableOpacity onPress={goToNextMonth} style={styles.monthArrow}>
-                  <MaterialCommunityIcons name="chevron-right" size={26} color={COLORS.textPrimary} />
-                </TouchableOpacity>
-              </View>
-
-              {/* Week day headers */}
-              <View style={styles.weekRow}>
-                {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((d, i) => (
-                  <Text key={i} style={styles.weekDay}>{d}</Text>
-                ))}
-              </View>
-
-              {/* Calendar grid */}
-              <View style={styles.calendarGrid}>
-                {Array.from({ length: firstDayOffset }).map((_, i) => (
-                  <View key={`e-${i}`} style={styles.dayCell} />
-                ))}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const day = i + 1;
-                  const isToday = isCurrentMonth && day === now.getDate();
-                  const isSelected = selectedDay === day;
-                  const hasApt = appointmentDays.has(dateKey(viewYear, viewMonth, day));
-                  return (
-                    <TouchableOpacity key={day} style={styles.dayCell} onPress={() => handleDayPress(day)} activeOpacity={0.6}>
-                      <View style={[
-                        styles.dayCircle,
-                        isToday && !isSelected && styles.dayToday,
-                        isSelected && styles.daySelected,
-                      ]}>
-                        <Text style={[
-                          styles.dayText,
-                          (isToday && !isSelected) && styles.dayTextToday,
-                          isSelected && styles.dayTextSelected,
-                        ]}>
-                          {day}
-                        </Text>
-                      </View>
-                      {hasApt && <View style={[styles.appointmentDot, isSelected && styles.dotSelected]} />}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* Selected day label */}
-              {selectedDay != null && (
-                <View style={styles.selectedLabel}>
-                  <MaterialCommunityIcons name="calendar-check" size={16} color={COLORS.primary} />
-                  <Text style={styles.selectedLabelText}>
-                    {formatDateShort(viewYear, viewMonth, selectedDay)}
-                  </Text>
-                  <TouchableOpacity onPress={() => setSelectedDay(null)}>
-                    <Text style={styles.clearSelection}>Ver todas</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Appointments list */}
-              <Text style={styles.sectionLabel}>
-                {selectedDay != null ? 'Citas del día' : 'Próximas citas'}
-              </Text>
-
-              {filteredAppointments.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <MaterialCommunityIcons name="calendar-blank-outline" size={36} color={COLORS.textMuted} />
-                  <Text style={styles.emptyText}>
-                    {selectedDay != null ? 'No hay citas este día' : 'No hay citas próximas'}
-                  </Text>
-                </View>
-              ) : (
-                filteredAppointments.map(apt => {
-                  const cfg = TYPE_MAP[apt.type];
-                  return (
-                    <View key={apt.id} style={styles.appointmentCard}>
-                      <View style={[styles.aptIconWrap, { backgroundColor: cfg.color + '18' }]}>
-                        <MaterialCommunityIcons name={cfg.icon} size={22} color={cfg.color} />
-                      </View>
-                      <View style={styles.aptBody}>
-                        <Text style={styles.aptTitle}>{apt.title}</Text>
-                        <Text style={styles.aptDoctor}>{apt.doctor}</Text>
-                        <View style={styles.aptDateRow}>
-                          <MaterialCommunityIcons name="calendar-outline" size={13} color={COLORS.textMuted} />
-                          <Text style={styles.aptDate}>{formatDateShort(apt.year, apt.month, apt.day)}</Text>
-                          <MaterialCommunityIcons name="clock-outline" size={13} color={COLORS.textMuted} />
-                          <Text style={styles.aptDate}>{apt.time}</Text>
-                        </View>
-                      </View>
-                      <View style={[
-                        styles.statusBadge,
-                        apt.status === 'confirmada' ? styles.statusConfirmed : styles.statusPending,
-                      ]}>
-                        <Text style={[
-                          styles.statusText,
-                          { color: apt.status === 'confirmada' ? COLORS.success : COLORS.warning },
-                        ]}>
-                          {apt.status === 'confirmada' ? 'Confirmada' : 'Pendiente'}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })
-              )}
-
-              {/* New appointment form */}
-              {showNewForm ? (
-                <View style={styles.formCard}>
-                  <Text style={styles.formTitle}>Nueva cita</Text>
-                  {selectedDay != null && (
-                    <Text style={styles.formDate}>
-                      Fecha: {formatDateShort(viewYear, viewMonth, selectedDay)}
-                    </Text>
-                  )}
-
-                  <Text style={styles.fieldLabel}>Título</Text>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Ej: Control de presión"
-                      placeholderTextColor={COLORS.placeholder}
-                      value={newTitle}
-                      onChangeText={setNewTitle}
-                    />
-                  </View>
-
-                  <Text style={styles.fieldLabel}>Doctor / Lugar</Text>
-                  <View style={styles.inputWrap}>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Ej: Dr. López"
-                      placeholderTextColor={COLORS.placeholder}
-                      value={newDoctor}
-                      onChangeText={setNewDoctor}
-                    />
-                  </View>
-
-                  <Text style={styles.fieldLabel}>Hora</Text>
-                  <View style={styles.inputWrap}>
-                    <MaterialCommunityIcons name="clock-outline" size={18} color={COLORS.textMuted} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Ej: 09:30"
-                      placeholderTextColor={COLORS.placeholder}
-                      value={newTime}
-                      onChangeText={setNewTime}
-                    />
-                  </View>
-
-                  <Text style={styles.fieldLabel}>Tipo de cita</Text>
-                  <View style={styles.typeRow}>
-                    {TYPE_OPTIONS.map(opt => (
-                      <TouchableOpacity
-                        key={opt.key}
-                        style={[styles.typeChip, newType === opt.key && { backgroundColor: opt.color + '20', borderColor: opt.color }]}
-                        onPress={() => setNewType(opt.key)}
-                      >
-                        <MaterialCommunityIcons name={opt.icon} size={16} color={newType === opt.key ? opt.color : COLORS.textMuted} />
-                        <Text style={[styles.typeChipText, newType === opt.key && { color: opt.color }]}>{opt.label}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  <View style={styles.formActions}>
-                    <TouchableOpacity style={styles.formCancelBtn} onPress={resetForm}>
-                      <Text style={styles.formCancelText}>Cancelar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.formSaveBtn} onPress={handleCreateAppointment}>
-                      <MaterialCommunityIcons name="check" size={18} color={COLORS.textOnPrimary} />
-                      <Text style={styles.formSaveText}>Agendar</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <TouchableOpacity style={styles.addBtn} onPress={() => setShowNewForm(true)}>
-                  <MaterialCommunityIcons name="plus-circle-outline" size={20} color={COLORS.primaryMedium} />
-                  <Text style={styles.addBtnText}>Agendar nueva cita</Text>
-                </TouchableOpacity>
-              )}
-
-              <View style={{ height: 16 }} />
-            </ScrollView>
-
-            {/* Footer */}
-            <View style={styles.footer}>
-              <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
-                <Text style={styles.closeBtnText}>Cerrar</Text>
-              </TouchableOpacity>
-            </View>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={styles.overlay}><View style={styles.container}>
+        <View style={styles.header}>
+          <MaterialCommunityIcons name="calendar-month" size={24} color={COLORS.textOnPrimary} />
+          <Text style={styles.headerTitle}>Mis citas</Text>
+          <TouchableOpacity onPress={onClose}><MaterialCommunityIcons name="close" size={24} color={COLORS.textOnPrimary} /></TouchableOpacity>
+        </View>
+        <ScrollView contentContainerStyle={styles.body}>
+          {loading ? <ActivityIndicator color={COLORS.primary} /> : error ? <Text style={styles.error}>{error}</Text> : null}
+          <Text style={styles.assigned}>{nutritionist ? `Nutricionista: ${nutritionist.name}` : 'No tienes un nutricionista asignado'}</Text>
+          <View style={styles.monthNav}>
+            <TouchableOpacity disabled={currentMonthKey <= todayMonthKey} onPress={() => changeMonth(-1)}><MaterialCommunityIcons name="chevron-left" size={28} color={currentMonthKey <= todayMonthKey ? COLORS.textMuted : COLORS.textPrimary} /></TouchableOpacity>
+            <Text style={styles.monthTitle}>{calendarDate(viewYear, viewMonth, 1).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}</Text>
+            <TouchableOpacity onPress={() => changeMonth(1)}><MaterialCommunityIcons name="chevron-right" size={28} color={COLORS.textPrimary} /></TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
-      </View>
+          <View style={styles.weekRow}>{WEEKDAYS.map((d, i) => <Text key={i} style={styles.weekday}>{d}</Text>)}</View>
+          <View style={styles.grid}>
+            {Array.from({ length: firstDayOffset }).map((_, i) => <View key={`empty-${i}`} style={styles.dayCell} />)}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const date = calendarDate(viewYear, viewMonth, day);
+              const past = date < calendarDate(today.getFullYear(), today.getMonth(), today.getDate());
+              const selected = day === selectedDay;
+              return <TouchableOpacity key={day} disabled={past} style={styles.dayCell} onPress={() => selectDay(day)}>
+                <View style={[styles.dayCircle, selected && styles.selectedDay]}><Text style={[styles.dayText, past && styles.pastDay, selected && styles.selectedDayText]}>{day}</Text></View>
+                {appointmentDays.has(localDateKey(date)) && <View style={styles.dot} />}
+              </TouchableOpacity>;
+            })}
+          </View>
+
+          <Text style={styles.sectionTitle}>{selectedDate ? `Citas del ${formatDate(selectedDate)}` : 'Próximas citas'}</Text>
+          {visibleAppointments.length === 0 ? <Text style={styles.empty}>No hay citas para mostrar.</Text> : visibleAppointments.map(appointment => (
+            <View key={appointment.id} style={styles.card}>
+              <MaterialCommunityIcons name={appointment.modality === 'virtual' ? 'video-outline' : 'map-marker-outline'} size={25} color={COLORS.primary} />
+              <View style={styles.cardBody}>
+                <Text style={styles.cardTitle}>{appointment.notes || 'Consulta nutricional'}</Text>
+                <Text style={styles.cardMeta}>{nutritionistName(appointment)}</Text>
+                <Text style={styles.cardMeta}>{formatDate(new Date(appointment.scheduled_at))} · {formatTime(appointment.scheduled_at)} · {appointment.duration_min} min</Text>
+                <Text style={styles.cardMeta}>{appointment.modality === 'virtual' ? 'Virtual' : 'Presencial'} · {appointment.status === 'scheduled' ? 'Agendada' : appointment.status}</Text>
+              </View>
+              {(appointment.status === 'scheduled' || appointment.status === 'confirmed') && <TouchableOpacity onPress={() => requestCancellation(appointment)}><MaterialCommunityIcons name="calendar-remove" size={23} color={canCancel(appointment) ? COLORS.danger : COLORS.textMuted} /></TouchableOpacity>}
+            </View>
+          ))}
+
+          {showForm ? <View style={styles.form}>
+            <Text style={styles.sectionTitle}>Nueva cita · {DURATION_MIN} minutos</Text>
+            {!selectedDate && <Text style={styles.help}>Selecciona primero una fecha futura.</Text>}
+            <Text style={styles.label}>Horario disponible</Text>
+            {slotsLoading ? <ActivityIndicator color={COLORS.primary} /> : selectedDate && slots.length === 0 ? <Text style={styles.help}>No hay horarios disponibles para este día.</Text> : <View style={styles.chips}>{slots.map(slot => <TouchableOpacity key={slot} style={[styles.chip, selectedSlot === slot && styles.chipSelected]} onPress={() => setSelectedSlot(slot)}><Text style={[styles.chipText, selectedSlot === slot && styles.chipTextSelected]}>{formatTime(slot)}</Text></TouchableOpacity>)}</View>}
+            <Text style={styles.label}>Modalidad</Text>
+            <View style={styles.chips}>{(['virtual', 'in_person'] as AppointmentModality[]).map(value => <TouchableOpacity key={value} style={[styles.chip, modality === value && styles.chipSelected]} onPress={() => setModality(value)}><Text style={[styles.chipText, modality === value && styles.chipTextSelected]}>{value === 'virtual' ? 'Virtual' : 'Presencial'}</Text></TouchableOpacity>)}</View>
+            <Text style={styles.label}>Descripción</Text>
+            <TextInput style={styles.input} value={description} onChangeText={setDescription} placeholder="Ej: Control de presión arterial" placeholderTextColor={COLORS.placeholder} multiline />
+            <View style={styles.actions}><TouchableOpacity style={styles.secondary} onPress={() => setShowForm(false)}><Text style={styles.secondaryText}>Volver</Text></TouchableOpacity><TouchableOpacity disabled={saving} style={styles.primary} onPress={createAppointment}>{saving ? <ActivityIndicator color={COLORS.textOnPrimary} /> : <Text style={styles.primaryText}>Agendar</Text>}</TouchableOpacity></View>
+          </View> : <TouchableOpacity disabled={!nutritionist} style={[styles.add, !nutritionist && styles.disabled]} onPress={() => setShowForm(true)}><MaterialCommunityIcons name="plus-circle-outline" size={20} color={COLORS.primary} /><Text style={styles.addText}>Agendar nueva cita</Text></TouchableOpacity>}
+        </ScrollView>
+      </View></View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: COLORS.backdrop,
-    justifyContent: 'flex-end',
-  },
-  keyboardView: {
-    justifyContent: 'flex-end',
-  },
-  container: {
-    backgroundColor: COLORS.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '92%',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primaryMedium,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 10,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '700',
-    color: COLORS.textOnPrimary,
-  },
-  body: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-
-  // Month nav
-  monthNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  monthArrow: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  monthLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-
-  // Calendar
-  weekRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  weekDay: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textMuted,
-  },
-  calendarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 16,
-  },
-  dayCell: {
-    width: `${100 / 7}%`,
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  dayCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayToday: {
-    backgroundColor: COLORS.primaryLight,
-  },
-  daySelected: {
-    backgroundColor: COLORS.primary,
-  },
-  dayText: {
-    fontSize: 13,
-    color: COLORS.textPrimary,
-  },
-  dayTextToday: {
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
-  dayTextSelected: {
-    color: COLORS.textOnPrimary,
-    fontWeight: '700',
-  },
-  appointmentDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: COLORS.primaryMedium,
-    marginTop: 2,
-  },
-  dotSelected: {
-    backgroundColor: COLORS.textOnPrimary,
-  },
-
-  // Selected label
-  selectedLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  selectedLabelText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  clearSelection: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.primaryMedium,
-    textDecorationLine: 'underline',
-  },
-
-  // Appointments
-  sectionLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 12,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    gap: 8,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: COLORS.textMuted,
-  },
-  appointmentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  aptIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  aptBody: {
-    flex: 1,
-  },
-  aptTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 2,
-  },
-  aptDoctor: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginBottom: 4,
-  },
-  aptDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  aptDate: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    marginRight: 8,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  statusConfirmed: {
-    backgroundColor: COLORS.success + '15',
-    borderColor: COLORS.success + '40',
-  },
-  statusPending: {
-    backgroundColor: COLORS.warning + '15',
-    borderColor: COLORS.warning + '40',
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-
-  // Add button
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: COLORS.primaryMedium,
-    borderStyle: 'dashed',
-    marginTop: 4,
-  },
-  addBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primaryMedium,
-  },
-
-  // Form
-  formCard: {
-    backgroundColor: COLORS.background,
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 4,
-  },
-  formTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 4,
-  },
-  formDate: {
-    fontSize: 12,
-    color: COLORS.primaryMedium,
-    marginBottom: 12,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    marginBottom: 4,
-    marginTop: 8,
-  },
-  inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: COLORS.surface,
-    gap: 6,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: COLORS.textPrimary,
-  },
-  typeRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  typeChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
-  },
-  typeChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textMuted,
-  },
-  formActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 16,
-  },
-  formCancelBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 50,
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
-    alignItems: 'center',
-  },
-  formCancelText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-  },
-  formSaveBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    paddingVertical: 12,
-    borderRadius: 50,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  formSaveText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.textOnPrimary,
-  },
-
-  // Footer
-  footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.divider,
-  },
-  closeBtn: {
-    paddingVertical: 14,
-    borderRadius: 50,
-    backgroundColor: COLORS.primaryMedium,
-    alignItems: 'center',
-  },
-  closeBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.textOnPrimary,
-  },
+  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: COLORS.backdrop },
+  container: { maxHeight: '94%', borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: COLORS.surface, overflow: 'hidden' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 18, backgroundColor: COLORS.primaryMedium },
+  headerTitle: { flex: 1, color: COLORS.textOnPrimary, fontSize: 18, fontWeight: '700' },
+  body: { padding: 20, paddingBottom: 38 },
+  assigned: { color: COLORS.textSecondary, fontWeight: '600', marginBottom: 12 },
+  error: { color: COLORS.danger, marginBottom: 10 },
+  monthNav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10 },
+  monthTitle: { color: COLORS.textPrimary, fontSize: 16, fontWeight: '700', textTransform: 'capitalize' },
+  weekRow: { flexDirection: 'row' },
+  weekday: { width: `${100 / 7}%`, textAlign: 'center', color: COLORS.textMuted, fontWeight: '600' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 18 },
+  dayCell: { width: `${100 / 7}%`, height: 46, alignItems: 'center', justifyContent: 'center' },
+  dayCircle: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  selectedDay: { backgroundColor: COLORS.primary },
+  dayText: { color: COLORS.textPrimary },
+  pastDay: { color: COLORS.textMuted },
+  selectedDayText: { color: COLORS.textOnPrimary, fontWeight: '700' },
+  dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: COLORS.primaryMedium, marginTop: -3 },
+  sectionTitle: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 10 },
+  empty: { color: COLORS.textMuted, textAlign: 'center', paddingVertical: 16 },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: COLORS.border, borderRadius: 14, padding: 13, marginBottom: 10 },
+  cardBody: { flex: 1 },
+  cardTitle: { color: COLORS.textPrimary, fontWeight: '700', marginBottom: 3 },
+  cardMeta: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
+  add: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 7, borderWidth: 1, borderStyle: 'dashed', borderColor: COLORS.primary, borderRadius: 14, padding: 14, marginTop: 8 },
+  addText: { color: COLORS.primary, fontWeight: '700' },
+  disabled: { opacity: 0.45 },
+  form: { backgroundColor: COLORS.background, borderRadius: 14, padding: 15, marginTop: 12 },
+  help: { color: COLORS.textMuted, fontSize: 12, marginBottom: 8 },
+  label: { color: COLORS.textSecondary, fontSize: 12, fontWeight: '600', marginTop: 10, marginBottom: 6 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surface, borderRadius: 18, paddingHorizontal: 13, paddingVertical: 8 },
+  chipSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
+  chipText: { color: COLORS.textSecondary, fontWeight: '600' },
+  chipTextSelected: { color: COLORS.textOnPrimary },
+  input: { minHeight: 72, textAlignVertical: 'top', borderWidth: 1, borderColor: COLORS.border, borderRadius: 10, padding: 11, color: COLORS.textPrimary, backgroundColor: COLORS.surface },
+  actions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  secondary: { flex: 1, alignItems: 'center', padding: 12, borderWidth: 1, borderColor: COLORS.border, borderRadius: 22 },
+  secondaryText: { color: COLORS.textSecondary, fontWeight: '600' },
+  primary: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 22, backgroundColor: COLORS.primary },
+  primaryText: { color: COLORS.textOnPrimary, fontWeight: '700' },
 });
