@@ -108,7 +108,7 @@ export function GeneratePlanModal({ visible, onClose, onGenerated }: GeneratePla
       setTimeout(() => {
         Alert.alert(
           'Plan generado',
-          `Tu nutricionista revisará este plan antes de activarlo. Te avisaremos cuando esté listo.${
+          `En menos de 24 horas un nutricionista aceptará tu plan nutricional. Te avisaremos cuando esté listo.${
             mentionsBp
               ? '\n\nDetectamos una posible lectura de presión arterial en tu nota — si la IA la reconoció, ya quedó guardada en tu historial.'
               : ''

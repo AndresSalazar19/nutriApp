@@ -212,7 +212,9 @@ export default function HomeScreen() {
       return;
     }
     if (metricMode === 'hydration') {
-      await ProgressService.createHydrationLog(user.id, value, date);
+      // The hydration modal collects liters (typed exactly or via a container preset);
+      // the backend stores milliliters, so convert before saving.
+      await ProgressService.createHydrationLog(user.id, Math.round(value * 1000), date);
     } else {
       await ProgressService.createCalorieLog(user.id, value, date, metricMode);
     }
@@ -268,7 +270,7 @@ export default function HomeScreen() {
           <ActionCard
             icon="water"
             title="Hidratacion"
-            subtitle={`${dailySummary.hydration_ml} ml hoy`}
+            subtitle={`${(dailySummary.hydration_ml / 1000).toFixed(2)} L hoy`}
             accentColor={COLORS.primaryMedium}
             onPress={() => setMetricMode('hydration')}
           />
