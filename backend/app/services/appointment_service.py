@@ -12,6 +12,7 @@ from app.db.models.appointment import (
     AvailabilityNutritionist,
     AvailabilityRuleType,
 )
+from app.db.models.patient_nutritionist import PatientNutritionist
 from app.schemas.appointment import (
     AppointmentRequest,
     AppointmentResponse,
@@ -19,7 +20,7 @@ from app.schemas.appointment import (
     AvailabilityNutritionistRequest,
 )
 
-LOCAL_TZ = ZoneInfo("America/Guayaquil")
+LOCAL_TZ = ZoneInfo("America/Bogota")
 ALL_DAY_START = time(0, 0, 0)
 ALL_DAY_END = time(23, 59, 0)
 
@@ -137,6 +138,24 @@ class AppointmentService:
 
         scheduled_at = scheduled_at.astimezone(timezone.utc)
 
+        if scheduled_at <= datetime.now(timezone.utc):
+            raise HTTPException(status_code=400, detail="No se pueden agendar citas en el pasado")
+
+        assigned = (
+            db.query(PatientNutritionist)
+            .filter(
+                PatientNutritionist.patient_id == data.patient_id,
+                PatientNutritionist.nutritionist_id == data.nutritionist_id,
+                PatientNutritionist.is_active.is_(True),
+            )
+            .first()
+        )
+        if not assigned:
+            raise HTTPException(
+                status_code=400,
+                detail="Solo puedes agendar con tu nutricionista asignado",
+            )
+
         if not AppointmentService._is_slot_available(
             db, data.nutritionist_id, scheduled_at, data.duration_min
         ):
@@ -193,6 +212,11 @@ class AppointmentService:
             new_date = new_date.astimezone(timezone.utc)
             duration = data.duration_min or appointment.duration_min
 
+            if new_date <= datetime.now(timezone.utc):
+                raise HTTPException(
+                    status_code=400, detail="No se pueden reprogramar citas en el pasado"
+                )
+
             if not AppointmentService._is_slot_available(
                 db, appointment.nutritionist_id, new_date, duration, appointment.id
             ):
@@ -227,6 +251,15 @@ class AppointmentService:
 
         if not appointment:
             raise HTTPException(status_code=404, detail="Cita no encontrada")
+
+        scheduled_at = appointment.scheduled_at
+        if scheduled_at.tzinfo is None:
+            scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+        if scheduled_at - datetime.now(timezone.utc) < timedelta(hours=24):
+            raise HTTPException(
+                status_code=400,
+                detail="La cita solo puede cancelarse con al menos 24 horas de anticipacion",
+            )
 
         appointment.status = AppointmentStatus.cancelled
         appointment.cancelled_by = user_id
@@ -287,8 +320,8 @@ class AppointmentService:
             )
 
             current = start_dt
-            while current < end_dt:
-                if AppointmentService._is_slot_available(
+            while current + timedelta(minutes=duration_min) <= end_dt:
+                if current > datetime.now(timezone.utc) and AppointmentService._is_slot_available(
                     db, nutritionist_id, current, duration_min
                 ):
                     slots.append(current)
