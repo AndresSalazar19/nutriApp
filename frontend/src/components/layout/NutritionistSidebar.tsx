@@ -138,9 +138,6 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
         <nav className="space-y-0.5">
           {NAV_ITEMS.map(({ label, icon, route, badge }, index) => {
             const itemLocked = isItemLocked(index);
-            // En modo locked, el único ítem navegable (Panel Principal) debe
-            // llevar a la pantalla de "en revisión" (DASHBOARD), no a HOME —
-            // HOME es el panel completo, reservado para cuentas verificadas.
             const targetRoute = locked && index === 0 ? ROUTES.DASHBOARD : route;
             const isActive = location.pathname === targetRoute && !itemLocked;
 

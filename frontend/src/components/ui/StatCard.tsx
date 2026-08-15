@@ -8,6 +8,7 @@ interface StatCardProps {
   change?: string;
   changeType?: 'positive' | 'negative' | 'neutral';
   accentColor?: string;
+  isLoading?: boolean;
 }
 
 const changeColors = {
@@ -24,6 +25,7 @@ export function StatCard({
   change,
   changeType = 'positive',
   accentColor = 'text-gray-800',
+  isLoading = false,
 }: StatCardProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
@@ -35,8 +37,17 @@ export function StatCard({
         </div>
         <span className="text-gray-500 text-sm">{label}</span>
       </div>
-      <p className={`text-3xl font-bold ${accentColor} mb-1`}>{value}</p>
-      {change && <p className={`text-xs ${changeColors[changeType]}`}>{change}</p>}
+      {isLoading ? (
+        <div className="animate-pulse">
+          <div className="h-8 w-16 bg-gray-200 rounded mb-2" />
+          <div className="h-3 w-24 bg-gray-100 rounded" />
+        </div>
+      ) : (
+        <>
+          <p className={`text-3xl font-bold ${accentColor} mb-1`}>{value}</p>
+          {change && <p className={`text-xs ${changeColors[changeType]}`}>{change}</p>}
+        </>
+      )}
     </div>
   );
 }

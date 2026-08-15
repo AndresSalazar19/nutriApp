@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
+    admin,
     alimentos_intercambio,
     appointment,
     assistant,
@@ -28,6 +29,7 @@ from app.api.v1.endpoints import (
 )
 
 router = APIRouter()
+router.include_router(admin.router)
 router.include_router(users.router)
 router.include_router(catalog.router)
 router.include_router(nutritionist.router)

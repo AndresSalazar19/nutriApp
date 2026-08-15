@@ -3,7 +3,6 @@ import { NutritionistSidebar } from './NutritionistSidebar';
 
 interface NutritionistLayoutProps {
   children: React.ReactNode;
-  /** true = cuenta pendiente de verificación: sidebar bloqueado salvo Panel Principal */
   locked?: boolean;
 }
 

@@ -11,7 +11,7 @@ from app.db.models.nutritionist import (
     NutritionistProfile,
     NutritionistStatus,
 )
-from app.db.models.user import UserRole
+from app.db.models.user import User, UserRole
 from app.schemas.user import UserCreate
 from app.services.user_service import UserService
 
@@ -21,7 +21,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class NutritionistService:
     @staticmethod
     def get_all(db: Session, status: NutritionistStatus | None = None):
-        query = db.query(NutritionistProfile)
+        query = db.query(NutritionistProfile).options(
+            joinedload(NutritionistProfile.specialty),
+            joinedload(NutritionistProfile.user).joinedload(User.person),
+            joinedload(NutritionistProfile.user)
+            .joinedload(User.nutritionist_profile)
+            .joinedload(NutritionistProfile.specialty),
+        )
 
         if status:
             query = query.filter(NutritionistProfile.status == status.value)

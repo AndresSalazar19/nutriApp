@@ -1,8 +1,3 @@
-// ─── Types ────────────────────────────────────────────────────────────────────
-// Nota: este archivo ya no contiene datos mock — solo los tipos que consumen
-// PatientProfile, WeightChart, PatientsPage y ClientPage. Se conserva el nombre
-// de archivo para no romper los imports existentes.
-
 export type PatientStatus = 'active' | 'inactive' | 'pending';
 export type PlanType = 'Premium' | 'Basic';
 export type ConsultType = 'Presencial' | 'Virtual';
