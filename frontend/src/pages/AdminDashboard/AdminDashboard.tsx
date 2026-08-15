@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { AdminTopBar } from '../../components/layout/AdminTopBar';
 import { StatCard } from '../../components/ui/StatCard';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { DataTable, Column } from '../../components/ui/DataTable';
+import { NutritionistService, NutritionistProfile } from '../../services/NutritionistService';
 import {
   MdEmojiEvents,
   MdPeople,
@@ -66,71 +67,24 @@ interface Nutritionist {
   status: 'active' | 'pending';
 }
 
-const nutritionists: Nutritionist[] = [
-  {
-    id: '1',
-    initials: 'AS',
+const RECENT_NUTRITIONISTS_LIMIT = 7;
+
+function mapProfileToNutritionist(p: NutritionistProfile): Nutritionist {
+  const firstName = p.user?.person?.first_name ?? '';
+  const lastName = p.user?.person?.last_name ?? '';
+  const fullName = `${firstName} ${lastName}`.trim();
+  const initials = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase() || '??';
+
+  return {
+    id: p.id,
+    initials,
     color: 'bg-admin-light',
-    name: 'Dr. Alfonso Silva',
-    email: 'alfonso.silva@nutria.com',
-    specialty: 'Hipertensión',
-    status: 'active',
-  },
-  {
-    id: '2',
-    initials: 'MG',
-    color: 'bg-admin-light',
-    name: 'Dra. María García',
-    email: 'maria.garcia@nutria.com',
-    specialty: 'Diabetes',
-    status: 'active',
-  },
-  {
-    id: '3',
-    initials: 'JR',
-    color: 'bg-admin-light',
-    name: 'Dr. Juan Rodríguez',
-    email: 'juan.rodriguez@nutria.com',
-    specialty: 'Obesidad',
-    status: 'active',
-  },
-  {
-    id: '4',
-    initials: 'LC',
-    color: 'bg-admin-light',
-    name: 'Dra. Laura Castro',
-    email: 'laura.castro@nutria.com',
-    specialty: 'Deportiva',
-    status: 'pending',
-  },
-  {
-    id: '5',
-    initials: 'PM',
-    color: 'bg-admin-light',
-    name: 'Dr. Pedro Morales',
-    email: 'pedro.morales@nutria.com',
-    specialty: 'Cardiología',
-    status: 'active',
-  },
-  {
-    id: '6',
-    initials: 'ST',
-    color: 'bg-admin-light',
-    name: 'Dra. Sara Torres',
-    email: 'sara.torres@nutria.com',
-    specialty: 'Pediatría',
-    status: 'active',
-  },
-  {
-    id: '7',
-    initials: 'DF',
-    color: 'bg-admin-light',
-    name: 'Dr. Daniel Fernández',
-    email: 'daniel.fernandez@nutria.com',
-    specialty: 'Renal',
-    status: 'active',
-  },
-];
+    name: fullName || p.user?.email || '—',
+    email: p.user?.email ?? '—',
+    specialty: p.specialty?.name ?? '—',
+    status: p.status === 'verified' ? 'active' : 'pending',
+  };
+}
 
 const quickActions = [
   {
@@ -195,6 +149,30 @@ const columns: Column<Nutritionist>[] = [
 
 function AdminDashboard() {
   const [activeNav, setActiveNav] = useState('Panel Principal');
+  const [nutritionists, setNutritionists] = useState<Nutritionist[]>([]);
+  const [loadingNutritionists, setLoadingNutritionists] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    NutritionistService.getAll()
+      .then((profiles) => {
+        if (cancelled) return;
+        setNutritionists(
+          profiles.slice(0, RECENT_NUTRITIONISTS_LIMIT).map(mapProfileToNutritionist),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setNutritionists([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingNutritionists(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
@@ -233,6 +211,7 @@ function AdminDashboard() {
               columns={columns}
               data={nutritionists}
               keyExtractor={(row) => row.id}
+              isLoading={loadingNutritionists}
               emptyTitle="No hay nutricionistas"
               emptyIcon={<MdLocalHospital className="w-12 h-12" />}
             />

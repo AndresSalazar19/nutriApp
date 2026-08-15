@@ -3,12 +3,14 @@ import { NutritionistSidebar } from './NutritionistSidebar';
 
 interface NutritionistLayoutProps {
   children: React.ReactNode;
+  /** true = cuenta pendiente de verificación: sidebar bloqueado salvo Panel Principal */
+  locked?: boolean;
 }
 
-export function NutritionistLayout({ children }: NutritionistLayoutProps) {
+export function NutritionistLayout({ children, locked = false }: NutritionistLayoutProps) {
   return (
     <div className="flex h-screen bg-nutri-bg font-sans overflow-hidden">
-      <NutritionistSidebar />
+      <NutritionistSidebar locked={locked} />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   );

@@ -68,6 +68,9 @@ class NutritionistService:
 
     @staticmethod
     def create(db: Session, data) -> NutritionistProfile:
+        # El genero se pasa aqui en vez de parchear user.person despues de crear:
+        # asi entra en el INSERT original (antes quedaba gender=None en la fila
+        # recien insertada y solo se corregia en un UPDATE posterior).
         user_data = UserCreate(
             email=data.email,
             cedula=data.cedula,
@@ -76,16 +79,10 @@ class NutritionistService:
             last_name=data.last_name,
             date_of_birth=data.date_of_birth,
             phone=data.phone,
+            gender=data.gender.value if data.gender else None,
             role=UserRole.nutritionist,
         )
         user = UserService.create(db, user_data)
-
-        if user.person:
-            if data.cedula:
-                user.person.cedula = data.cedula
-            if data.gender:
-                user.person.gender = data.gender
-            db.flush()
 
         profile = NutritionistProfile(
             user_id=user.id,
