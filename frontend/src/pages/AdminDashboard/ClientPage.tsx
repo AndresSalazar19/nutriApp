@@ -22,7 +22,6 @@ import {
   MdHistory,
   MdPersonAdd,
   MdPeople,
-  MdDescription,
   MdNewReleases,
   MdEmojiEvents,
   MdWarningAmber,
@@ -118,46 +117,75 @@ function mapPatientResponseToProfilePatient(p: PatientResponse): Patient {
   };
 }
 
-const statsCards = [
-  {
-    icon: MdPeople,
-    iconBg: 'bg-admin-light',
-    label: 'Total Pacientes',
-    value: '347',
-    change: '↑ 23 este mes',
-    changeType: 'positive' as const,
-    accentColor: 'text-gray-900',
-  },
-  {
-    icon: MdDescription,
-    iconBg: 'bg-admin-light',
-    label: 'Suscripciones Activas',
-    value: '289',
-    change: '33% del total',
-    changeType: 'neutral' as const,
-    accentColor: 'text-gray-900',
-  },
-  {
-    icon: MdNewReleases,
-    iconBg: 'bg-admin-light',
-    label: 'Nuevos este mes',
-    value: '23',
-    change: '↑ 12% vs mes anterior',
-    changeType: 'positive' as const,
-    accentColor: 'text-gray-900',
-  },
-  {
-    icon: MdEmojiEvents,
-    iconBg: 'bg-admin-light',
-    label: 'Con Nutricionista',
-    value: '334',
-    change: '96% asignados',
-    changeType: 'positive' as const,
-    accentColor: 'text-gray-900',
-  },
-];
+const PAGE_SIZE = 10;
 
 const STATUS_TABS = [{ label: 'Todos' }, { label: 'Activos' }, { label: 'Sin asignar' }];
+
+type ChangeType = 'positive' | 'negative' | 'neutral';
+
+interface StatsCardData {
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  label: string;
+  value: string;
+  change: string;
+  changeType: ChangeType;
+  accentColor: string;
+}
+
+function buildStatsCards(clients: Client[], rawPatients: PatientResponse[]): StatsCardData[] {
+  const total = clients.length;
+  const assigned = clients.filter((c) => c.nutritionist !== null).length;
+  const unassigned = total - assigned;
+
+  const now = new Date();
+  const newThisMonth = rawPatients.filter((p) => {
+    if (!p.registered_at) return false;
+    const d = new Date(p.registered_at);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+
+  const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+
+  return [
+    {
+      icon: MdPeople,
+      iconBg: 'bg-admin-light',
+      label: 'Total Pacientes',
+      value: String(total),
+      change: `${newThisMonth} nuevos este mes`,
+      changeType: newThisMonth > 0 ? 'positive' : 'neutral',
+      accentColor: 'text-gray-900',
+    },
+    {
+      icon: MdNewReleases,
+      iconBg: 'bg-admin-light',
+      label: 'Nuevos este mes',
+      value: String(newThisMonth),
+      change: 'Registrados en el mes actual',
+      changeType: 'neutral',
+      accentColor: 'text-gray-900',
+    },
+    {
+      icon: MdEmojiEvents,
+      iconBg: 'bg-admin-light',
+      label: 'Con Nutricionista',
+      value: String(assigned),
+      change: `${pct(assigned)}% del total`,
+      changeType: assigned > 0 ? 'positive' : 'neutral',
+      accentColor: 'text-gray-900',
+    },
+    {
+      icon: MdWarningAmber,
+      iconBg: 'bg-admin-light',
+      label: 'Sin Asignar',
+      value: String(unassigned),
+      change: `${pct(unassigned)}% del total`,
+      changeType: unassigned > 0 ? 'negative' : 'positive',
+      accentColor: 'text-gray-900',
+    },
+  ];
+}
 
 function NutritionistCell({ nutritionist }: { nutritionist: Client['nutritionist'] }) {
   if (!nutritionist) {
@@ -304,6 +332,13 @@ function ClientsPage() {
       return 0;
     });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const from = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const to = Math.min(currentPage * PAGE_SIZE, filtered.length);
+
+  const statsCards = buildStatsCards(clients, rawPatients);
+
   const columns: Column<Client>[] = [
     {
       key: 'cliente',
@@ -427,7 +462,7 @@ function ClientsPage() {
 
           <DataTable
             columns={columns}
-            data={filtered}
+            data={paginated}
             keyExtractor={(row) => row.id}
             emptyIcon={<MdPeople className="w-12 h-12" />}
             emptyTitle="No hay pacientes"
@@ -437,10 +472,9 @@ function ClientsPage() {
 
           <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-50">
             <p className="text-xs text-gray-400">
-              Mostrando {filtered.length > 0 ? 1 : 0}-{filtered.length} de {clients.length}{' '}
-              pacientes
+              Mostrando {from}-{to} de {filtered.length} pacientes
             </p>
-            <Pagination current={currentPage} total={3} onChange={setCurrentPage} />
+            <Pagination current={currentPage} total={totalPages} onChange={setCurrentPage} />
           </div>
         </div>
       </div>

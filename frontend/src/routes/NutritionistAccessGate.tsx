@@ -23,15 +23,6 @@ function PageLoader() {
   );
 }
 
-/**
- * Wraps every nutritionist route. Combines the consent check and the
- * verification-status check (previously two nested guards, each with its own
- * loading spinner) into a single gate: both requests fire in parallel and
- * share one loading phase, instead of the status check only starting once
- * consent had already finished — that serial double-spinner, plus a one-frame
- * flash of the /dashboard "pending" screen for already-verified nutritionists
- * before bouncing to /home, is what showed up as flickering right after login.
- */
 export function NutritionistAccessGate() {
   const consent = useConsentStatus();
   const nutritionistStatus = useNutritionistStatus();
@@ -46,12 +37,18 @@ export function NutritionistAccessGate() {
   const loading = consent.loading || nutritionistStatus.loading;
   const willRedirectHome =
     nutritionistStatus.status === 'verified' && location.pathname === ROUTES.DASHBOARD;
+  const PENDING_ALLOWED_ROUTES: string[] = [ROUTES.DASHBOARD, ROUTES.NUTRITIONIST_PROFILE];
+  const willRedirectDashboard =
+    nutritionistStatus.status === 'pending' && !PENDING_ALLOWED_ROUTES.includes(location.pathname);
 
   useEffect(() => {
-    if (!loading && willRedirectHome) {
+    if (loading) return;
+    if (willRedirectHome) {
       navigate(ROUTES.HOME, { replace: true });
+    } else if (willRedirectDashboard) {
+      navigate(ROUTES.DASHBOARD, { replace: true });
     }
-  }, [loading, willRedirectHome, navigate]);
+  }, [loading, willRedirectHome, willRedirectDashboard, navigate]);
 
   async function handleAcceptConsent() {
     if (!signatureName.trim()) {
@@ -148,13 +145,9 @@ export function NutritionistAccessGate() {
     return <AccessDeniedModal status={nutritionistStatus.status} onDone={handleDone} />;
   }
 
-  if (willRedirectHome) {
-    // Already know we're bouncing to /home in the effect above — render the
-    // loader instead of the matched /dashboard route so it never flashes.
+  if (willRedirectHome || willRedirectDashboard) {
     return <PageLoader />;
   }
 
-  // pending → renders matched child (MainView)
-  // verified (not on /dashboard) → renders matched child (HomePage or other routes)
   return <Outlet />;
 }
