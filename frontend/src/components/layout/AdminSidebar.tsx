@@ -29,7 +29,6 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
       Pacientes: ROUTES.ADMIN_CLIENTS,
       Contenido: ROUTES.ADMIN_CONTENT,
       'Bases de Datos': ROUTES.ADMIN_DATABASES,
-      Configuración: ROUTES.ADMIN_SETTINGS,
       Reportes: ROUTES.ADMIN_REPORTS,
     };
 

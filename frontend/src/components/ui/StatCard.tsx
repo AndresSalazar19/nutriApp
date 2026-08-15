@@ -28,8 +28,8 @@ export function StatCard({
   isLoading = false,
 }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-      <div className="flex items-center gap-3 mb-3">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+      <div className="flex items-center gap-3 mb-2">
         <div
           className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center text-xl flex-shrink-0`}
         >
