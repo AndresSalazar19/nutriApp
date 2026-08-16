@@ -386,7 +386,7 @@ export function NewAppointmentModal({
     startTime: '09:00',
     endTime: '10:00',
     date: todayLocalISO(),
-    type: 'in_person' as ConsultType,
+    type: 'Presencial' as ConsultType,
     notes: '',
   });
   const [patients, setPatients] = useState<PatientNutritionistPatient[]>([]);

@@ -7,19 +7,93 @@ import { SearchInput } from '../../components/ui/SearchInput';
 import { Pagination } from '../../components/ui/Pagination';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PatientProfile } from '../../components/ui/PatientProfile';
-import { useAuth } from '../../hooks/useAuth';
-import { NutritionistService } from '../../services/NutritionistService';
+import {
+  NutritionistService,
+  NutritionistPatientListItem,
+} from '../../services/NutritionistService';
 import { Patient } from '../../components/mock/patientsMock';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 8;
 
+const GENDER_LABEL: Record<string, Patient['gender']> = {
+  masculino: 'Masculino',
+  femenino: 'Femenino',
+};
+
+function formatAppointmentDate(iso: string | null, fallback: string): string {
+  if (!iso) return fallback;
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  const now = new Date();
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round(
+    (startOfDay(date).valueOf() - startOfDay(now).valueOf()) / 86_400_000,
+  );
+  const time = date.toLocaleTimeString('es-EC', { hour: 'numeric', minute: '2-digit' });
+
+  if (diffDays === 0) return `Hoy, ${time}`;
+  if (diffDays === -1) return `Ayer, ${time}`;
+  if (diffDays === 1) return `Mañana, ${time}`;
+  if (diffDays > 1 && diffDays < 7) return `En ${diffDays} días`;
+  if (diffDays < -1 && diffDays > -7) return `Hace ${Math.abs(diffDays)} días`;
+  return date.toLocaleDateString('es-EC', { day: 'numeric', month: 'short' });
+}
+
+function mapToPatient(item: NutritionistPatientListItem): Patient {
+  const initials = `${item.first_name.charAt(0)}${item.last_name.charAt(0)}`.toUpperCase();
+
+  return {
+    id: item.id,
+    initials,
+    color: 'bg-nutri-light text-nutri-dark font-bold',
+    firstName: item.first_name,
+    lastName: item.last_name,
+    age: item.age ?? 0,
+    gender: (item.gender && GENDER_LABEL[item.gender]) || 'Otro',
+    email: item.email,
+    phone: item.phone ?? '',
+    status: item.status,
+    plan: (item.plan as Patient['plan']) ?? 'free',
+    adherence: item.adherence,
+    lastConsult: formatAppointmentDate(item.last_consult, 'Sin consultas'),
+    nextAppointment: formatAppointmentDate(item.next_appointment, 'Sin agendar'),
+    diagnosis: '',
+    additionalConditions: [],
+    allergies: '',
+    weight: 0,
+    weightGoal: 0,
+    height: 0,
+    bmi: 0,
+    waist: 0,
+    hip: 0,
+    fatPercent: 0,
+    weightChange: 0,
+    weightHistory: [],
+    appointments: [],
+    nutritionalPlan: {
+      id: '',
+      name: '',
+      startDate: '',
+      calories: 0,
+      sodium: 0,
+      compliance: 0,
+    },
+  };
+}
+
 // ─── Row component ────────────────────────────────────────────────────────────
 
 function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient) => void }) {
   const statusVariant =
-    patient.status === 'active' ? 'active' : patient.status === 'inactive' ? 'inactive' : 'pending';
+    patient.status === 'active'
+      ? 'active'
+      : patient.status === 'inactive'
+        ? 'inactive'
+        : 'revision';
 
   const adherenceColor =
     patient.adherence >= 80
@@ -47,7 +121,6 @@ function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient
         </div>
       </td>
 
-      {/* ID */}
       {/* Estado */}
       <td className="py-3.5 px-4">
         <Badge
@@ -57,7 +130,7 @@ function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient
               ? 'Activo'
               : patient.status === 'inactive'
                 ? 'Inactivo'
-                : 'Pendiente'
+                : 'En riesgo'
           }
         />
       </td>
@@ -93,7 +166,7 @@ function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient
 
       {/* Acciones */}
       <td className="py-3.5 px-4">
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => onView(patient)}
             className="px-3 py-1.5 bg-nutri-light text-nutri-dark text-xs font-semibold rounded-lg hover:bg-nutri-medium/20 transition"
@@ -112,7 +185,6 @@ function PatientRow({ patient, onView }: { patient: Patient; onView: (p: Patient
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function PatientsPage() {
-  const { user } = useAuth();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -140,84 +212,22 @@ export default function PatientsPage() {
   useEffect(() => {
     let isMounted = true;
 
-    const fetchPatients = async () => {
-      if (!user?.userId) {
-        setPatients([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-
-      try {
-        const response = await NutritionistService.getAssignedPatients(user.userId);
-        const mappedPatients: Patient[] = Array.isArray(response)
-          ? response.map((item: any) => {
-              const firstName = item.patient?.person?.first_name ?? '';
-              const lastName = item.patient?.person?.last_name ?? '';
-              const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-
-              return {
-                id: String(item.patient?.id ?? ''),
-                initials,
-                color: 'bg-nutri-light text-nutri-dark font-bold',
-                firstName,
-                lastName,
-                age: 0,
-                gender: 'Masculino',
-                email: item.patient?.email ?? '',
-                phone: item.patient?.phone ?? '',
-                status: item.is_active ? 'active' : 'inactive',
-                plan: 'Basic',
-                adherence: 0,
-                lastConsult: '—',
-                nextAppointment: '—',
-                diagnosis: '',
-                additionalConditions: [],
-                allergies: '',
-                weight: 0,
-                weightGoal: 0,
-                height: 0,
-                bmi: 0,
-                waist: 0,
-                hip: 0,
-                fatPercent: 0,
-                weightChange: 0,
-                weightHistory: [],
-                appointments: [],
-                nutritionalPlan: {
-                  id: '',
-                  name: '',
-                  startDate: '',
-                  calories: 0,
-                  sodium: 0,
-                  compliance: 0,
-                },
-              };
-            })
-          : [];
-
-        if (isMounted) {
-          setPatients(mappedPatients);
-        }
-      } catch (error) {
+    NutritionistService.getMyPatients()
+      .then((items) => {
+        if (isMounted) setPatients(items.map(mapToPatient));
+      })
+      .catch((error) => {
         console.error('Error cargando pacientes:', error);
-        if (isMounted) {
-          setPatients([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchPatients();
+        if (isMounted) setPatients([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
 
     return () => {
       isMounted = false;
     };
-  }, [user?.userId]);
+  }, []);
 
   // ── Patient profile view ──
   if (selectedPatient) {
@@ -262,7 +272,6 @@ export default function PatientsPage() {
           {/* Table */}
           {loading ? (
             <div className="p-16 flex flex-col items-center justify-center text-gray-400">
-              {/* Spinner animado usando Tailwind */}
               <svg
                 className="animate-spin h-8 w-8 mb-4 text-nutri-medium"
                 xmlns="http://www.w3.org/2000/svg"

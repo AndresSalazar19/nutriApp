@@ -96,7 +96,7 @@ function mapPatientResponseToProfilePatient(p: PatientResponse): Patient {
     email: p.email,
     phone: p.phone ?? '',
     status: p.status as Patient['status'],
-    plan: 'Basic',
+    plan: 'basic',
     adherence: 0,
     lastConsult: '—',
     nextAppointment: '—',

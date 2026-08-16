@@ -77,14 +77,22 @@ export function UserMenuPopover({
   return (
     <div className="relative w-full block" ref={ref}>
       {/* Trigger */}
-      <button
+      <div
         onClick={() => setOpen((v) => !v)}
-        className="w-full block items-center justify-center rounded-full transition focus:outline-none"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        className="w-full block items-center justify-center rounded-full transition focus:outline-none cursor-pointer"
         aria-haspopup="true"
         aria-expanded={open}
       >
         {trigger}
-      </button>
+      </div>
 
       {/* Popover */}
       {open && (

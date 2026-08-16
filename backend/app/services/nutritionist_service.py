@@ -130,7 +130,7 @@ class NutritionistService:
         profile = (
             db.query(NutritionistProfile)
             .options(
-                joinedload(NutritionistProfile.user),
+                joinedload(NutritionistProfile.user).joinedload(User.person),
                 joinedload(NutritionistProfile.specialty),
                 joinedload(NutritionistProfile.documents),
             )

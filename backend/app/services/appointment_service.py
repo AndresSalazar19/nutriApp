@@ -4,7 +4,7 @@ from typing import List
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.appointment import (
     Appointment,
@@ -12,7 +12,9 @@ from app.db.models.appointment import (
     AvailabilityNutritionist,
     AvailabilityRuleType,
 )
+from app.db.models.nutritionist import NutritionistProfile
 from app.db.models.patient_nutritionist import PatientNutritionist
+from app.db.models.user import User
 from app.schemas.appointment import (
     AppointmentRequest,
     AppointmentResponse,
@@ -188,7 +190,16 @@ class AppointmentService:
 
     @staticmethod
     def list(db: Session, user_id: uuid.UUID, role: str):
-        query = db.query(Appointment)
+        query = db.query(Appointment).options(
+            joinedload(Appointment.patient).joinedload(User.person),
+            joinedload(Appointment.patient)
+            .joinedload(User.nutritionist_profile)
+            .joinedload(NutritionistProfile.specialty),
+            joinedload(Appointment.nutritionist).joinedload(User.person),
+            joinedload(Appointment.nutritionist)
+            .joinedload(User.nutritionist_profile)
+            .joinedload(NutritionistProfile.specialty),
+        )
 
         if role == "patient":
             query = query.filter(Appointment.patient_id == user_id)
