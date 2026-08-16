@@ -29,7 +29,6 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
       Pacientes: ROUTES.ADMIN_CLIENTS,
       Contenido: ROUTES.ADMIN_CONTENT,
       'Bases de Datos': ROUTES.ADMIN_DATABASES,
-      Configuración: ROUTES.ADMIN_SETTINGS,
       Reportes: ROUTES.ADMIN_REPORTS,
     };
 
@@ -92,7 +91,7 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
           direction="up"
           align="left"
           trigger={
-            <button className="w-full text-left flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-admin-medium transition">
+            <div className="w-full text-left flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-admin-medium transition">
               <div className="w-9 h-9 bg-admin-accent rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                 AD
               </div>
@@ -100,7 +99,7 @@ export function AdminSidebar({ activeNav, onNavChange }: AdminSidebarProps) {
                 <p className="text-white text-xs font-semibold leading-tight">Administrador</p>
                 <p className="text-admin-light text-xs">Sistema NutrIA</p>
               </div>
-            </button>
+            </div>
           }
         />
       </div>

@@ -10,6 +10,7 @@ export interface Article {
   category: string;
   categoryColor: string;
   cardBg: string;
+  categoryIcon: React.ReactNode;
   status: ArticleStatus;
   date: string;
   is_approved: boolean;
@@ -23,14 +24,6 @@ interface ArticleCardProps {
   onDelete?: (a: Article) => void;
 }
 
-function DocIcon() {
-  return (
-    <svg className="w-10 h-10 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z" />
-    </svg>
-  );
-}
-
 export function ArticleCard({ article, onView, onApprove, onDelete }: ArticleCardProps) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition flex flex-col">
@@ -41,9 +34,7 @@ export function ArticleCard({ article, onView, onApprove, onDelete }: ArticleCar
         >
           {article.category}
         </span>
-        <div className="flex items-center justify-center flex-1">
-          <DocIcon />
-        </div>
+        <div className="flex items-center justify-center flex-1">{article.categoryIcon}</div>
       </div>
 
       <div className="p-4 flex flex-col flex-1">

@@ -81,6 +81,53 @@ export interface NutritionistProfileDetail extends NutritionistProfile {
   availabilities: AvailabilityRule[];
 }
 
+export interface NutritionistDashboardStats {
+  patients_active_total: number;
+  patients_new_this_month: number;
+  appointments_today_total: number;
+  appointments_today_pending: number;
+  unread_messages: number;
+  average_adherence: number | null;
+  adherence_delta_vs_last_month: number | null;
+}
+
+export interface NutritionistWeeklyProgressPoint {
+  dia: string;
+  adherencia: number;
+  peso: number | null;
+  presion: number | null;
+}
+
+export type NutritionistRecentPatientStatus = 'active' | 'inactive' | 'at_risk';
+
+export interface NutritionistRecentPatient {
+  id: string;
+  name: string;
+  last_consult: string | null;
+  status: NutritionistRecentPatientStatus;
+}
+
+export interface NutritionistDashboardData {
+  stats: NutritionistDashboardStats;
+  weekly_progress: NutritionistWeeklyProgressPoint[];
+  recent_patients: NutritionistRecentPatient[];
+}
+
+export interface NutritionistPatientListItem {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  gender: string | null;
+  age: number | null;
+  status: NutritionistRecentPatientStatus;
+  plan: string;
+  adherence: number;
+  last_consult: string | null;
+  next_appointment: string | null;
+}
+
 function authHeaders(): Record<string, string> {
   const token = tokenStorage.get() ?? '';
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -104,6 +151,28 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const NutritionistService = {
+  async getDashboard(): Promise<NutritionistDashboardData> {
+    const response = await fetch(`${API_URL}/nutritionists/dashboard`, {
+      headers: authHeaders(),
+    });
+    return handleResponse<NutritionistDashboardData>(response);
+  },
+
+  async getMyPatients(): Promise<NutritionistPatientListItem[]> {
+    const response = await fetch(`${API_URL}/nutritionists/patients`, {
+      headers: authHeaders(),
+    });
+    return handleResponse<NutritionistPatientListItem[]>(response);
+  },
+
+  async getUnreadMessagesCount(): Promise<number> {
+    const response = await fetch(`${API_URL}/nutritionists/unread-messages`, {
+      headers: authHeaders(),
+    });
+    const data = await handleResponse<{ count: number }>(response);
+    return data.count;
+  },
+
   async getStatus(userId: string): Promise<ApiResponse<NutritionistStatusData>> {
     const response = await fetch(`${API_URL}/nutritionists/status/${userId}`, {
       headers: authHeaders(),

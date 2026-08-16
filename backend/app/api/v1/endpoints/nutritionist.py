@@ -8,10 +8,11 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.dependencies import get_current_user
 from app.core.response import error_response, success_response
 from app.db.base import get_db
 from app.db.models.nutritionist import DocumentType, NutritionistStatus
-from app.db.models.user import GenderEnum
+from app.db.models.user import GenderEnum, User
 from app.schemas.nutritionist import (
     NutritionistCreateRequest,
     NutritionistDocumentsResponse,
@@ -19,6 +20,7 @@ from app.schemas.nutritionist import (
     NutritionistProfileResponse,
     NutritionistStatusUpdate,
 )
+from app.services.nutritionist_dashboard_service import NutritionistDashboardService
 from app.services.nutritionist_service import NutritionistService
 from app.services.user_service import UserService
 
@@ -30,6 +32,35 @@ router = APIRouter(prefix="/nutritionists", tags=["nutritionists"])
 @router.get("", response_model=list[NutritionistProfileResponse])
 def get_nutritionists(status: NutritionistStatus | None = None, db: Session = Depends(get_db)):
     return NutritionistService.get_all(db, status=status)
+
+
+@router.get("/dashboard", response_model=None)
+def get_nutritionist_dashboard(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    data = NutritionistDashboardService.get_dashboard(db, current_user.id)
+    return JSONResponse(status_code=200, content=success_response(data=data).model_dump())
+
+
+@router.get("/unread-messages", response_model=None)
+def get_unread_messages_count(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    count = NutritionistDashboardService.get_unread_messages_count(db, current_user.id)
+    return JSONResponse(
+        status_code=200, content=success_response(data={"count": count}).model_dump()
+    )
+
+
+@router.get("/patients", response_model=None)
+def get_my_patients(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    data = NutritionistDashboardService.get_patients_list(db, current_user.id)
+    return JSONResponse(status_code=200, content=success_response(data=data).model_dump())
 
 
 @router.get("/status/{user_id}", response_model=None)

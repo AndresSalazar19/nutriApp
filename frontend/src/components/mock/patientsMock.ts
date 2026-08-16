@@ -1,10 +1,5 @@
-// ─── Types ────────────────────────────────────────────────────────────────────
-// Nota: este archivo ya no contiene datos mock — solo los tipos que consumen
-// PatientProfile, WeightChart, PatientsPage y ClientPage. Se conserva el nombre
-// de archivo para no romper los imports existentes.
-
-export type PatientStatus = 'active' | 'inactive' | 'pending';
-export type PlanType = 'Premium' | 'Basic';
+export type PatientStatus = 'active' | 'inactive' | 'at_risk';
+export type PlanType = 'free' | 'basic' | 'premium';
 export type ConsultType = 'Presencial' | 'Virtual';
 
 export interface WeightEntry {
@@ -36,7 +31,7 @@ export interface Patient {
   firstName: string;
   lastName: string;
   age: number;
-  gender: 'Masculino' | 'Femenino';
+  gender: 'Masculino' | 'Femenino' | 'Otro';
   email: string;
   phone: string;
   status: PatientStatus;

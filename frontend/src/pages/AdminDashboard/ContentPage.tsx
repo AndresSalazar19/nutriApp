@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   MdCalendarMonth,
+  MdFitnessCenter,
   MdHourglassEmpty,
   MdLabel,
+  MdLightbulb,
+  MdMonitorHeart,
   MdNotes,
+  MdRestaurant,
+  MdSelfImprovement,
+  MdSoupKitchen,
   MdVisibility,
   MdWorkspacePremium,
 } from 'react-icons/md';
@@ -22,13 +28,58 @@ import {
 
 const SORT_OPTIONS = ['Más reciente', 'Más antiguo', 'A-Z', 'Z-A'];
 
-const CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
-  nutrition: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
-  hypertension: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
-  recipes: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
-  exercise: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
-  lifestyle: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
-  tips: { color: 'bg-admin-light text-admin-dark', bg: 'bg-white' },
+const CATEGORY_STYLES: Record<
+  string,
+  {
+    color: string;
+    bg: string;
+    iconColor: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
+> = {
+  nutrition: {
+    color: 'bg-emerald-100 text-emerald-700',
+    bg: 'bg-emerald-50',
+    iconColor: 'text-emerald-300',
+    icon: MdRestaurant,
+  },
+  hypertension: {
+    color: 'bg-rose-100 text-rose-700',
+    bg: 'bg-rose-50',
+    iconColor: 'text-rose-300',
+    icon: MdMonitorHeart,
+  },
+  recipes: {
+    color: 'bg-amber-100 text-amber-700',
+    bg: 'bg-amber-50',
+    iconColor: 'text-amber-300',
+    icon: MdSoupKitchen,
+  },
+  exercise: {
+    color: 'bg-orange-100 text-orange-700',
+    bg: 'bg-orange-50',
+    iconColor: 'text-orange-300',
+    icon: MdFitnessCenter,
+  },
+  lifestyle: {
+    color: 'bg-violet-100 text-violet-700',
+    bg: 'bg-violet-50',
+    iconColor: 'text-violet-300',
+    icon: MdSelfImprovement,
+  },
+  tips: {
+    color: 'bg-sky-100 text-sky-700',
+    bg: 'bg-sky-50',
+    iconColor: 'text-sky-300',
+    icon: MdLightbulb,
+  },
+};
+
+const DEFAULT_CATEGORY_STYLE = {
+  color: 'bg-admin-light text-admin-dark',
+  bg: 'bg-gray-50',
+  iconColor: 'text-gray-300',
+  icon: MdLabel,
 };
 
 function categoryLabel(value: string) {
@@ -175,10 +226,8 @@ function ContentPage() {
   });
 
   const articles: Article[] = filtered.map((item) => {
-    const style = CATEGORY_STYLES[item.category] ?? {
-      color: 'bg-admin-light text-admin-dark',
-      bg: 'bg-white',
-    };
+    const style = CATEGORY_STYLES[item.category] ?? DEFAULT_CATEGORY_STYLE;
+    const CategoryIcon = style.icon;
     return {
       id: item.id,
       title: item.title,
@@ -187,6 +236,7 @@ function ContentPage() {
       category: categoryLabel(item.category),
       categoryColor: style.color,
       cardBg: style.bg,
+      categoryIcon: <CategoryIcon className={`w-9 h-9 ${style.iconColor}`} />,
       status: (item.is_published ? 'active' : 'draft') as 'active' | 'draft',
       date: item.created_at
         ? `Enviado: ${new Date(item.created_at).toLocaleDateString('es-EC')}`

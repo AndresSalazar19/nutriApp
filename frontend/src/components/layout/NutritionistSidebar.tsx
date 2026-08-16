@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { MdRestaurant } from 'react-icons/md';
 import { ROUTES } from '../../routes/routes';
@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { UserMenuPopover } from '../ui/UserMenuPopover';
 import { Avatar } from '../ui/Avatar';
 import { API_URL } from '../../config/api';
+import { NutritionistService } from '../../services/NutritionistService';
 
 // ─── Ítem de navegación ───────────────────────────────────────────────────────
 
@@ -13,7 +14,6 @@ interface NavItem {
   label: string;
   icon: string;
   route: string;
-  badge?: number;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -22,7 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Planes Nutricionales', icon: 'plan', route: ROUTES.PLANS },
   { label: 'Agenda', icon: 'agenda', route: ROUTES.AGENDA },
   { label: 'Análisis y Reportes', icon: 'chart', route: ROUTES.REPORTS },
-  { label: 'Mensajes', icon: 'message', route: ROUTES.MESSAGES, badge: 3 },
+  { label: 'Mensajes', icon: 'message', route: ROUTES.MESSAGES },
   { label: 'Recursos', icon: 'book', route: ROUTES.RESOURCES },
 ];
 
@@ -110,6 +110,24 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (locked) return;
+
+    let cancelled = false;
+    NutritionistService.getUnreadMessagesCount()
+      .then((count) => {
+        if (!cancelled) setUnreadCount(count);
+      })
+      .catch(() => {
+        if (!cancelled) setUnreadCount(0);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locked]);
 
   const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : 'NT';
   const display = user?.email ?? 'Nutricionista';
@@ -136,13 +154,11 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
 
         {/* ── Navegación ── */}
         <nav className="space-y-0.5">
-          {NAV_ITEMS.map(({ label, icon, route, badge }, index) => {
+          {NAV_ITEMS.map(({ label, icon, route }, index) => {
             const itemLocked = isItemLocked(index);
-            // En modo locked, el único ítem navegable (Panel Principal) debe
-            // llevar a la pantalla de "en revisión" (DASHBOARD), no a HOME —
-            // HOME es el panel completo, reservado para cuentas verificadas.
             const targetRoute = locked && index === 0 ? ROUTES.DASHBOARD : route;
             const isActive = location.pathname === targetRoute && !itemLocked;
+            const badge = route === ROUTES.MESSAGES ? unreadCount : 0;
 
             return (
               <button
@@ -185,14 +201,13 @@ export function NutritionistSidebar({ locked = false }: NutritionistSidebarProps
           direction="up"
           align="left"
           trigger={
-            <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-nutri-medium transition select-none text-left">
+            <div className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-nutri-medium transition select-none text-left">
               <Avatar src={avatarUrl} initials={initials} color="bg-nutri-medium" size="sm" />
-              {/* Añadimos flex-1 para que el texto empuje el botón hasta el borde derecho */}
               <div className="min-w-0 flex-1">
                 <p className="text-white text-xs font-semibold leading-tight truncate">{display}</p>
                 <p className="text-nutri-light text-xs">Nutricionista</p>
               </div>
-            </button>
+            </div>
           }
         />
       </div>

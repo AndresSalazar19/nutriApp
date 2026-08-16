@@ -63,7 +63,7 @@ export function DataTable<T>({
                 className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition"
               >
                 {columns.map((col) => (
-                  <td key={col.key} className="py-3 px-4">
+                  <td key={col.key} className="py-2.5 px-4">
                     {col.render(row)}
                   </td>
                 ))}

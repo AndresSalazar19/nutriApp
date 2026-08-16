@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.db.models.conversations import Conversation, ConversationType
 from app.db.models.message import Message, MessageSenderRole
+from app.db.models.user import User
 from app.schemas.conversations import MessageCreate
 
 
@@ -49,8 +50,8 @@ class ChatsService:
         conversations = (
             db.query(Conversation)
             .options(
-                joinedload(Conversation.patient),
-                joinedload(Conversation.nutritionist),
+                joinedload(Conversation.patient).joinedload(User.person),
+                joinedload(Conversation.nutritionist).joinedload(User.person),
                 joinedload(Conversation.messages),
             )
             .filter(

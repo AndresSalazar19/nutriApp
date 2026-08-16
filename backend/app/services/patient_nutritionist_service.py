@@ -2,9 +2,11 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
+from app.db.models.nutritionist import NutritionistProfile
 from app.db.models.patient_nutritionist import PatientNutritionist
+from app.db.models.user import User
 from app.schemas.patient_nutritionist import (
     PatientNutritionistQueryParams,
     PatientNutritionistRequest,
@@ -18,7 +20,16 @@ class PatientNutritionistService:
     def get_all(
         db: Session, q: PatientNutritionistQueryParams | None = None
     ) -> list[PatientNutritionistResponse]:
-        query = db.query(PatientNutritionist)
+        query = db.query(PatientNutritionist).options(
+            joinedload(PatientNutritionist.patient).joinedload(User.person),
+            joinedload(PatientNutritionist.patient)
+            .joinedload(User.nutritionist_profile)
+            .joinedload(NutritionistProfile.specialty),
+            joinedload(PatientNutritionist.nutritionist).joinedload(User.person),
+            joinedload(PatientNutritionist.nutritionist)
+            .joinedload(User.nutritionist_profile)
+            .joinedload(NutritionistProfile.specialty),
+        )
 
         if q:
             if q.status == "active":
