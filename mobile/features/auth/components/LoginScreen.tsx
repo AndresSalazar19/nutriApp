@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useLogin } from '@/features/auth/hooks/useAuth';
 import { AuthService } from '@/features/auth/services/authService';
+import { OnboardingProgress } from '@/features/onboarding/services/onboardingProgress';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PasswordField } from '@/components/ui/PasswordField';
 
@@ -51,7 +52,16 @@ export default function LoginScreen() {
       return;
     }
 
-    router.replace('/(tabs)');
+    // Si el token expiró a mitad del onboarding (p. ej. wizard de salud),
+    // al reloguear hay que retomar ese paso, no mandar directo a /(tabs)
+    // con el perfil incompleto -- mismo criterio que el guard de index.tsx.
+    const step = await OnboardingProgress.get(result.user.id);
+    if (step === 'health') router.replace('/(onboarding)/health');
+    else if (step === 'history') router.replace('/(onboarding)/history');
+    else if (step === 'dietary') router.replace('/(onboarding)/dietary');
+    else if (step === 'plans') router.replace('/(onboarding)/plans');
+    else if (step === 'payment') router.replace('/(onboarding)/payment');
+    else router.replace('/(tabs)');
   };
 
   return (

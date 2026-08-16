@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.response import error_response, success_response
 from app.db.base import get_db
-from app.schemas.food_item import FoodItemRequest, FoodItemResponse
+from app.schemas.food_item import FoodItemListResponse, FoodItemRequest, FoodItemResponse
 from app.services.food_item_service import FoodItemService
 
 router = APIRouter(prefix="/food-items", tags=["Food Items"])
@@ -25,7 +25,7 @@ def create_food_item(data: FoodItemRequest, db: Session = Depends(get_db)):
         return JSONResponse(status_code=400, content=resp.model_dump())
 
 
-@router.get("", response_model=list[FoodItemResponse])
+@router.get("", response_model=list[FoodItemListResponse])
 def list_food_items(
     category: Optional[str] = Query(None),
     search: Optional[str] = Query(None),

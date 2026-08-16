@@ -524,7 +524,7 @@ export function PatientProfile({ patient, onBack }: PatientProfileProps) {
 
   const currentStatus = detail?.status ?? patient.status;
   const statusVariant =
-    currentStatus === 'active' ? 'active' : currentStatus === 'inactive' ? 'inactive' : 'pending';
+    currentStatus === 'active' ? 'active' : currentStatus === 'inactive' ? 'inactive' : 'revision';
   const statusLabel =
     currentStatus === 'active' ? 'Activo' : currentStatus === 'inactive' ? 'Inactivo' : 'En riesgo';
 

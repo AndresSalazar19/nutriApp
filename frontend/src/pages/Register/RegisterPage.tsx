@@ -5,6 +5,7 @@ import { ProfessionalInfoStep } from './ProfessionalInfoStep';
 import { SecurityStep } from './SecurityStep';
 import { useFormValidation } from './useFormValidation';
 import { RegistrerServices } from '../../services/Registrer/RegisterServices';
+import { RegistrerServices as LoginServices } from '../../services/Login/LoginServices';
 import { MdRestaurant } from 'react-icons/md';
 
 function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
@@ -107,15 +108,22 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
       const profileData = response.data;
 
-      if (onRegistered) {
-        onRegistered({
-          userId: profileData.user_id ?? profileData.id,
-          email: form.email,
-          role: 'nutritionist',
-        });
-      } else {
+      const sesion = await LoginServices.iniciarSesion(form.email, form.password);
+      const token = sesion.data?.access_token;
+
+      if (!onRegistered || !token) {
+        alert('Tu cuenta fue creada. Inicia sesión para continuar.');
         onGoToLogin();
+        return;
       }
+
+      onRegistered({
+        userId: sesion.data.user?.id ?? profileData.user_id ?? profileData.id,
+        email: form.email,
+        role: 'nutritionist',
+        token,
+        avatar_url: sesion.data.user?.avatar_url ?? null,
+      });
     } catch (error) {
       console.error('Error al registrar nutricionista:', error);
       const message = error instanceof Error ? error.message : 'Error desconocido';

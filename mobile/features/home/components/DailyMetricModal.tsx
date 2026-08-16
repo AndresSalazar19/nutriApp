@@ -17,10 +17,18 @@ export type DailyMetricMode = 'weight' | 'hydration' | 'consumed' | 'burned';
 
 const CONFIG = {
   weight: { title: 'Registrar peso', unit: 'kg', icon: 'scale-bathroom' as const },
-  hydration: { title: 'Registrar hidratacion', unit: 'ml', icon: 'water' as const },
+  hydration: { title: 'Registrar hidratacion', unit: 'L', icon: 'water' as const },
   consumed: { title: 'Calorias de la comida', unit: 'kcal', icon: 'food-apple' as const },
   burned: { title: 'Calorias quemadas', unit: 'kcal', icon: 'run' as const },
 };
+
+/** Common container sizes in liters, for people who don't know how many liters
+ * they drank but do know what they drank from (a glass, a bottle, a jug). */
+const HYDRATION_PRESETS: [string, number, string][] = [
+  ['Vaso', 0.25, '250 ml'],
+  ['Botella', 0.5, '500 ml'],
+  ['Botella grande', 1, '1000 ml'],
+];
 
 interface Props {
   visible: boolean;
@@ -41,7 +49,7 @@ export function DailyMetricModal({ visible, mode, onClose, onSave }: Props) {
     const valid = mode === 'weight'
       ? parsed >= 20 && parsed <= 500
       : mode === 'hydration'
-        ? parsed >= 50 && parsed <= 3000
+        ? parsed >= 0.05 && parsed <= 3
         : Number.isInteger(parsed) && parsed >= 1 && parsed <= 10000;
     if (!valid) {
       Alert.alert('Valor invalido', `Ingresa una cantidad valida en ${config.unit}.`);
@@ -72,30 +80,34 @@ export function DailyMetricModal({ visible, mode, onClose, onSave }: Props) {
           </View>
 
           {mode === 'hydration' && (
-            <View style={styles.presets}>
-              {[
-                ['Pequeno', 250],
-                ['Mediano', 350],
-                ['Grande', 500],
-              ].map(([label, amount]) => (
-                <TouchableOpacity
-                  key={String(amount)}
-                  style={styles.preset}
-                  onPress={() => setValue(String(amount))}
-                >
-                  <Text style={styles.presetLabel}>{label}</Text>
-                  <Text style={styles.presetValue}>{amount} ml</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <>
+              <Text style={styles.hint}>
+                ¿No sabes cuántos litros son? Elige lo que tomaste y lo calculamos por ti.
+              </Text>
+              <View style={styles.presets}>
+                {HYDRATION_PRESETS.map(([label, liters, mlHint]) => (
+                  <TouchableOpacity
+                    key={label}
+                    style={styles.preset}
+                    onPress={() => setValue(String(liters))}
+                  >
+                    <Text style={styles.presetLabel}>{label}</Text>
+                    <Text style={styles.presetValue}>{liters} L</Text>
+                    <Text style={styles.presetHint}>{mlHint}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
           )}
 
-          <Text style={styles.label}>{mode === 'hydration' ? 'Volumen personalizado' : 'Cantidad'}</Text>
+          <Text style={styles.label}>
+            {mode === 'hydration' ? 'O ingresa los litros exactos' : 'Cantidad'}
+          </Text>
           <View style={styles.inputWrap}>
             <TextInput
               value={value}
               onChangeText={setValue}
-              keyboardType={mode === 'weight' ? 'decimal-pad' : 'number-pad'}
+              keyboardType={mode === 'weight' || mode === 'hydration' ? 'decimal-pad' : 'number-pad'}
               placeholder="0"
               placeholderTextColor={COLORS.placeholder}
               style={styles.input}
@@ -117,10 +129,12 @@ const styles = StyleSheet.create({
   sheet: { backgroundColor: COLORS.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 28 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 18, backgroundColor: COLORS.primary, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
   title: { flex: 1, color: COLORS.textOnPrimary, fontSize: 17, fontWeight: '700' },
-  presets: { flexDirection: 'row', gap: 8, paddingHorizontal: 18, paddingTop: 18 },
+  hint: { fontSize: 12, color: COLORS.textMuted, paddingHorizontal: 18, paddingTop: 14, lineHeight: 16 },
+  presets: { flexDirection: 'row', gap: 8, paddingHorizontal: 18, paddingTop: 10 },
   preset: { flex: 1, paddingVertical: 12, borderWidth: 1, borderColor: COLORS.primary, borderRadius: 12, alignItems: 'center' },
   presetLabel: { fontSize: 12, fontWeight: '600', color: COLORS.textPrimary },
   presetValue: { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
+  presetHint: { fontSize: 10, color: COLORS.textMuted, marginTop: 1 },
   label: { marginHorizontal: 18, marginTop: 18, marginBottom: 6, fontSize: 13, fontWeight: '600', color: COLORS.textPrimary },
   inputWrap: { marginHorizontal: 18, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border, borderRadius: 12, paddingHorizontal: 14 },
   input: { flex: 1, paddingVertical: 13, fontSize: 18, color: COLORS.textPrimary },

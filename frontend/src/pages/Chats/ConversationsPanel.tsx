@@ -17,14 +17,17 @@ const ConversationsPanel = ({
   onSelectConversation,
 }: Props) => {
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
   const filteredConversations = useMemo(() => {
-    if (!search.trim()) return conversations;
-
-    return conversations.filter((conversation) =>
-      conversation.participant_name.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [conversations, search]);
+    return conversations.filter((conversation) => {
+      const matchesSearch =
+        !search.trim() ||
+        conversation.participant_name.toLowerCase().includes(search.toLowerCase());
+      const matchesFilter = filter === 'all' || conversation.unread_count > 0;
+      return matchesSearch && matchesFilter;
+    });
+  }, [conversations, search, filter]);
 
   const getInitials = (name: string) => {
     return name
@@ -72,11 +75,23 @@ const ConversationsPanel = ({
       {/* Filtros */}
 
       <div className="flex gap-2 px-4 pb-4">
-        <button className="rounded-full bg-[#1F4D3A] px-4 py-1 text-xs font-medium text-white">
+        <button
+          onClick={() => setFilter('all')}
+          className={`rounded-full px-4 py-1 text-xs font-medium transition ${
+            filter === 'all' ? 'bg-[#1F4D3A] text-white' : 'border border-[#E1E8DC] text-[#6D796C]'
+          }`}
+        >
           Todas
         </button>
 
-        <button className="rounded-full border border-[#E1E8DC] px-4 py-1 text-xs text-[#6D796C]">
+        <button
+          onClick={() => setFilter('unread')}
+          className={`rounded-full px-4 py-1 text-xs font-medium transition ${
+            filter === 'unread'
+              ? 'bg-[#1F4D3A] text-white'
+              : 'border border-[#E1E8DC] text-[#6D796C]'
+          }`}
+        >
           No leídas
         </button>
       </div>

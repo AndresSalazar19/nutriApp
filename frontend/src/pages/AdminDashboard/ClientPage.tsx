@@ -22,7 +22,6 @@ import {
   MdHistory,
   MdPersonAdd,
   MdPeople,
-  MdDescription,
   MdNewReleases,
   MdEmojiEvents,
   MdWarningAmber,
@@ -97,7 +96,7 @@ function mapPatientResponseToProfilePatient(p: PatientResponse): Patient {
     email: p.email,
     phone: p.phone ?? '',
     status: p.status as Patient['status'],
-    plan: 'Basic',
+    plan: 'basic',
     adherence: 0,
     lastConsult: '—',
     nextAppointment: '—',
@@ -118,46 +117,75 @@ function mapPatientResponseToProfilePatient(p: PatientResponse): Patient {
   };
 }
 
-const statsCards = [
-  {
-    icon: MdPeople,
-    iconBg: 'bg-admin-light',
-    label: 'Total Pacientes',
-    value: '347',
-    change: '↑ 23 este mes',
-    changeType: 'positive' as const,
-    accentColor: 'text-gray-900',
-  },
-  {
-    icon: MdDescription,
-    iconBg: 'bg-admin-light',
-    label: 'Suscripciones Activas',
-    value: '289',
-    change: '33% del total',
-    changeType: 'neutral' as const,
-    accentColor: 'text-gray-900',
-  },
-  {
-    icon: MdNewReleases,
-    iconBg: 'bg-admin-light',
-    label: 'Nuevos este mes',
-    value: '23',
-    change: '↑ 12% vs mes anterior',
-    changeType: 'positive' as const,
-    accentColor: 'text-gray-900',
-  },
-  {
-    icon: MdEmojiEvents,
-    iconBg: 'bg-admin-light',
-    label: 'Con Nutricionista',
-    value: '334',
-    change: '96% asignados',
-    changeType: 'positive' as const,
-    accentColor: 'text-gray-900',
-  },
-];
+const PAGE_SIZE = 10;
 
 const STATUS_TABS = [{ label: 'Todos' }, { label: 'Activos' }, { label: 'Sin asignar' }];
+
+type ChangeType = 'positive' | 'negative' | 'neutral';
+
+interface StatsCardData {
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  label: string;
+  value: string;
+  change: string;
+  changeType: ChangeType;
+  accentColor: string;
+}
+
+function buildStatsCards(clients: Client[], rawPatients: PatientResponse[]): StatsCardData[] {
+  const total = clients.length;
+  const assigned = clients.filter((c) => c.nutritionist !== null).length;
+  const unassigned = total - assigned;
+
+  const now = new Date();
+  const newThisMonth = rawPatients.filter((p) => {
+    if (!p.registered_at) return false;
+    const d = new Date(p.registered_at);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+
+  const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+
+  return [
+    {
+      icon: MdPeople,
+      iconBg: 'bg-admin-light',
+      label: 'Total Pacientes',
+      value: String(total),
+      change: `${newThisMonth} nuevos este mes`,
+      changeType: newThisMonth > 0 ? 'positive' : 'neutral',
+      accentColor: 'text-gray-900',
+    },
+    {
+      icon: MdNewReleases,
+      iconBg: 'bg-admin-light',
+      label: 'Nuevos este mes',
+      value: String(newThisMonth),
+      change: 'Registrados en el mes actual',
+      changeType: 'neutral',
+      accentColor: 'text-gray-900',
+    },
+    {
+      icon: MdEmojiEvents,
+      iconBg: 'bg-admin-light',
+      label: 'Con Nutricionista',
+      value: String(assigned),
+      change: `${pct(assigned)}% del total`,
+      changeType: assigned > 0 ? 'positive' : 'neutral',
+      accentColor: 'text-gray-900',
+    },
+    {
+      icon: MdWarningAmber,
+      iconBg: 'bg-admin-light',
+      label: 'Sin Asignar',
+      value: String(unassigned),
+      change: `${pct(unassigned)}% del total`,
+      changeType: unassigned > 0 ? 'negative' : 'positive',
+      accentColor: 'text-gray-900',
+    },
+  ];
+}
 
 function NutritionistCell({ nutritionist }: { nutritionist: Client['nutritionist'] }) {
   if (!nutritionist) {
@@ -304,6 +332,13 @@ function ClientsPage() {
       return 0;
     });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const from = filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const to = Math.min(currentPage * PAGE_SIZE, filtered.length);
+
+  const statsCards = buildStatsCards(clients, rawPatients);
+
   const columns: Column<Client>[] = [
     {
       key: 'cliente',
@@ -364,8 +399,8 @@ function ClientsPage() {
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
       <AdminTopBar title="Gestión de Pacientes" />
 
-      <div className="px-8 pb-8 pt-4 bg-admin-bg">
-        <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="px-8 pb-6 pt-3 bg-admin-bg">
+        <div className="grid grid-cols-4 gap-4 mb-4">
           {statsCards.map((card) => {
             const Icon = card.icon;
 
@@ -384,39 +419,26 @@ function ClientsPage() {
           })}
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
-            <div className="flex items-center gap-3 flex-wrap">
-              <SearchInput
-                placeholder="Buscar por nombre, email, nutricionista..."
-                value={search}
-                onChange={(v) => {
-                  setSearch(v);
-                  setCurrentPage(1);
-                }}
-                className="w-72"
-              />
-              <FilterTabs
-                tabs={STATUS_TABS}
-                active={activeTab}
-                onChange={(t) => {
-                  setActiveTab(t);
-                  setCurrentPage(1);
-                }}
-                accentColor="admin"
-              />
-            </div>
-
-            <button className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50 transition">
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Excel
-            </button>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className="flex items-center gap-3 flex-wrap mb-4">
+            <SearchInput
+              placeholder="Buscar por nombre, email, nutricionista..."
+              value={search}
+              onChange={(v) => {
+                setSearch(v);
+                setCurrentPage(1);
+              }}
+              className="w-72"
+            />
+            <FilterTabs
+              tabs={STATUS_TABS}
+              active={activeTab}
+              onChange={(t) => {
+                setActiveTab(t);
+                setCurrentPage(1);
+              }}
+              accentColor="admin"
+            />
           </div>
 
           {error ? (
@@ -427,7 +449,7 @@ function ClientsPage() {
 
           <DataTable
             columns={columns}
-            data={filtered}
+            data={paginated}
             keyExtractor={(row) => row.id}
             emptyIcon={<MdPeople className="w-12 h-12" />}
             emptyTitle="No hay pacientes"
@@ -435,12 +457,11 @@ function ClientsPage() {
             isLoading={isLoading}
           />
 
-          <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-50">
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
             <p className="text-xs text-gray-400">
-              Mostrando {filtered.length > 0 ? 1 : 0}-{filtered.length} de {clients.length}{' '}
-              pacientes
+              Mostrando {from}-{to} de {filtered.length} pacientes
             </p>
-            <Pagination current={currentPage} total={3} onChange={setCurrentPage} />
+            <Pagination current={currentPage} total={totalPages} onChange={setCurrentPage} />
           </div>
         </div>
       </div>

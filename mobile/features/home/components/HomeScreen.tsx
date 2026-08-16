@@ -212,7 +212,9 @@ export default function HomeScreen() {
       return;
     }
     if (metricMode === 'hydration') {
-      await ProgressService.createHydrationLog(user.id, value, date);
+      // The hydration modal collects liters (typed exactly or via a container preset);
+      // the backend stores milliliters, so convert before saving.
+      await ProgressService.createHydrationLog(user.id, Math.round(value * 1000), date);
     } else {
       await ProgressService.createCalorieLog(user.id, value, date, metricMode);
     }
@@ -227,9 +229,6 @@ export default function HomeScreen() {
           <Text style={styles.headerGreeting}>Hola, {user?.person?.first_name ?? 'Paciente'}</Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
-        <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
-          <MaterialCommunityIcons name="bell-outline" size={22} color={COLORS.textOnPrimary} />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.statsCardWrapper}>
@@ -271,7 +270,7 @@ export default function HomeScreen() {
           <ActionCard
             icon="water"
             title="Hidratacion"
-            subtitle={`${dailySummary.hydration_ml} ml hoy`}
+            subtitle={`${(dailySummary.hydration_ml / 1000).toFixed(2)} L hoy`}
             accentColor={COLORS.primaryMedium}
             onPress={() => setMetricMode('hydration')}
           />
@@ -399,15 +398,6 @@ const styles = StyleSheet.create({
     color: COLORS.overlayMedium,
     marginTop: 2,
   },
-  bellBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.overlay,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
   statsCardWrapper: {
     paddingHorizontal: 16,
     marginTop: -36,

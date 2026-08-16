@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { AdminTopBar } from '../../components/layout/AdminTopBar';
 import { StatCard } from '../../components/ui/StatCard';
 import { Avatar } from '../../components/ui/Avatar';
 import { Badge } from '../../components/ui/Badge';
 import { DataTable, Column } from '../../components/ui/DataTable';
+import { NutritionistService, NutritionistProfile } from '../../services/NutritionistService';
+import { AdminService, AdminDashboardStats, AdminActivityItem } from '../../services/AdminService';
+import { ROUTES } from '../../routes/routes';
 import {
   MdEmojiEvents,
   MdPeople,
@@ -17,44 +21,67 @@ import {
   MdLocalHospital,
 } from 'react-icons/md';
 
-const statsCards = [
-  {
-    icon: MdEmojiEvents,
-    iconBg: 'bg-admin-light',
-    label: 'Nutricionistas',
-    value: '15',
-    change: '↑ 2 este mes',
-    changeType: 'positive' as const,
-    accentColor: 'text-gray-900',
-  },
-  {
-    icon: MdPeople,
-    iconBg: 'bg-admin-light',
-    label: 'Clientes Totales',
-    value: '347',
-    change: '↑ 23 este mes',
-    changeType: 'positive' as const,
-    accentColor: 'text-gray-900',
-  },
-  {
-    icon: MdDescription,
-    iconBg: 'bg-admin-light',
-    label: 'Suscripciones Activas',
-    value: '289',
-    change: '83% tasa',
-    changeType: 'neutral' as const,
-    accentColor: 'text-gray-900',
-  },
-  {
-    icon: MdLocalFlorist,
-    iconBg: 'bg-admin-light',
-    label: 'Artículos Publicados',
-    value: '128',
-    change: '↑ 8 esta semana',
-    changeType: 'positive' as const,
-    accentColor: 'text-gray-900',
-  },
-];
+type ChangeType = 'positive' | 'negative' | 'neutral';
+
+function buildStatsCards(stats: AdminDashboardStats | null) {
+  return [
+    {
+      icon: MdEmojiEvents,
+      iconBg: 'bg-admin-light',
+      label: 'Nutricionistas',
+      value: stats ? String(stats.nutritionists_total) : '—',
+      change: stats ? `↑ ${stats.nutritionists_new_this_month} este mes` : '',
+      changeType: (stats && stats.nutritionists_new_this_month > 0
+        ? 'positive'
+        : 'neutral') as ChangeType,
+      accentColor: 'text-gray-900',
+    },
+    {
+      icon: MdPeople,
+      iconBg: 'bg-admin-light',
+      label: 'Clientes Totales',
+      value: stats ? String(stats.patients_total) : '—',
+      change: stats ? `↑ ${stats.patients_new_this_month} este mes` : '',
+      changeType: (stats && stats.patients_new_this_month > 0
+        ? 'positive'
+        : 'neutral') as ChangeType,
+      accentColor: 'text-gray-900',
+    },
+    {
+      icon: MdDescription,
+      iconBg: 'bg-admin-light',
+      label: 'Suscripciones Activas',
+      value: stats ? String(stats.subscriptions_active) : '—',
+      change: stats ? `${stats.subscription_rate}% tasa` : '',
+      changeType: 'neutral' as ChangeType,
+      accentColor: 'text-gray-900',
+    },
+    {
+      icon: MdLocalFlorist,
+      iconBg: 'bg-admin-light',
+      label: 'Artículos Publicados',
+      value: stats ? String(stats.content_published_total) : '—',
+      change: stats ? `↑ ${stats.content_published_this_week} esta semana` : '',
+      changeType: (stats && stats.content_published_this_week > 0
+        ? 'positive'
+        : 'neutral') as ChangeType,
+      accentColor: 'text-gray-900',
+    },
+  ];
+}
+
+function formatActivityTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const now = new Date();
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((startOfDay(now) - startOfDay(date)) / 86_400_000);
+
+  if (diffDays <= 0) return 'Hoy';
+  if (diffDays === 1) return 'Ayer';
+  return date.toLocaleDateString('es-EC', { day: 'numeric', month: 'short' });
+}
 
 interface Nutritionist {
   id: string;
@@ -66,105 +93,57 @@ interface Nutritionist {
   status: 'active' | 'pending';
 }
 
-const nutritionists: Nutritionist[] = [
-  {
-    id: '1',
-    initials: 'AS',
-    color: 'bg-admin-light',
-    name: 'Dr. Alfonso Silva',
-    email: 'alfonso.silva@nutria.com',
-    specialty: 'Hipertensión',
-    status: 'active',
-  },
-  {
-    id: '2',
-    initials: 'MG',
-    color: 'bg-admin-light',
-    name: 'Dra. María García',
-    email: 'maria.garcia@nutria.com',
-    specialty: 'Diabetes',
-    status: 'active',
-  },
-  {
-    id: '3',
-    initials: 'JR',
-    color: 'bg-admin-light',
-    name: 'Dr. Juan Rodríguez',
-    email: 'juan.rodriguez@nutria.com',
-    specialty: 'Obesidad',
-    status: 'active',
-  },
-  {
-    id: '4',
-    initials: 'LC',
-    color: 'bg-admin-light',
-    name: 'Dra. Laura Castro',
-    email: 'laura.castro@nutria.com',
-    specialty: 'Deportiva',
-    status: 'pending',
-  },
-  {
-    id: '5',
-    initials: 'PM',
-    color: 'bg-admin-light',
-    name: 'Dr. Pedro Morales',
-    email: 'pedro.morales@nutria.com',
-    specialty: 'Cardiología',
-    status: 'active',
-  },
-  {
-    id: '6',
-    initials: 'ST',
-    color: 'bg-admin-light',
-    name: 'Dra. Sara Torres',
-    email: 'sara.torres@nutria.com',
-    specialty: 'Pediatría',
-    status: 'active',
-  },
-  {
-    id: '7',
-    initials: 'DF',
-    color: 'bg-admin-light',
-    name: 'Dr. Daniel Fernández',
-    email: 'daniel.fernandez@nutria.com',
-    specialty: 'Renal',
-    status: 'active',
-  },
-];
+const RECENT_NUTRITIONISTS_LIMIT = 7;
 
-const quickActions = [
-  {
-    icon: MdPersonAdd,
-    title: 'Agregar Nutricionista',
-    desc: 'Registrar nuevo profesional',
-    iconBg: 'bg-admin-light',
-  },
-  {
-    icon: MdGroup,
-    title: 'Gestionar Pacientes',
-    desc: 'Ver todos los usuarios',
-    iconBg: 'bg-admin-light',
-  },
-  {
-    icon: MdLibraryBooks,
-    title: 'Publicar Contenido',
-    desc: 'Artículos y recursos',
-    iconBg: 'bg-admin-light',
-  },
-  {
-    icon: MdBarChart,
-    title: 'Ver Reportes',
-    desc: 'Estadísticas del sistema',
-    iconBg: 'bg-admin-light',
-  },
-];
+function mapProfileToNutritionist(p: NutritionistProfile): Nutritionist {
+  const firstName = p.user?.person?.first_name ?? '';
+  const lastName = p.user?.person?.last_name ?? '';
+  const fullName = `${firstName} ${lastName}`.trim();
+  const initials = `${firstName[0] ?? ''}${lastName[0] ?? ''}`.toUpperCase() || '??';
 
-const systemActivity = [
-  { text: 'Nuevo nutricionista registrado: Dr. Daniel Fernández', time: 'Hace 2h' },
-  { text: '8 nuevos artículos publicados en la biblioteca', time: 'Hace 5h' },
-  { text: '23 nuevos pacientes registrados esta semana', time: 'Hoy' },
-  { text: 'Sistema actualizado a versión 2.5.1', time: 'Ayer' },
-];
+  return {
+    id: p.id,
+    initials,
+    color: 'bg-admin-light',
+    name: fullName || p.user?.email || '—',
+    email: p.user?.email ?? '—',
+    specialty: p.specialty?.name ?? '—',
+    status: p.status === 'verified' ? 'active' : 'pending',
+  };
+}
+
+function buildQuickActions(navigate: (route: string) => void) {
+  return [
+    {
+      icon: MdPersonAdd,
+      title: 'Agregar Nutricionista',
+      desc: 'Revisar solicitudes',
+      iconBg: 'bg-admin-light',
+      onClick: () => navigate(ROUTES.ADMIN_NUTRITIONISTS),
+    },
+    {
+      icon: MdGroup,
+      title: 'Gestionar Pacientes',
+      desc: 'Ver todos los usuarios',
+      iconBg: 'bg-admin-light',
+      onClick: () => navigate(ROUTES.ADMIN_CLIENTS),
+    },
+    {
+      icon: MdLibraryBooks,
+      title: 'Publicar Contenido',
+      desc: 'Artículos y recursos',
+      iconBg: 'bg-admin-light',
+      onClick: () => navigate(ROUTES.ADMIN_CONTENT),
+    },
+    {
+      icon: MdBarChart,
+      title: 'Ver Reportes',
+      desc: 'Estadísticas del sistema',
+      iconBg: 'bg-admin-light',
+      onClick: () => navigate(ROUTES.ADMIN_REPORTS),
+    },
+  ];
+}
 
 const columns: Column<Nutritionist>[] = [
   {
@@ -194,7 +173,62 @@ const columns: Column<Nutritionist>[] = [
 ];
 
 function AdminDashboard() {
+  const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState('Panel Principal');
+  const [nutritionists, setNutritionists] = useState<Nutritionist[]>([]);
+  const [loadingNutritionists, setLoadingNutritionists] = useState(true);
+  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+  const [activity, setActivity] = useState<AdminActivityItem[]>([]);
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    NutritionistService.getAll()
+      .then((profiles) => {
+        if (cancelled) return;
+        setNutritionists(
+          profiles.slice(0, RECENT_NUTRITIONISTS_LIMIT).map(mapProfileToNutritionist),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setNutritionists([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingNutritionists(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    AdminService.getDashboard()
+      .then((dashboard) => {
+        if (cancelled) return;
+        setStats(dashboard.stats);
+        setActivity(dashboard.activity);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setStats(null);
+          setActivity([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingDashboard(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const statsCards = buildStatsCards(stats);
+  const quickActions = buildQuickActions(navigate);
 
   return (
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
@@ -214,6 +248,7 @@ function AdminDashboard() {
             <StatCard
               key={card.label}
               {...card}
+              isLoading={loadingDashboard}
               icon={<card.icon className="text-xl text-admin-dark" />}
             />
           ))}
@@ -225,7 +260,10 @@ function AdminDashboard() {
           <div className="col-span-3 bg-white rounded-xl border-none shadow-sm p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-gray-800 text-base">Nutricionistas Recientes</h2>
-              <button className="text-gray-900 font-medium text-sm hover:underline">
+              <button
+                onClick={() => navigate(ROUTES.ADMIN_NUTRITIONISTS)}
+                className="text-gray-900 font-medium text-sm hover:underline"
+              >
                 Ver todos →
               </button>
             </div>
@@ -233,6 +271,7 @@ function AdminDashboard() {
               columns={columns}
               data={nutritionists}
               keyExtractor={(row) => row.id}
+              isLoading={loadingNutritionists}
               emptyTitle="No hay nutricionistas"
               emptyIcon={<MdLocalHospital className="w-12 h-12" />}
             />
@@ -247,6 +286,7 @@ function AdminDashboard() {
                 {quickActions.map((action) => (
                   <button
                     key={action.title}
+                    onClick={action.onClick}
                     className="flex items-start gap-3 p-3 rounded-lg bg-admin-bg hover:bg-admin-light transition text-left"
                   >
                     <div
@@ -268,17 +308,25 @@ function AdminDashboard() {
             {/* Actividad del sistema */}
             <div className="bg-white rounded-xl border-none shadow-sm p-5">
               <h2 className="font-bold text-gray-800 text-base mb-4">Actividad del Sistema</h2>
-              <ul className="space-y-3">
-                {systemActivity.map((item, i) => (
-                  <li key={i} className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2">
-                      <span className="text-gray-900 mt-0.5 text-xs">•</span>
-                      <span className="text-gray-900 text-xs">{item.text}</span>
-                    </div>
-                    <span className="text-gray-400 text-xs whitespace-nowrap">{item.time}</span>
-                  </li>
-                ))}
-              </ul>
+              {loadingDashboard ? (
+                <p className="text-gray-400 text-xs">Cargando actividad...</p>
+              ) : activity.length === 0 ? (
+                <p className="text-gray-400 text-xs">Sin actividad reciente.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {activity.map((item, i) => (
+                    <li key={i} className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2">
+                        <span className="text-gray-900 mt-0.5 text-xs">•</span>
+                        <span className="text-gray-900 text-xs">{item.text}</span>
+                      </div>
+                      <span className="text-gray-400 text-xs whitespace-nowrap">
+                        {formatActivityTime(item.time)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>

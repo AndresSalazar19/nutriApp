@@ -356,7 +356,7 @@ function NutritionistsPage() {
     <AdminLayout activeNav={activeNav} onNavChange={setActiveNav}>
       <AdminTopBar title="Gestión de Nutricionistas" />
 
-      <div className="px-8 pb-8 pt-4 bg-admin-bg">
+      <div className="px-8 pb-6 pt-3 bg-admin-bg">
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center justify-between">
             <span>{error}</span>
@@ -370,44 +370,30 @@ function NutritionistsPage() {
         )}
 
         {/* Barra de herramientas */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <SearchInput
-              placeholder="Buscar por nombre, email o especialidad..."
-              value={search}
-              onChange={(v) => {
-                setSearch(v);
-                setCurrentPage(1);
-              }}
-              className="w-72"
-            />
-            <span className="text-sm text-gray-500 font-medium">Filtrar por:</span>
-            <FilterTabs
-              tabs={TABS}
-              active={activeTab}
-              onChange={(tab) => {
-                setActiveTab(tab);
-                setCurrentPage(1);
-              }}
-              accentColor="admin"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50 transition">
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Excel
-            </button>
-          </div>
+        <div className="flex items-center gap-3 mb-4">
+          <SearchInput
+            placeholder="Buscar por nombre, email o especialidad..."
+            value={search}
+            onChange={(v) => {
+              setSearch(v);
+              setCurrentPage(1);
+            }}
+            className="w-72"
+          />
+          <span className="text-sm text-gray-500 font-medium">Filtrar por:</span>
+          <FilterTabs
+            tabs={TABS}
+            active={activeTab}
+            onChange={(tab) => {
+              setActiveTab(tab);
+              setCurrentPage(1);
+            }}
+            accentColor="admin"
+          />
         </div>
 
         {/* Tabla */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
           <DataTable
             columns={columns}
             data={paginated}
@@ -418,7 +404,7 @@ function NutritionistsPage() {
             emptyDescription="No se encontraron resultados para tu búsqueda."
           />
 
-          <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-50">
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
             <p className="text-xs text-gray-500">
               Mostrando {from}–{to} de {filtered.length} nutricionistas
             </p>

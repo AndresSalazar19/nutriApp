@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
 import { useAuth } from '../../hooks/useAuth';
+import { useNutritionistStatus } from '../../hooks/useNutritionistStatus';
 import { tokenStorage } from '../../utils/tokenStorage';
 import {
   NutritionistService,
@@ -30,6 +31,8 @@ const DEFAULT_FORM: AvailabilityFormState = {
 
 export default function NutritionistProfilePage() {
   const { user, login } = useAuth();
+  const nutritionistStatus = useNutritionistStatus();
+  const locked = nutritionistStatus.status === 'pending';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<NutritionistProfileDetail | null>(null);
@@ -234,7 +237,7 @@ export default function NutritionistProfilePage() {
 
   if (loading) {
     return (
-      <NutritionistLayout>
+      <NutritionistLayout locked={locked}>
         <div className="absolute inset-0 z-20 bg-white/50 backdrop-blur-[2px] flex items-center justify-center">
           <Spinner size="lg" color="text-nutri-medium" text="Actualizando perfil..." />
         </div>
@@ -244,7 +247,7 @@ export default function NutritionistProfilePage() {
 
   if (error) {
     return (
-      <NutritionistLayout>
+      <NutritionistLayout locked={locked}>
         <div className="px-8 py-6">
           <EmptyState title="Error" description={error} />
         </div>
@@ -254,7 +257,7 @@ export default function NutritionistProfilePage() {
 
   if (!profile) {
     return (
-      <NutritionistLayout>
+      <NutritionistLayout locked={locked}>
         <div className="px-8 py-6">
           <EmptyState title="No encontrado" description="Perfil no encontrado" />
         </div>
@@ -263,7 +266,7 @@ export default function NutritionistProfilePage() {
   }
 
   return (
-    <NutritionistLayout>
+    <NutritionistLayout locked={locked}>
       <div className="px-8 py-6 space-y-4">
         <NutritionistProfileCards
           profile={profile}

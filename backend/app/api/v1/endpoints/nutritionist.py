@@ -1,15 +1,18 @@
+import logging
 import os
 import shutil
 import uuid
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.dependencies import get_current_user
 from app.core.response import error_response, success_response
 from app.db.base import get_db
 from app.db.models.nutritionist import DocumentType, NutritionistStatus
-from app.db.models.user import GenderEnum
+from app.db.models.user import GenderEnum, User
 from app.schemas.nutritionist import (
     NutritionistCreateRequest,
     NutritionistDocumentsResponse,
@@ -17,8 +20,11 @@ from app.schemas.nutritionist import (
     NutritionistProfileResponse,
     NutritionistStatusUpdate,
 )
+from app.services.nutritionist_dashboard_service import NutritionistDashboardService
 from app.services.nutritionist_service import NutritionistService
 from app.services.user_service import UserService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/nutritionists", tags=["nutritionists"])
 
@@ -26,6 +32,35 @@ router = APIRouter(prefix="/nutritionists", tags=["nutritionists"])
 @router.get("", response_model=list[NutritionistProfileResponse])
 def get_nutritionists(status: NutritionistStatus | None = None, db: Session = Depends(get_db)):
     return NutritionistService.get_all(db, status=status)
+
+
+@router.get("/dashboard", response_model=None)
+def get_nutritionist_dashboard(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    data = NutritionistDashboardService.get_dashboard(db, current_user.id)
+    return JSONResponse(status_code=200, content=success_response(data=data).model_dump())
+
+
+@router.get("/unread-messages", response_model=None)
+def get_unread_messages_count(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    count = NutritionistDashboardService.get_unread_messages_count(db, current_user.id)
+    return JSONResponse(
+        status_code=200, content=success_response(data={"count": count}).model_dump()
+    )
+
+
+@router.get("/patients", response_model=None)
+def get_my_patients(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    data = NutritionistDashboardService.get_patients_list(db, current_user.id)
+    return JSONResponse(status_code=200, content=success_response(data=data).model_dump())
 
 
 @router.get("/status/{user_id}", response_model=None)
@@ -76,19 +111,35 @@ def get_nutritionist_documents(nutritionist_id: uuid.UUID, db: Session = Depends
     return NutritionistDocumentsResponse(cv_url=cv_url, senescyt_url=senescyt_url)
 
 
-def save_pdf(file: UploadFile) -> dict:
-    """Helper para validar y guardar archivos PDF en disco"""
-    if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
+CV_TYPES: dict[str, str] = {
+    "application/pdf": ".pdf",
+}
+# El Senescyt puede entregarse como captura del portal, no solo como PDF; el
+# formulario de registro ya acepta PDF/JPG/PNG, asi que el backend acepta lo
+# mismo (antes rechazaba cualquier imagen con "Solo se permiten archivos PDF").
+SENESCYT_TYPES: dict[str, str] = {
+    "application/pdf": ".pdf",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+}
+
+
+def save_document(file: UploadFile, allowed: dict[str, str], label: str) -> dict:
+    """Valida el tipo del archivo y lo guarda en disco."""
+    extension = allowed.get(file.content_type)
+    if extension is None:
+        formatos = ", ".join(sorted({e.lstrip(".").upper() for e in allowed.values()}))
+        raise HTTPException(
+            status_code=400,
+            detail=f"El {label} debe ser un archivo {formatos}",
+        )
 
     # Crear directorio si no existe
     upload_dir = "uploads/nutritionists"
     os.makedirs(upload_dir, exist_ok=True)
 
     # Generar nombre único
-    file_id = str(uuid.uuid4())
-    file_extension = ".pdf"
-    unique_filename = f"{file_id}{file_extension}"
+    unique_filename = f"{uuid.uuid4()}{extension}"
     file_path = os.path.join(upload_dir, unique_filename)
 
     # Obtener tamaño del archivo
@@ -106,6 +157,15 @@ def save_pdf(file: UploadFile) -> dict:
         "file_size": file_size,
         "mime_type": file.content_type,
     }
+
+
+def _discard_files(*documentos: dict) -> None:
+    """Borra los archivos ya escritos cuando el registro no llego a completarse."""
+    for doc in documentos:
+        try:
+            os.remove(doc["file_path"])
+        except OSError:
+            pass
 
 
 @router.post("", response_model=None)
@@ -130,6 +190,13 @@ def create_nutritionist(
         resp = error_response(["El email ya esta registrado"], status_code=400)
         return JSONResponse(status_code=400, content=resp.model_dump())
 
+    # persons.cedula tiene UNIQUE en la BD. Sin este chequeo el INSERT reventaba
+    # con un UniqueViolation de psycopg2 que terminaba mostrandose crudo (con el
+    # SQL y los datos del usuario) en el alert del navegador.
+    if UserService.cedula_exists(db, cedula):
+        resp = error_response(["La cedula ya esta registrada"], status_code=400)
+        return JSONResponse(status_code=400, content=resp.model_dump())
+
     # Reconstruir objeto NutritionistCreateRequest
     payload = NutritionistCreateRequest(
         email=email,
@@ -145,6 +212,13 @@ def create_nutritionist(
         license_number=license_number,
     )
 
+    # Los archivos se validan y guardan ANTES de tocar la base. Antes se creaba
+    # el usuario primero y, si el archivo era rechazado, quedaba una cuenta
+    # huerfana sin documentos que ademas dejaba el email ocupado: el segundo
+    # intento fallaba con "El email ya esta registrado".
+    cv_data = save_document(cv_file, CV_TYPES, "Curriculum Vitae")
+    senescyt_data = save_document(senescyt_file, SENESCYT_TYPES, "Registro Senescyt")
+
     try:
         # Crear perfil de nutricionista
         profile = NutritionistService.create(db, payload)
@@ -152,39 +226,49 @@ def create_nutritionist(
         if avatar_file:
             UserService.upload_avatar(db, profile.user_id, avatar_file)
 
-        # Guardar archivos PDF
-        cv_data = save_pdf(cv_file)
-        senescyt_data = save_pdf(senescyt_file)
-
         # Crear documentos asociados usando el servicio
-        try:
-            NutritionistService.add_document(
-                db,
-                profile.id,
-                DocumentType.cv,
-                cv_data["file_path"],
-                cv_data["file_name"],
-                cv_data["file_size"],
-                cv_data["mime_type"],
-            )
+        NutritionistService.add_document(
+            db,
+            profile.id,
+            DocumentType.cv,
+            cv_data["file_path"],
+            cv_data["file_name"],
+            cv_data["file_size"],
+            cv_data["mime_type"],
+        )
 
-            NutritionistService.add_document(
-                db,
-                profile.id,
-                DocumentType.senescyt,
-                senescyt_data["file_path"],
-                senescyt_data["file_name"],
-                senescyt_data["file_size"],
-                senescyt_data["mime_type"],
-            )
-        except Exception as e:
-            resp = error_response([f"Error al guardar documentos: {str(e)}"], status_code=500)
-            return JSONResponse(status_code=500, content=resp.model_dump())
-
+        NutritionistService.add_document(
+            db,
+            profile.id,
+            DocumentType.senescyt,
+            senescyt_data["file_path"],
+            senescyt_data["file_name"],
+            senescyt_data["file_size"],
+            senescyt_data["mime_type"],
+        )
     except HTTPException:
+        db.rollback()
+        _discard_files(cv_data, senescyt_data)
         raise
-    except Exception as e:
-        resp = error_response([f"Error al crear nutricionista: {str(e)}"], status_code=500)
+    except IntegrityError:
+        # Carrera contra los chequeos de arriba, o algun otro UNIQUE que no
+        # validamos antes. El detalle real va al log del servidor, nunca al
+        # navegador: traia el SQL completo con los datos personales dentro.
+        db.rollback()
+        _discard_files(cv_data, senescyt_data)
+        logger.exception("IntegrityError al registrar nutricionista")
+        resp = error_response(
+            ["Ya existe una cuenta con esos datos. Revisa el correo y la cedula."],
+            status_code=400,
+        )
+        return JSONResponse(status_code=400, content=resp.model_dump())
+    except Exception:
+        db.rollback()
+        _discard_files(cv_data, senescyt_data)
+        logger.exception("Error inesperado al registrar nutricionista")
+        resp = error_response(
+            ["No se pudo completar el registro. Intenta nuevamente."], status_code=500
+        )
         return JSONResponse(status_code=500, content=resp.model_dump())
 
     resp = success_response(
