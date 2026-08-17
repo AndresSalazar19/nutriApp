@@ -1,7 +1,7 @@
-from app.db.base import engine, Base
-from app.db.models.user import User
-from app.db.models.weight_log import WeightLog
 from sqlalchemy import text
+
+from app.db.base import Base, engine
+from app.db.models.weight_log import WeightLog
 
 conn = engine.connect()
 conn.execute(text("DROP TABLE IF EXISTS weight_logs"))

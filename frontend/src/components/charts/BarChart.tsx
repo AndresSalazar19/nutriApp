@@ -8,7 +8,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Cell,
 } from 'recharts';
 
 export interface BarConfig {
@@ -73,12 +72,29 @@ export function BarChart({
 
         {isVertical ? (
           <>
-            <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-            <YAxis dataKey={xKey} type="category" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} width={80} />
+            <XAxis
+              type="number"
+              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              dataKey={xKey}
+              type="category"
+              tick={{ fontSize: 11, fill: '#6b7280' }}
+              axisLine={false}
+              tickLine={false}
+              width={80}
+            />
           </>
         ) : (
           <>
-            <XAxis dataKey={xKey} tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+            <XAxis
+              dataKey={xKey}
+              tick={{ fontSize: 11, fill: '#9ca3af' }}
+              axisLine={false}
+              tickLine={false}
+            />
             <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
           </>
         )}

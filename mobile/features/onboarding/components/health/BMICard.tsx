@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 
 interface BMICardProps {
@@ -23,7 +24,7 @@ export const BMICard: React.FC<BMICardProps> = ({ weight, height }) => {
 
   return (
     <View style={styles.bmiCard}>
-      <Text style={styles.bmiIcon}>📊</Text>
+      <MaterialCommunityIcons name="chart-bar" size={28} color={COLORS.primary} />
       <View>
         <Text style={styles.bmiTitle}>Tu IMC (Índice de Masa Corporal)</Text>
         <Text style={styles.bmiValue}>

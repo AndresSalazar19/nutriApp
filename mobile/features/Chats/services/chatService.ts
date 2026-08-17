@@ -1,0 +1,110 @@
+import { tokenStorage } from '@/utils/tokenStorage';
+
+const API = `${process.env.EXPO_PUBLIC_API_URL}/api/v1`;
+
+export interface ConversationCreateRequest {
+  participant_id: string;
+}
+
+export interface ConversationResponse {
+  id: string;
+  conversation_type: 'ai' | 'human';
+  patient_id: string;
+  nutritionist_id?: string | null;
+  participant_id: string;
+  participant_name: string;
+  participant_avatar?: string | null;
+  last_message?: string | null;
+  last_message_time?: string | null;
+  unread_count: number;
+}
+
+export interface MessageResponse {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  sender_role: 'patient' | 'nutritionist' | 'assistant';
+  content: string;
+  media_url?: string | null;
+  sent_at: string;
+  read_at?: string | null;
+}
+
+export interface ConversationMessagesResponse {
+  conversation_id: string;
+  messages: MessageResponse[];
+}
+
+async function authHeaders() {
+  const token = (await tokenStorage.get()) ?? '';
+
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    console.log('Error response:', data);
+
+    let msg = `Error ${response.status}`;
+
+    if (typeof data?.detail === 'string') {
+      msg = data.detail;
+    } else if (Array.isArray(data?.detail)) {
+      msg = data.detail.map((e: any) => e.msg).join(', ');
+    } else if (typeof data?.status?.messages?.[0] === 'string') {
+      msg = data.status.messages[0];
+    }
+    throw new Error(msg);
+  }
+
+  return data;
+}
+
+export const ChatService = {
+  async createConversation(payload: ConversationCreateRequest): Promise<ConversationResponse> {
+    const res = await fetch(`${API}/chats/`, {
+      method: 'POST',
+      headers: await authHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    const response = await handleResponse<any>(res);
+    return response.data;
+  },
+
+  async getConversations(): Promise<ConversationResponse[]> {
+    const res = await fetch(`${API}/chats/`, {
+      method: 'GET',
+      headers: await authHeaders(),
+    });
+
+    const response = await handleResponse<any>(res);
+    return response.data ?? [];
+  },
+
+  async getMessages(conversation_id: string): Promise<ConversationMessagesResponse> {
+    const res = await fetch(`${API}/chats/${conversation_id}/messages`, {
+      method: 'GET',
+      headers: await authHeaders(),
+    });
+
+    const response = await handleResponse<any>(res);
+    return response.data ?? { conversation_id, messages: [] };
+  },
+
+  async sendMessage(conversation_id: string, content: string): Promise<MessageResponse> {
+    const res = await fetch(`${API}/chats/${conversation_id}/messages`, {
+      method: 'POST',
+      headers: await authHeaders(),
+      body: JSON.stringify({ content }),
+    });
+
+    const response = await handleResponse<any>(res);
+    return response.data;
+  },
+};

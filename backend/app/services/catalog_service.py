@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
+
 from app.db.models.nutritionist import Specialty
-import uuid
+
 
 class CatalogService:
     @staticmethod

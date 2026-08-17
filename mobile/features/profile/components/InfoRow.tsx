@@ -1,22 +1,33 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { COLORS } from '@/constants/colors';
 
 interface InfoRowProps {
-  emoji: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   label: string;
   value: string;
   onPress?: () => void;
 }
 
-export function InfoRow({ emoji, label, value, onPress }: InfoRowProps) {
+export function InfoRow({ icon, label, value, onPress }: InfoRowProps) {
   return (
-    <TouchableOpacity style={styles.infoRow} activeOpacity={0.7} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.infoRow}
+      activeOpacity={onPress ? 0.7 : 1}
+      onPress={onPress}
+      disabled={!onPress}
+    >
       <View style={styles.infoIconWrap}>
-        <Text style={styles.infoEmoji}>{emoji}</Text>
+        <MaterialCommunityIcons
+          name={icon}
+          size={22}
+          color={COLORS.primaryMedium}
+        />
       </View>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text style={styles.infoValue}>{value}</Text>
-      <Text style={styles.chevron}>›</Text>
+      {onPress ? <Text style={styles.chevron}>›</Text> : null}
     </TouchableOpacity>
   );
 }
@@ -32,25 +43,24 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#f5f6fa',
+    backgroundColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  infoEmoji: { fontSize: 16 },
   infoLabel: {
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.textPrimary,
   },
   infoValue: {
     fontSize: 13,
-    color: '#888',
+    color: COLORS.textMuted,
     marginRight: 8,
   },
   chevron: {
     fontSize: 20,
-    color: '#ccc',
+    color: COLORS.border,
   },
 });

@@ -72,7 +72,7 @@ export default function BloodPressureChart({
                 y1={y} 
                 x2={width - paddingRight} 
                 y2={y} 
-                stroke="#E2E8F0" 
+                stroke={COLORS.border} 
                 strokeWidth="1" 
                 strokeDasharray="4, 4" 
               />
@@ -85,16 +85,16 @@ export default function BloodPressureChart({
         <Polyline 
           points={sysPointsStr} 
           fill="none" 
-          stroke={COLORS.danger || '#FF5252'} 
-          strokeWidth="3" 
-          strokeLinejoin="round" 
-          strokeLinecap="round" 
+          stroke={COLORS.primary}
+          strokeWidth="3"
+          strokeLinejoin="round"
+          strokeLinecap="round"
         />
         {/* Línea de Diastólica */}
-        <Polyline 
-          points={diaPointsStr} 
-          fill="none" 
-          stroke="#4A90D9" 
+        <Polyline
+          points={diaPointsStr}
+          fill="none"
+          stroke={COLORS.primaryAccent} 
           strokeWidth="3" 
           strokeLinejoin="round" 
           strokeLinecap="round" 
@@ -106,18 +106,18 @@ export default function BloodPressureChart({
             cx={sysPoints[sysPoints.length - 1].x} 
             cy={sysPoints[sysPoints.length - 1].y} 
             r={4.5} 
-            fill={COLORS.surface || '#FFF'} 
-            stroke={COLORS.danger || '#FF5252'} 
-            strokeWidth="3" 
+            fill={COLORS.surface}
+            stroke={COLORS.primary}
+            strokeWidth="3"
           />
         )}
         {diaPoints.length > 0 && (
-          <Circle 
-            cx={diaPoints[diaPoints.length - 1].x} 
-            cy={diaPoints[diaPoints.length - 1].y} 
-            r={4.5} 
-            fill={COLORS.surface || '#FFF'} 
-            stroke="#4A90D9" 
+          <Circle
+            cx={diaPoints[diaPoints.length - 1].x}
+            cy={diaPoints[diaPoints.length - 1].y}
+            r={4.5}
+            fill={COLORS.surface}
+            stroke={COLORS.primaryAccent} 
             strokeWidth="3" 
           />
         )}
@@ -140,7 +140,7 @@ export default function BloodPressureChart({
             key={`label-${index}`} 
             style={{ 
               fontSize: 11, 
-              color: '#94A3B8', 
+              color: COLORS.textMuted,
               fontWeight: '600',
               textAlign: 'center',
               width: chartWidth / labels.length

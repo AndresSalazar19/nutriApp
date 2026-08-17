@@ -1,8 +1,7 @@
 import React from 'react';
-import { CalendarAppointment, pad } from '../../components/mock/agendaMock';
+import { CalendarAppointment, pad } from '../../pages/Appoinment/agendaUtils';
 
 const SLOT_HEIGHT = 56; // px per 30-min slot (must match WeekGrid)
-const SLOTS_PER_HOUR = 2;
 
 interface AppointmentCardProps {
   appt: CalendarAppointment;
@@ -11,7 +10,7 @@ interface AppointmentCardProps {
 
 export function AppointmentCard({ appt, onClick }: AppointmentCardProps) {
   const startSlots = (appt.startHour * 60 + appt.startMin) / 30;
-  const endSlots   = (appt.endHour   * 60 + appt.endMin)   / 30;
+  const endSlots = (appt.endHour * 60 + appt.endMin) / 30;
   const durationSlots = endSlots - startSlots;
 
   // Height in px
@@ -19,12 +18,12 @@ export function AppointmentCard({ appt, onClick }: AppointmentCardProps) {
 
   const isVirtual = appt.type === 'Virtual';
 
-  const bg     = isVirtual ? 'bg-blue-50  border-blue-200'  : 'bg-green-50  border-green-200';
-  const text   = isVirtual ? 'text-blue-800'                : 'text-green-800';
-  const badge  = isVirtual ? 'bg-blue-100 text-blue-700'    : 'bg-green-100 text-green-700';
-  const dot    = isVirtual ? 'bg-blue-500'                  : 'bg-green-500';
-  const avatar = isVirtual ? 'bg-blue-500' : appt.patientColor;
-
+  const bg = isVirtual
+    ? 'bg-admin-light border-admin-medium/30'
+    : 'bg-nutri-light border-nutri-medium/30';
+  const text = isVirtual ? 'text-admin-dark' : 'text-nutri-dark';
+  const badge = isVirtual ? 'bg-admin-bg text-admin-dark' : 'bg-white/60 text-nutri-dark';
+  const dot = isVirtual ? 'bg-admin-medium' : 'bg-nutri-medium';
   return (
     <div
       onClick={() => onClick(appt)}
@@ -40,7 +39,9 @@ export function AppointmentCard({ appt, onClick }: AppointmentCardProps) {
           {pad(appt.startHour)}:{pad(appt.startMin)} – {pad(appt.endHour)}:{pad(appt.endMin)}
         </span>
         {height > 40 && (
-          <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1 ${badge}`}>
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1 ${badge}`}
+          >
             <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
             {appt.type}
           </span>
@@ -49,14 +50,12 @@ export function AppointmentCard({ appt, onClick }: AppointmentCardProps) {
 
       {/* Patient name */}
       {height > 30 && (
-        <p className={`text-xs font-bold leading-tight truncate ${text}`}>
-          {appt.patientName}
-        </p>
+        <p className={`text-xs font-bold leading-tight truncate ${text}`}>{appt.patientName}</p>
       )}
 
       {/* Notes */}
       {height > 52 && appt.notes && (
-        <p className="text-xs text-gray-400 truncate mt-0.5">{appt.notes}</p>
+        <p className="text-xs text-gray-500 truncate mt-0.5">{appt.notes}</p>
       )}
     </div>
   );

@@ -3,11 +3,11 @@ import {
   Alert,
   Image,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 import { isAllowedImageUri } from '../utils/validations';
 
@@ -79,11 +79,11 @@ export function AvatarPicker({ imageUri, onImageSelected }: AvatarPickerProps) {
         {imageUri ? (
           <Image source={{ uri: imageUri }} style={styles.avatarImage} />
         ) : (
-          <Text style={styles.avatarEmoji}>👤</Text>
+          <MaterialCommunityIcons name="account" size={40} color={COLORS.primaryMedium} />
         )}
       </View>
       <TouchableOpacity style={styles.cameraBtn} activeOpacity={0.8} onPress={handlePickImage}>
-        <Text style={styles.cameraEmoji}>📷</Text>
+        <MaterialCommunityIcons name="camera" size={13} color={COLORS.textOnPrimary} />
       </TouchableOpacity>
     </View>
   );
@@ -98,12 +98,12 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: COLORS.primaryLight,
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: COLORS.primaryDark,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },

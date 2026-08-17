@@ -1,5 +1,5 @@
-import { API_URL } from "../../config/api";
-import { tokenStorage } from "../../utils/tokenStorage";
+import { API_URL } from '../../config/api';
+import { tokenStorage } from '../../utils/tokenStorage';
 
 export interface ContentItem {
   id: string;
@@ -29,20 +29,20 @@ export interface ContentCreatePayload {
 }
 
 export const CONTENT_TYPES = [
-  { value: 'article',     label: 'Artículo'    },
-  { value: 'video',       label: 'Video'        },
-  { value: 'infographic', label: 'Infografía'   },
-  { value: 'recipe',      label: 'Receta'       },
-  { value: 'tip',         label: 'Consejo'      },
+  { value: 'article', label: 'Artículo' },
+  { value: 'video', label: 'Video' },
+  { value: 'infographic', label: 'Infografía' },
+  { value: 'recipe', label: 'Receta' },
+  { value: 'tip', label: 'Consejo' },
 ];
 
 export const CONTENT_CATEGORIES = [
-  { value: 'nutrition',    label: 'Nutrición'         },
-  { value: 'hypertension', label: 'Hipertensión'      },
-  { value: 'recipes',      label: 'Recetas'           },
-  { value: 'exercise',     label: 'Ejercicio'         },
-  { value: 'lifestyle',    label: 'Estilo de vida'    },
-  { value: 'tips',         label: 'Consejos'          },
+  { value: 'nutrition', label: 'Nutrición' },
+  { value: 'hypertension', label: 'Hipertensión' },
+  { value: 'recipes', label: 'Recetas' },
+  { value: 'exercise', label: 'Ejercicio' },
+  { value: 'lifestyle', label: 'Estilo de vida' },
+  { value: 'tips', label: 'Consejos' },
 ];
 
 function authHeaders() {
@@ -60,9 +60,9 @@ export const ContentService = {
   }): Promise<ContentItem[]> {
     const query = new URLSearchParams();
     if (params.content_type) query.append('content_type', params.content_type);
-    if (params.category)     query.append('category',     params.category);
-    if (params.q)            query.append('q',            params.q);
-    if (params.skip  != null) query.append('skip',  String(params.skip));
+    if (params.category) query.append('category', params.category);
+    if (params.q) query.append('q', params.q);
+    if (params.skip != null) query.append('skip', String(params.skip));
     if (params.limit != null) query.append('limit', String(params.limit));
 
     const response = await fetch(`${API_URL}/content?${query.toString()}`, {
@@ -72,10 +72,12 @@ export const ContentService = {
     return data.data ?? [];
   },
 
-  async getAllForAdmin(params: { q?: string; skip?: number; limit?: number } = {}): Promise<ContentItem[]> {
+  async getAllForAdmin(
+    params: { q?: string; skip?: number; limit?: number } = {},
+  ): Promise<ContentItem[]> {
     const query = new URLSearchParams();
-    if (params.q)     query.append('q',     params.q);
-    if (params.skip  != null) query.append('skip',  String(params.skip));
+    if (params.q) query.append('q', params.q);
+    if (params.skip != null) query.append('skip', String(params.skip));
     if (params.limit != null) query.append('limit', String(params.limit));
 
     const response = await fetch(`${API_URL}/content/admin/all?${query.toString()}`, {

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import PeriodSelector from './PeriodSelector';
 import { COLORS } from '@/constants/colors';
 
-type Period = 'Semana' | 'Mes' | 'Año' | 'Todo';
+type Period = 'Día' | 'Semana' | 'Mes';
 
 interface ProgressHeaderProps {
   selectedPeriod: Period;
@@ -38,6 +38,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#fff',
+    color: COLORS.textOnPrimary,
   },
 });

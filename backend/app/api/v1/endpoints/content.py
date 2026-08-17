@@ -1,20 +1,27 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from uuid import UUID
 
-from app.db.base import get_db
-from app.db.models.content import ContentType, ContentCategory
-from app.db.models.user import User
-from app.schemas.content import ContentCreate, ContentUpdate, ContentDetailResponse, ContentListResponse
 from app.core.dependencies import get_current_user, require_admin, require_nutritionist_or_admin
-from app.core.response import success_response, error_response
+from app.core.response import error_response, success_response
+from app.db.base import get_db
+from app.db.models.content import ContentCategory, ContentType
+from app.db.models.user import User
+from app.schemas.content import (
+    ContentCreate,
+    ContentDetailResponse,
+    ContentListResponse,
+    ContentUpdate,
+)
 from app.services.content_service import ContentService
 
 router = APIRouter(prefix="/content", tags=["content"])
 
 
 # ── Rutas con segmento fijo — deben ir ANTES de /{content_id} ───────────────
+
 
 @router.get("/admin/all", response_model=None)
 def list_all_content_admin(
@@ -43,6 +50,7 @@ def list_my_content(
 
 # ── Pacientes / público autenticado ─────────────────────────────────────────
 
+
 @router.get("", response_model=None)
 def list_content(
     content_type: ContentType | None = Query(None),
@@ -66,7 +74,9 @@ def get_content(
 ):
     content = ContentService.get_by_id(db, content_id)
     if not content:
-        return JSONResponse(status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump())
+        return JSONResponse(
+            status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump()
+        )
 
     ContentService.increment_views(db, content)
     data = ContentDetailResponse.model_validate(content).model_dump(mode="json")
@@ -74,6 +84,7 @@ def get_content(
 
 
 # ── Admin / Nutricionista ────────────────────────────────────────────────────
+
 
 @router.post("", response_model=None)
 def create_content(
@@ -95,7 +106,9 @@ def update_content(
 ):
     content = ContentService.get_any_by_id(db, content_id)
     if not content:
-        return JSONResponse(status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump())
+        return JSONResponse(
+            status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump()
+        )
 
     content = ContentService.update(db, content, body)
     data = ContentDetailResponse.model_validate(content).model_dump(mode="json")
@@ -110,7 +123,9 @@ def publish_content(
 ):
     content = ContentService.get_any_by_id(db, content_id)
     if not content:
-        return JSONResponse(status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump())
+        return JSONResponse(
+            status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump()
+        )
 
     content = ContentService.publish(db, content, current_user.id)
     data = ContentDetailResponse.model_validate(content).model_dump(mode="json")
@@ -125,7 +140,9 @@ def reject_content(
 ):
     content = ContentService.get_any_by_id(db, content_id)
     if not content:
-        return JSONResponse(status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump())
+        return JSONResponse(
+            status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump()
+        )
 
     content = ContentService.reject(db, content)
     data = ContentDetailResponse.model_validate(content).model_dump(mode="json")
@@ -140,7 +157,9 @@ def archive_content(
 ):
     content = ContentService.get_any_by_id(db, content_id)
     if not content:
-        return JSONResponse(status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump())
+        return JSONResponse(
+            status_code=404, content=error_response(["Contenido no encontrado"], 404).model_dump()
+        )
 
     content = ContentService.archive(db, content)
     data = ContentDetailResponse.model_validate(content).model_dump(mode="json")

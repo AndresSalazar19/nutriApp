@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { StepProps, FormErrors } from './types';
 import { SectionTitle } from './SectionTitle';
 import { InputField } from './InputField';
+import { FaCheckCircle } from 'react-icons/fa';
+
+import { FiCircle } from 'react-icons/fi';
+import { PasswordVisibilityToggle } from '../../components/PasswordVisibilityToggle';
 
 export interface SecurityStepProps extends StepProps {
   acceptTerms: boolean;
@@ -9,7 +13,13 @@ export interface SecurityStepProps extends StepProps {
   errors: FormErrors;
 }
 
-export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, acceptTerms, setAcceptTerms, errors }) => {
+export const SecurityStep: React.FC<SecurityStepProps> = ({
+  form,
+  update,
+  acceptTerms,
+  setAcceptTerms,
+  errors,
+}) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -35,19 +45,30 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
 
       {/* --- REGLAS DE LA CONTRASEÑA --- */}
       <div className="mb-4 bg-gray-50 rounded-lg p-3 border border-gray-100">
-        <p className="text-xs text-gray-500 font-semibold mb-2">La contraseña debe contener:</p>
+        <p className="text-xs text-gray-600 font-semibold mb-2">La contraseña debe contener:</p>
         <ul className="text-xs space-y-1">
-          <li className={`flex items-center gap-2 ${hasMinLength ? 'text-green-600' : 'text-gray-400'}`}>
-            <span className="text-sm">{hasMinLength ? '✓' : '○'}</span> Mínimo 8 caracteres
+          <li
+            className={`flex items-center gap-2 ${hasMinLength ? 'text-nutri-medium' : 'text-gray-600'}`}
+          >
+            {hasMinLength ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Mínimo 8
+            caracteres
           </li>
-          <li className={`flex items-center gap-2 ${hasUppercase ? 'text-green-600' : 'text-gray-400'}`}>
-            <span className="text-sm">{hasUppercase ? '✓' : '○'}</span> Al menos una letra mayúscula
+          <li
+            className={`flex items-center gap-2 ${hasUppercase ? 'text-nutri-medium' : 'text-gray-600'}`}
+          >
+            {hasUppercase ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Al menos una letra
+            mayúscula
           </li>
-          <li className={`flex items-center gap-2 ${hasNumber ? 'text-green-600' : 'text-gray-400'}`}>
-            <span className="text-sm">{hasNumber ? '✓' : '○'}</span> Al menos un número
+          <li
+            className={`flex items-center gap-2 ${hasNumber ? 'text-nutri-medium' : 'text-gray-600'}`}
+          >
+            {hasNumber ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Al menos un número
           </li>
-          <li className={`flex items-center gap-2 ${hasSpecialChar ? 'text-green-600' : 'text-gray-400'}`}>
-            <span className="text-sm">{hasSpecialChar ? '✓' : '○'}</span> Un carácter especial (Ej: !@#$%)
+          <li
+            className={`flex items-center gap-2 ${hasSpecialChar ? 'text-nutri-medium' : 'text-gray-600'}`}
+          >
+            {hasSpecialChar ? <FaCheckCircle size={14} /> : <FiCircle size={14} />} Un carácter
+            especial (Ej: !@#$%)
           </li>
         </ul>
       </div>
@@ -65,9 +86,12 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
+          className="absolute right-3 top-[34px] text-gray-500 hover:text-gray-700"
         >
-          {showPassword ? '🙈' : '👁️'}
+          <PasswordVisibilityToggle
+            visible={showPassword}
+            onClick={() => setShowPassword(!showPassword)}
+          />
         </button>
       </div>
 
@@ -84,9 +108,12 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
         <button
           type="button"
           onClick={() => setShowConfirm(!showConfirm)}
-          className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
+          className="absolute right-3 top-[34px] text-gray-500 hover:text-gray-700"
         >
-          {showConfirm ? '🙈' : '👁️'}
+          <PasswordVisibilityToggle
+            visible={showConfirm}
+            onClick={() => setShowConfirm(!showConfirm)}
+          />
         </button>
       </div>
 
@@ -96,15 +123,28 @@ export const SecurityStep: React.FC<SecurityStepProps> = ({ form, update, accept
           type="checkbox"
           id="terms"
           checked={acceptTerms}
-          onChange={e => setAcceptTerms(e.target.checked)}
-          className="accent-green-500 w-4 h-4 cursor-pointer"
+          onChange={(e) => setAcceptTerms(e.target.checked)}
+          className="accent-nutri-medium w-4 h-4 cursor-pointer"
         />
-        <label htmlFor="terms" className="text-xs text-gray-500 cursor-pointer">
-          Acepto los <button type="button" className="text-green-600 font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer">Términos de Servicio</button> y <button type="button" className="text-green-600 font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer">Política de Privacidad</button>
+        <label htmlFor="terms" className="text-xs text-gray-600 cursor-pointer">
+          Acepto los{' '}
+          <button
+            type="button"
+            className="text-nutri-medium font-semibold hover:text-nutri-dark hover:underline bg-transparent border-none p-0 cursor-pointer"
+          >
+            Términos de Servicio
+          </button>{' '}
+          y{' '}
+          <button
+            type="button"
+            className="text-nutri-medium font-semibold hover:text-nutri-dark hover:underline bg-transparent border-none p-0 cursor-pointer"
+          >
+            Política de Privacidad
+          </button>
         </label>
       </div>
       {errors.acceptTerms && (
-        <p className="text-red-500 text-xs mt-1 mb-4 pl-6">{errors.acceptTerms}</p>
+        <p className="text-admin-accent text-xs mt-1 mb-4 pl-6">{errors.acceptTerms}</p>
       )}
     </div>
   );

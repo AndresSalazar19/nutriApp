@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; 
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { COLORS } from '@/constants/colors';
 
 interface AIFloatingButtonProps {
   onPress: () => void;
@@ -9,13 +10,13 @@ interface AIFloatingButtonProps {
 
 export function AIFloatingButton({ onPress, style }: AIFloatingButtonProps) {
   return (
-    <TouchableOpacity 
-      style={[styles.fabContainer, style]} 
-      activeOpacity={0.85} 
+    <TouchableOpacity
+      style={[styles.fabContainer, style]}
+      activeOpacity={0.85}
       onPress={onPress}
     >
       <View style={styles.fabInner}>
-        <MaterialCommunityIcons name="robot-happy" size={28} color="#fff" />
+        <MaterialCommunityIcons name="robot-happy" size={28} color={COLORS.textOnPrimary} />
       </View>
     </TouchableOpacity>
   );
@@ -24,15 +25,15 @@ export function AIFloatingButton({ onPress, style }: AIFloatingButtonProps) {
 const styles = StyleSheet.create({
   fabContainer: {
     position: 'absolute',
-    bottom: 100, 
+    bottom: 100,
     right: 20,
-    width: 60,  
+    width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#0284c7', 
+    backgroundColor: COLORS.primaryMedium,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0284c7',
+    shadowColor: COLORS.primaryMedium,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 6,

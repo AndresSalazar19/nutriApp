@@ -53,7 +53,11 @@ function validateStep1(form: FormState): FormErrors {
   return errors;
 }
 
-function validateStep2(form: FormState, cvFile: File | null, senescytFile: File | null): FormErrors {
+function validateStep2(
+  form: FormState,
+  cvFile: File | null,
+  senescytFile: File | null,
+): FormErrors {
   const errors: FormErrors = {};
 
   if (!form.specialties) {
@@ -77,7 +81,11 @@ function validateStep2(form: FormState, cvFile: File | null, senescytFile: File 
   } else {
     const validTypes = ['application/pdf', 'image/jpeg', 'image/png'];
     const name = senescytFile.name.toLowerCase();
-    const validExt = name.endsWith('.pdf') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png');
+    const validExt =
+      name.endsWith('.pdf') ||
+      name.endsWith('.jpg') ||
+      name.endsWith('.jpeg') ||
+      name.endsWith('.png');
     if (!validTypes.includes(senescytFile.type) && !validExt) {
       errors.senescytFile = 'El Registro Senescyt debe ser PDF, JPG o PNG.';
     }

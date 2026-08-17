@@ -1,17 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { tokenStorage } from '@/utils/tokenStorage';
 
-// ── La BASE_URL debe ser solo el origen, sin trailing slash
-// ── Ejemplo en .env:  EXPO_PUBLIC_API_URL=http://192.168.1.10:8000
-// ── El prefijo /api/v1 se añade aquí una sola vez
-//const BASE_URL = (
-//  process.env.EXPO_PUBLIC_API_URL ?? process.env.REACT_APP_API_URL ?? ''
-//).replace(/\/$/, ''); // elimina slash final si existe
-
-const BASE_URL="http://147.93.176.210:8083"
-
-const API = `${BASE_URL}/api/v1`;
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+const API = `${process.env.EXPO_PUBLIC_API_URL}/api/v1`;
 
 export interface RegisterPayload {
   first_name: string;
@@ -21,6 +11,8 @@ export interface RegisterPayload {
   date_of_birth: string; // "YYYY-MM-DD"
   password: string;
   role?: string;
+  cedula: string;
+  gender: string;
 }
 
 export interface LoginPayload {
@@ -28,23 +20,64 @@ export interface LoginPayload {
   password: string;
 }
 
+// Campos que el backend sabe chequear por duplicado en GET /users/availability.
+// "identification" es el nombre que usa el frontend para la cédula.
+export type DuplicateCheckField = 'email' | 'identification' | 'phone';
+
+interface AvailabilityResponse {
+  field: string;
+  value: string;
+  available: boolean;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
   role: string;
-  first_name: string;
-  last_name: string;
+  is_active?: boolean;
+  email_verified?: boolean;
+  avatar_url?: string | null;
+  // El backend anida first_name/last_name dentro de `person`
+  // (ver UserResponse en app/schemas/user.py), no a nivel raíz.
+  person: {
+    first_name: string;
+    last_name: string;
+    cedula?: string | null;
+    date_of_birth?: string | null;
+    gender?: string | null;
+    phone?: string | null;
+  } | null;
 }
 
-// ─── Storage keys ─────────────────────────────────────────────────────────────
+interface AuthTokenResponse {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
+}
 
 const USER_KEY = 'auth_user';
 
-// ─── Helper fetch ─────────────────────────────────────────────────────────────
+// Esta app móvil es solo para pacientes; admin/nutricionista usan la web.
+export const PATIENT_ROLE = 'patient';
+
+/**
+ * Error de API que además de un mensaje legible, puede traer el nombre del
+ * campo (`field`) que provocó el error, cuando el backend lo indica
+ * (por ejemplo "email", "identification", "phone").
+ */
+export class ApiError extends Error {
+  field?: string;
+
+  constructor(message: string, field?: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.field = field;
+  }
+}
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API}${endpoint}`;
-  console.log('[AuthService] →', options.method ?? 'GET', url); // útil para debug
+  console.log('[AuthService] →', options.method ?? 'GET', url);
 
   let response: Response;
   try {
@@ -53,50 +86,81 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       ...options,
     });
   } catch {
-    throw new Error('No se pudo conectar al servidor. Verifica tu conexión o la URL en .env');
+    throw new ApiError('No se pudo conectar al servidor. Verifica tu conexión.');
   }
 
   const text = await response.text();
-  console.log('[AuthService] ← status:', response.status, '| body:', text.slice(0, 200));
+  console.log('[AuthService] ← status:', response.status, '| body:', text.slice(0, 300));
 
   let data: any;
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(text || `Error HTTP ${response.status}`);
+    throw new ApiError(text || `Error HTTP ${response.status}`);
   }
 
   if (!response.ok) {
-    // Tu backend: { success: false, errors: ["mensaje"] }
-    if (Array.isArray(data?.errors) && data.errors.length > 0) throw new Error(data.errors[0]);
-    // FastAPI estándar: { detail: "..." }
+    const field = typeof data?.field === 'string' ? data.field : undefined;
+
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      throw new ApiError(data.errors[0], field);
+    }
+    const statusMsgs = data?.status?.messages;
+    if (Array.isArray(statusMsgs) && statusMsgs.length > 0) {
+      throw new ApiError(statusMsgs[0], field);
+    }
     const detail = data?.detail;
-    if (typeof detail === 'string') throw new Error(detail);
-    if (Array.isArray(detail))      throw new Error(detail[0]?.msg ?? 'Error desconocido');
-    throw new Error(`Error ${response.status}`);
+    if (typeof detail === 'string') {
+      throw new ApiError(detail, field);
+    }
+    if (Array.isArray(detail)) {
+      throw new ApiError(detail[0]?.msg ?? 'Error desconocido', field);
+    }
+    throw new ApiError(`Error ${response.status}`, field);
   }
 
-  // Tu backend: { success: true, data: { ... } }
   return (data?.data ?? data) as T;
 }
 
-// ─── Auth Service ─────────────────────────────────────────────────────────────
+async function persistSession(body: AuthTokenResponse): Promise<AuthUser> {
+  if (body.access_token) {
+    await tokenStorage.set(body.access_token);
+  }
+  const user = body.user;
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  return user;
+}
 
 export const AuthService = {
 
   async register(payload: RegisterPayload): Promise<AuthUser> {
-    return request<AuthUser>('/users/', {
+    const body = await request<AuthTokenResponse>('/users/', {
       method: 'POST',
       body: JSON.stringify({ ...payload, role: payload.role ?? 'patient' }),
     });
+    // El registro ahora deja la sesión iniciada de una vez (el backend
+    // devuelve access_token igual que /login), para que el resto del
+    // onboarding pueda llamar endpoints protegidos sin login manual.
+    return persistSession(body);
+  },
+
+  /**
+   * Consulta al backend si un valor de cédula/correo/teléfono ya está
+   * registrado, sin enviar el resto del formulario. Pensada para llamarse
+   * en el onBlur del campo, una vez que su formato ya es válido.
+   */
+  async checkAvailability(field: DuplicateCheckField, value: string): Promise<boolean> {
+    const query = `field=${encodeURIComponent(field)}&value=${encodeURIComponent(value)}`;
+    const body = await request<AvailabilityResponse>(`/users/availability?${query}`);
+    return body.available;
   },
 
   async login(payload: LoginPayload): Promise<{ user: AuthUser }> {
-    const user = await request<AuthUser>('/users/login', {
+    const body = await request<AuthTokenResponse>('/users/login', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-    await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+    const user = await persistSession(body);
     return { user };
   },
 
@@ -107,9 +171,14 @@ export const AuthService = {
 
   async logout(): Promise<void> {
     await AsyncStorage.removeItem(USER_KEY);
+    await tokenStorage.clear();
   },
 
   async isAuthenticated(): Promise<boolean> {
     return !!(await AsyncStorage.getItem(USER_KEY));
+  },
+
+  isPatient(user: Pick<AuthUser, 'role'> | null | undefined): boolean {
+    return user?.role === PATIENT_ROLE;
   },
 };

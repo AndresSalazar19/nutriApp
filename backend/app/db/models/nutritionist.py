@@ -1,10 +1,13 @@
-from sqlalchemy import Column, String, Integer, Numeric, Text, Boolean, ForeignKey
+import enum
+import uuid
+
+from sqlalchemy import Column, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy import Enum as SQLEnum
+
 from app.db.base import Base
-import uuid
-import enum
+
 
 class NutritionistStatus(str, enum.Enum):
     pending = "pending"
@@ -31,7 +34,9 @@ class NutritionistProfile(Base):
     __tablename__ = "nutritionist_profiles"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
     license_number = Column(String(100), nullable=False)
     bio = Column(Text, nullable=True)
     specialty_id = Column(Integer, ForeignKey("specialties.id"), nullable=False)
@@ -45,21 +50,29 @@ class NutritionistProfile(Base):
 
     user = relationship("User", back_populates="nutritionist_profile", foreign_keys=[user_id])
     specialty = relationship("Specialty", back_populates="nutritionist_profiles")
-    documents = relationship("NutritionistDocument", back_populates="nutritionist", cascade="all, delete-orphan")
+    documents = relationship(
+        "NutritionistDocument", back_populates="nutritionist", cascade="all, delete-orphan"
+    )
+    availability_rules = relationship(
+        "AvailabilityNutritionist",
+        primaryjoin="NutritionistProfile.user_id == foreign(AvailabilityNutritionist.nutritionist_id)",
+        viewonly=True,
+    )
 
 
 class NutritionistDocument(Base):
     __tablename__ = "nutritionist_documents"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    nutritionist_id = Column(UUID(as_uuid=True), ForeignKey("nutritionist_profiles.id", ondelete="CASCADE"), nullable=False)
+    nutritionist_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("nutritionist_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     document_type = Column(SQLEnum(DocumentType), nullable=False)
-    file_content = Column(Text, nullable=False)
+    file_path = Column(String(500), nullable=False)
     file_name = Column(String(255), nullable=True)
     file_size = Column(Integer, nullable=True)
     mime_type = Column(String(100), default="application/pdf", nullable=True)
-    is_verified = Column(Boolean, default=False, nullable=False)
-    verified_at = Column(nullable=True)
-    verified_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     nutritionist = relationship("NutritionistProfile", back_populates="documents")

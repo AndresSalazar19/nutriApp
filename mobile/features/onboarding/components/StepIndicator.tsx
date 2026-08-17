@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ONBOARDING_STEPS } from '../constants';
 import { COLORS } from '@/constants/colors';
 
@@ -22,14 +23,18 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => 
                 isActive && styles.stepCircleActive,
               ]}
             >
-              <Text
-                style={[
-                  styles.stepCircleText,
-                  (isActive || isCompleted) && styles.stepCircleTextActive,
-                ]}
-              >
-                {isCompleted ? '✓' : step.icon ?? step.id}
-              </Text>
+              {isCompleted ? (
+                <MaterialCommunityIcons name="check" size={16} color={COLORS.primary} />
+              ) : (
+                <Text
+                  style={[
+                    styles.stepCircleText,
+                    isActive && styles.stepCircleTextActive,
+                  ]}
+                >
+                  {step.icon ?? step.id}
+                </Text>
+              )}
             </View>
             <Text
               style={[

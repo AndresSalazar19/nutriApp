@@ -1,18 +1,18 @@
 import React from 'react';
 
 interface EmptyStateProps {
-  icon?: string;
+  icon?: React.ReactNode;
   title: string;
   description?: string;
   action?: {
     label: string;
     onClick: () => void;
   };
-  accentColor?: 'green' | 'red';
+  accentColor?: 'green' | 'red' | 'admin';
 }
 
 export function EmptyState({
-  icon = '📭',
+  icon,
   title,
   description,
   action,
@@ -21,16 +21,16 @@ export function EmptyState({
   const btnColor =
     accentColor === 'red'
       ? 'bg-red-500 hover:bg-red-600'
-      : 'bg-green-500 hover:bg-green-600';
+      : accentColor === 'admin'
+        ? 'bg-admin-dark hover:bg-admin-medium'
+        : 'bg-green-500 hover:bg-green-600';
 
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="text-5xl mb-4">{icon}</div>
+      {icon && <div className="text-5xl mb-4">{icon}</div>}
       <h3 className="text-base font-semibold text-gray-700 mb-2">{title}</h3>
       {description && (
-        <p className="text-sm text-gray-400 max-w-xs leading-relaxed mb-6">
-          {description}
-        </p>
+        <p className="text-sm text-gray-400 max-w-xs leading-relaxed mb-6">{description}</p>
       )}
       {action && (
         <button

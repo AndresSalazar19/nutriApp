@@ -1,15 +1,19 @@
-from sqlalchemy.orm import Session
-from app.db.models.user import User, Person, UserRole
-from app.schemas.user import UserCreate, UserResponse
+import os
+import shutil
 import uuid
+from datetime import datetime, timezone
+
+from fastapi import UploadFile
 from passlib.context import CryptContext
-from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
+from app.db.models.user import Person, User, UserRole
+from app.schemas.user import UserCreate
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UserService:
-
     @staticmethod
     def hash_password(plain_password: str) -> str:
         return pwd_context.hash(plain_password)
@@ -23,6 +27,18 @@ class UserService:
         return db.query(User).filter(User.email == email).first() is not None
 
     @staticmethod
+    def cedula_exists(db: Session, cedula: str | None) -> bool:
+        if not cedula:
+            return False
+        return db.query(Person).filter(Person.cedula == cedula).first() is not None
+
+    @staticmethod
+    def phone_exists(db: Session, phone: str | None) -> bool:
+        if not phone:
+            return False
+        return db.query(Person).filter(Person.phone == phone).first() is not None
+
+    @staticmethod
     def get_by_id(db: Session, user_id: uuid.UUID):
         return db.query(User).filter(User.id == user_id).first()
 
@@ -31,11 +47,64 @@ class UserService:
         return db.query(User).filter(User.email == email).first()
 
     @staticmethod
+    def upload_avatar(db: Session, user_id: uuid.UUID, file: UploadFile) -> str:
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise ValueError("Usuario no encontrado")
+
+        if not file.content_type or not file.content_type.startswith("image/"):
+            raise ValueError("Solo se permiten imágenes JPG/PNG/GIF")
+
+        if user.avatar_url:
+            if os.path.exists(user.avatar_url):
+                try:
+                    os.remove(user.avatar_url)
+                except Exception as e:
+                    print(f"Error al eliminar archivo físico antiguo: {e}")
+
+        upload_dir = "uploads/avatars"
+        os.makedirs(upload_dir, exist_ok=True)
+
+        _, file_extension = os.path.splitext(file.filename)
+        if not file_extension:
+            extension_by_content_type = {
+                "image/jpeg": ".jpg",
+                "image/jpg": ".jpg",
+                "image/png": ".png",
+                "image/gif": ".gif",
+                "image/webp": ".webp",
+                "image/bmp": ".bmp",
+                "image/svg+xml": ".svg",
+            }
+            file_extension = extension_by_content_type.get(file.content_type)
+
+        if not file_extension:
+            raise ValueError("Tipo de imagen no soportado")
+
+        file_id = str(uuid.uuid4())
+        avatar_filename = f"{file_id}{file_extension}"
+        avatar_path = os.path.join(upload_dir, avatar_filename)
+
+        file.file.seek(0)
+        with open(avatar_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        avatar_url = f"uploads/avatars/{avatar_filename}"
+        user.avatar_url = avatar_url
+
+        db.commit()
+        db.refresh(user)
+
+        return avatar_url
+
+    @staticmethod
     def create(db: Session, data: UserCreate) -> User:
         user = User(
             email=data.email,
             password_hash=UserService.hash_password(data.password),
             role=data.role,
+            created_at=datetime.now(timezone.utc),
         )
 
         db.add(user)
@@ -47,6 +116,8 @@ class UserService:
             last_name=data.last_name,
             date_of_birth=data.date_of_birth,
             phone=data.phone,
+            cedula=data.cedula,
+            gender=data.gender,
         )
 
         db.add(person)
@@ -77,7 +148,7 @@ class UserService:
         db.refresh(user)
 
         return user
-        
+
     @staticmethod
     def is_admin(user: User) -> bool:
         return user.role == UserRole.admin

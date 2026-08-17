@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   ScrollView,
   StyleSheet,
@@ -13,51 +14,67 @@ import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/colors';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { AIFloatingButton } from './AIFloatingButton';
+import { BloodPressureModal } from './BloodPressureModal';
+import { AppointmentsModal } from './AppointmentsModal';
 import { useContent } from '@/features/content/hooks/useContent';
-import { CATEGORY_EMOJI, CATEGORY_LABEL } from '@/features/content/services/contentService';
+import { CATEGORY_ICON, CATEGORY_LABEL } from '@/features/content/services/contentService';
+import { AuthService, AuthUser } from '@/features/auth/services/authService';
+import {
+  BloodPressureLog,
+  DailyTrackingSummary,
+  ProgressService,
+  WeightLog,
+} from '@/features/progress/services/progressService';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { PatientNutritionistService } from '@/services/patientNutritionistService';
+import DoctorChatScreen from '@/features/Chats/DoctorChatsSceen';
+import AIChatScreen from '@/features/Chats/AiChatsScreen';
+import { DailyMetricModal, DailyMetricMode } from './DailyMetricModal';
 
 const { width } = Dimensions.get('window');
 
 function StatCard({
-  emoji,
+  icon,
   value,
   unit,
-  color,
+  iconColor,
 }: {
-  emoji: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   value: string;
   unit: string;
-  color: string;
+  iconColor: string;
 }) {
   return (
     <View style={styles.statCard}>
-      <Text style={styles.statEmoji}>{emoji}</Text>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
+      <MaterialCommunityIcons name={icon} size={22} color={iconColor} />
+      <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statUnit}>{unit}</Text>
     </View>
   );
 }
 
 function ActionCard({
-  emoji,
+  icon,
   title,
   subtitle,
   accentColor,
   badge,
   dot,
+  onPress,
 }: {
-  emoji: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
   subtitle: string;
   accentColor: string;
   badge?: number;
   dot?: boolean;
+  onPress?: () => void;
 }) {
   return (
-    <TouchableOpacity style={styles.actionCard} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.actionCard} activeOpacity={0.8} onPress={onPress}>
       <View style={[styles.actionAccent, { backgroundColor: accentColor }]} />
       <View style={styles.actionIconWrap}>
-        <Text style={styles.actionEmoji}>{emoji}</Text>
+        <MaterialCommunityIcons name={icon} size={24} color={accentColor} />
       </View>
       <Text style={styles.actionTitle}>{title}</Text>
       <Text style={styles.actionSubtitle}>{subtitle}</Text>
@@ -72,36 +89,157 @@ function ActionCard({
   );
 }
 
+function todayISO() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+function formatWeight(log?: WeightLog | null) {
+  if (!log) return '--';
+  return Number(log.weight_kg).toFixed(1);
+}
+
+function formatPressure(log?: BloodPressureLog | null) {
+  if (!log) return '--/--';
+  return `${log.systolic}/${log.diastolic}`;
+}
+
+function ReminderCard() {
+  return (
+    <View style={styles.reminderCard}>
+      <MaterialCommunityIcons
+        name="lightbulb-on-outline"
+        size={22}
+        color={COLORS.warning}
+      />
+      <View style={styles.reminderBody}>
+        <Text style={styles.reminderTitle}>Recordatorio del día</Text>
+        <Text style={styles.reminderText}>
+          Registra tu peso y presión arterial antes del desayuno
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function NutritionistFloatingButton({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      style={styles.nutritionistFab}
+      activeOpacity={0.85}
+      onPress={onPress}
+    >
+      <View style={styles.fabInner}>
+        <MaterialCommunityIcons name="chat" size={28} color={COLORS.textOnPrimary} />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const { items: contentItems, loading: contentLoading } = useContent();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [nutritionist, setNutritionist] = useState<any | null>(null);
+  const [latestWeight, setLatestWeight] = useState<WeightLog | null>(null);
+  const [latestPressure, setLatestPressure] = useState<BloodPressureLog | null>(null);
+  const [dailySummary, setDailySummary] = useState<DailyTrackingSummary>({
+    log_date: todayISO(), hydration_ml: 0, consumed_calories: 0, burned_calories: 0,
+  });
   const previewItems = contentItems.slice(0, 3);
+  const [bpModalVisible, setBpModalVisible] = useState(false);
+  const [metricMode, setMetricMode] = useState<DailyMetricMode | null>(null);
+  const [aptModalVisible, setAptModalVisible] = useState(false);
+  const [activeChat, setActiveChat] = useState<'doctor' | 'ai' | null>(null);
+
+  async function loadDashboardData() {
+    const currentUser = await AuthService.getUser();
+    setUser(currentUser);
+    if (!currentUser?.id) return;
+
+    const [nutritionistPatient, weightHistory, pressureHistory, summary] = await Promise.all([
+      PatientNutritionistService
+        .list({ patient_id: currentUser.id, status: 'active' })
+        .catch(() => []),
+      ProgressService.getWeightHistory(currentUser.id, 1).catch(() => []),
+      ProgressService.getBloodPressureHistory(currentUser.id, 1).catch(() => []),
+      ProgressService.getDailySummary(currentUser.id, todayISO()).catch(() => null),
+    ]);
+
+    if (nutritionistPatient.length > 0) {
+      setNutritionist(nutritionistPatient[0].nutritionist ?? null);
+    }
+    setLatestWeight(weightHistory[0] ?? null);
+    setLatestPressure(pressureHistory[0] ?? null);
+    if (summary) setDailySummary(summary);
+  }
+
+  useEffect(() => {
+    void loadDashboardData();
+  }, []);
+
+  async function handleSavePressure(payload: {
+    systolic: number;
+    diastolic: number;
+    pulse?: number | null;
+    notes?: string;
+  }) {
+    if (!user?.id) {
+      throw new Error('Inicia sesion para registrar tu presion.');
+    }
+
+    const saved = await ProgressService.createBloodPressureLog({
+      user_id: user.id,
+      systolic: payload.systolic,
+      diastolic: payload.diastolic,
+      pulse: payload.pulse ?? null,
+      notes: payload.notes,
+      log_date: todayISO(),
+    });
+    setLatestPressure(saved);
+  }
+
+  async function handleSaveMetric(value: number) {
+    if (!user?.id || !metricMode) throw new Error('Inicia sesion para registrar tus datos.');
+    const date = todayISO();
+    if (metricMode === 'weight') {
+      const saved = await ProgressService.createWeightLog({
+        user_id: user.id, weight_kg: value, log_date: date, notes: 'Registro diario',
+      });
+      setLatestWeight(saved);
+      return;
+    }
+    if (metricMode === 'hydration') {
+      // The hydration modal collects liters (typed exactly or via a container preset);
+      // the backend stores milliliters, so convert before saving.
+      await ProgressService.createHydrationLog(user.id, Math.round(value * 1000), date);
+    } else {
+      await ProgressService.createCalorieLog(user.id, value, date, metricMode);
+    }
+    const summary = await ProgressService.getDailySummary(user.id, date);
+    setDailySummary(summary);
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      {/* ── Green Header ── */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerGreeting}>
-            Hola, Juan <Text>👋</Text>
-          </Text>
+          <Text style={styles.headerGreeting}>Hola, {user?.person?.first_name ?? 'Paciente'}</Text>
           <Text style={styles.headerSub}>¿Cómo te sientes hoy?</Text>
         </View>
-        <TouchableOpacity style={styles.bellBtn} activeOpacity={0.8}>
-          <Text style={styles.bellIcon}>🔔</Text>
-        </TouchableOpacity>
       </View>
 
-      {/* ── Stats Card ── */}
       <View style={styles.statsCardWrapper}>
         <View style={styles.statsCard}>
-          <StatCard emoji="⚖️" value="72.5" unit="kg" color="#555" />
+          <StatCard icon="scale-bathroom" value={formatWeight(latestWeight)} unit="kg" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard emoji="❤️" value="120/80" unit="mmHg" color="#e53935" />
+          <StatCard icon="heart-pulse" value={formatPressure(latestPressure)} unit="mmHg" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard emoji="💧" value="1.5" unit="L hoy" color="#1e88e5" />
+          <StatCard icon="water" value={(dailySummary.hydration_ml / 1000).toFixed(2)} unit="L hoy" iconColor={COLORS.primaryMedium} />
           <View style={styles.statDivider} />
-          <StatCard emoji="🔥" value="1,450" unit="kcal" color="#fb8c00" />
+          <StatCard icon="food-apple" value={String(dailySummary.consumed_calories)} unit="kcal comidas" iconColor={COLORS.primaryMedium} />
         </View>
       </View>
 
@@ -110,48 +248,56 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Acciones Rápidas ── */}
+        <ReminderCard />
+
         <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
 
         <View style={styles.actionsGrid}>
           <ActionCard
-            emoji="🥗"
-            title="Mi Plan de Comidas"
-            subtitle="Ver menú de hoy"
+            icon="scale-bathroom"
+            title="Registrar Peso"
+            subtitle="Actualizar medicion"
+            accentColor={COLORS.primaryMedium}
+            onPress={() => setMetricMode('weight')}
+          />
+          <ActionCard
+            icon="heart-pulse"
+            title="Registrar Presión"
+            subtitle="Registrar medición"
             accentColor={COLORS.primary}
+            onPress={() => setBpModalVisible(true)}
           />
           <ActionCard
-            emoji="📊"
-            title="Diario de Progreso"
-            subtitle="Registrar datos"
-            accentColor="#1e88e5"
+            icon="water"
+            title="Hidratacion"
+            subtitle={`${(dailySummary.hydration_ml / 1000).toFixed(2)} L hoy`}
+            accentColor={COLORS.primaryMedium}
+            onPress={() => setMetricMode('hydration')}
           />
           <ActionCard
-            emoji="📅"
+            icon="food-apple"
+            title="Registrar Comida"
+            subtitle={`${dailySummary.consumed_calories} kcal hoy`}
+            accentColor={COLORS.primary}
+            onPress={() => setMetricMode('consumed')}
+          />
+          <ActionCard
+            icon="run"
+            title="Registrar Actividad"
+            subtitle={`${dailySummary.burned_calories} kcal quemadas`}
+            accentColor={COLORS.primaryMedium}
+            onPress={() => setMetricMode('burned')}
+          />
+          <ActionCard
+            icon="calendar-month"
             title="Mis Citas"
-            subtitle="Próxima: 15 Nov"
-            accentColor="#fb8c00"
-            badge={2}
-          />
-          <ActionCard
-            emoji="💬"
-            title="Chat con Nutricionista"
-            subtitle=""
-            accentColor="#8e24aa"
-            dot
+            subtitle="Próxima: 28 Jun"
+            accentColor={COLORS.primaryMedium}
+            badge={3}
+            onPress={() => setAptModalVisible(true)}
           />
         </View>
 
-        {/* ── Obtener Reporte PDF ── */}
-        <TouchableOpacity style={styles.pdfRow} activeOpacity={0.8}>
-          <View style={styles.pdfIconWrap}>
-            <Text style={styles.pdfIcon}>📄</Text>
-          </View>
-          <Text style={styles.pdfText}>Obtener reporte PDF</Text>
-          <Text style={styles.pdfArrow}>›</Text>
-        </TouchableOpacity>
-
-        {/* ── Recursos Educativos ── */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Recursos Educativos</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/content' as any)}>
@@ -176,7 +322,14 @@ export default function HomeScreen() {
               onPress={() => router.push(`/(tabs)/content/${item.id}` as any)}
             >
               <View style={styles.resourceIconWrap}>
-                <Text style={styles.resourceIcon}>{CATEGORY_EMOJI[item.category] ?? '📖'}</Text>
+                <MaterialCommunityIcons
+                  name={
+                    (CATEGORY_ICON[item.category] as keyof typeof MaterialCommunityIcons.glyphMap)
+                    ?? 'book-open-page-variant'
+                  }
+                  size={24}
+                  color={COLORS.primary}
+                />
               </View>
               <View style={styles.resourceBody}>
                 <Text style={styles.resourceTitle} numberOfLines={1}>{item.title}</Text>
@@ -190,32 +343,42 @@ export default function HomeScreen() {
           ))
         )}
 
-        {/* Bottom spacing for tab bar */}
-        <View style={{ height: 20 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
-      <AIFloatingButton 
-        onPress={() => {}}
-        style={{ bottom: 100 }} 
-      />
+      <NutritionistFloatingButton onPress={() => setActiveChat('doctor')} />
+      <AIFloatingButton onPress={() => setActiveChat('ai')} style={{ bottom: 100, right: 90 }} />
 
-      {/* ── Bottom Tab Bar ── */}
+      {activeChat === 'doctor' && <DoctorChatScreen onClose={() => setActiveChat(null)} nutritionist={nutritionist ?? null} />}
+      {activeChat === 'ai' && <AIChatScreen onClose={() => setActiveChat(null)} />}
+
+      <BloodPressureModal
+        visible={bpModalVisible}
+        onClose={() => setBpModalVisible(false)}
+        onSave={handleSavePressure}
+      />
+      <DailyMetricModal
+        visible={metricMode !== null}
+        mode={metricMode ?? 'weight'}
+        onClose={() => setMetricMode(null)}
+        onSave={handleSaveMetric}
+      />
+      <AppointmentsModal visible={aptModalVisible} onClose={() => setAptModalVisible(false)} />
+
       <BottomTabBar activeTab="inicio" />
     </SafeAreaView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const CARD_GAP = 12;
 const CARD_WIDTH = (width - 48 - CARD_GAP) / 2;
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#f5f6fa',
+    backgroundColor: COLORS.background,
   },
 
-  // ── Header ──
   header: {
     backgroundColor: COLORS.primary,
     flexDirection: 'row',
@@ -228,36 +391,25 @@ const styles = StyleSheet.create({
   headerGreeting: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.textOnPrimary,
   },
   headerSub: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.85)',
+    color: COLORS.overlayMedium,
     marginTop: 2,
   },
-  bellBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bellIcon: { fontSize: 18 },
-
-  // ── Stats Card (overlapping header) ──
   statsCardWrapper: {
     paddingHorizontal: 16,
     marginTop: -36,
     marginBottom: 4,
   },
   statsCard: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderRadius: 18,
     flexDirection: 'row',
     paddingVertical: 16,
     paddingHorizontal: 8,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -269,39 +421,64 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  statEmoji: { fontSize: 20, marginBottom: 4 },
   statValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.textPrimary,
   },
   statUnit: {
     fontSize: 11,
-    color: '#aaa',
+    color: COLORS.textMuted,
     marginTop: 2,
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: COLORS.divider,
   },
 
-  // ── Scroll ──
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 18,
     paddingTop: 18,
   },
 
-  // ── Section Title ──
+  reminderCard: {
+    backgroundColor: COLORS.warningLight,
+    borderRadius: 14,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.warningBorder,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+    shadowColor: COLORS.warning,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  reminderBody: { flex: 1, marginLeft: 12 },
+  reminderTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.warning,
+    marginBottom: 3,
+  },
+  reminderText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    lineHeight: 17,
+  },
+
   sectionTitle: {
     fontSize: 17,
     fontWeight: 'bold',
-    color: '#1a1a2e',
+    color: COLORS.textPrimary,
     marginBottom: 14,
   },
 
-  // ── Action Cards Grid ──
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -310,10 +487,10 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: CARD_WIDTH,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 8,
@@ -333,23 +510,22 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#f5f6fa',
+    backgroundColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
     marginTop: 6,
   },
-  actionEmoji: { fontSize: 22 },
   actionTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#222',
+    color: COLORS.textPrimary,
     marginBottom: 3,
     lineHeight: 18,
   },
   actionSubtitle: {
     fontSize: 11,
-    color: '#999',
+    color: COLORS.textMuted,
   },
   badge: {
     position: 'absolute',
@@ -363,7 +539,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeText: {
-    color: '#fff',
+    color: COLORS.textOnPrimary,
     fontSize: 11,
     fontWeight: 'bold',
   },
@@ -377,73 +553,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
 
-  // ── PDF Row ──
-  pdfRow: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  pdfIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: COLORS.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  pdfIcon: { fontSize: 20 },
-  pdfText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  pdfArrow: {
-    fontSize: 20,
-    color: '#ccc',
-  },
-
-  // ── Reminder ──
-  reminderCard: {
-    backgroundColor: '#fffde7',
-    borderRadius: 14,
-    borderLeftWidth: 4,
-    borderLeftColor: '#fdd835',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 22,
-  },
-  reminderBulb: {
-    fontSize: 22,
-    marginRight: 12,
-    marginTop: 2,
-  },
-  reminderBody: { flex: 1 },
-  reminderTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#f57f17',
-    marginBottom: 4,
-  },
-  reminderText: {
-    fontSize: 12,
-    color: '#795548',
-    lineHeight: 18,
-  },
-
-  // ── Section header row ──
   sectionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -465,22 +574,22 @@ const styles = StyleSheet.create({
   },
   resourceEmptyText: {
     fontSize: 13,
-    color: '#aaa',
+    color: COLORS.textMuted,
   },
 
-  // ── Resource Row ──
   resourceRow: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 14,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
     elevation: 2,
+    marginBottom: 10,
   },
   resourceIconWrap: {
     width: 48,
@@ -491,23 +600,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
-  resourceIcon: { fontSize: 24 },
   resourceBody: { flex: 1 },
   resourceTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#222',
+    color: COLORS.textPrimary,
     marginBottom: 3,
   },
   resourceSubtitle: {
     fontSize: 11,
-    color: '#999',
+    color: COLORS.textMuted,
     lineHeight: 16,
   },
   resourceArrow: {
     fontSize: 20,
-    color: '#ccc',
+    color: COLORS.border,
     marginLeft: 8,
   },
 
+  nutritionistFab: {
+    position: 'absolute',
+    bottom: 100,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  fabInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

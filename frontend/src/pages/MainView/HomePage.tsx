@@ -1,104 +1,169 @@
-import { useState } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MdBarChart, MdCalendarMonth, MdDescription, MdGroup, MdSms } from 'react-icons/md';
 import { NutritionistLayout } from '../../components/layout/NutritionistLayout';
-import { StatCard }           from '../../components/ui/StatCard';
-import { Avatar }             from '../../components/ui/Avatar';
-import { Badge }              from '../../components/ui/Badge';
-import { Button }             from '../../components/ui/Button';
-import { SearchInput }        from '../../components/ui/SearchInput';
-import { BarChart }           from '../../components/charts/BarChart';
-import { useAuth }            from '../../hooks/useAuth';
-import { ROUTES }             from '../../routes/routes';
+import { NutritionistTopBar } from '../../components/layout/NutritionistTopBar';
+import { StatCard } from '../../components/ui/StatCard';
+import { Avatar } from '../../components/ui/Avatar';
+import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
+import { BarChart } from '../../components/charts/BarChart';
+import { useAuth } from '../../hooks/useAuth';
+import { ROUTES } from '../../routes/routes';
+import { NutritionPlanService } from '../../services/NutritionPlans/NutritionPlanService';
+import {
+  NutritionistService,
+  NutritionistDashboardData,
+  NutritionistRecentPatient,
+  NutritionistRecentPatientStatus,
+} from '../../services/NutritionistService';
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
-type PatientStatus = 'Excelente' | 'Regular' | 'Bueno' | 'Necesita seguimiento';
-
-interface RecentPatient {
-  id: string;
-  initials: string;
-  color: string;
-  name: string;
-  lastConsult: string;
-  status: PatientStatus;
-}
-
-// ─── Datos mock (se reemplazarán por llamadas al backend) ─────────────────────
-
-const statsCards = [
-  { icon: '👥', iconBg: 'bg-blue-100',   label: 'Pacientes Activos', value: '24', change: '↑ 3 este mes',       changeType: 'positive' as const },
-  { icon: '📅', iconBg: 'bg-orange-100', label: 'Citas de Hoy',      value: '5',  change: '2 pendientes',       changeType: 'neutral'  as const },
-  { icon: '💬', iconBg: 'bg-green-100',  label: 'Mensajes Nuevos',   value: '8',  change: '3 sin leer',         changeType: 'neutral'  as const },
-  { icon: '📊', iconBg: 'bg-purple-100', label: 'Adherencia Media',  value: '87%',change: '↑ 5% vs mes anterior', changeType: 'positive' as const },
-];
-
-const weeklyData = [
-  { dia: 'Lun', adherencia: 72, peso: 68, presion: 74 },
-  { dia: 'Mar', adherencia: 78, peso: 67, presion: 71 },
-  { dia: 'Mié', adherencia: 75, peso: 67, presion: 73 },
-  { dia: 'Jue', adherencia: 82, peso: 66, presion: 70 },
-  { dia: 'Vie', adherencia: 85, peso: 66, presion: 69 },
-  { dia: 'Sáb', adherencia: 88, peso: 65, presion: 68 },
-  { dia: 'Dom', adherencia: 91, peso: 65, presion: 67 },
-];
+// ─── Config estática (sin datos) ───────────────────────────────────────────────
 
 const weeklyBars = [
-  { dataKey: 'adherencia', label: 'Adherencia', color: '#22c55e' },
-  { dataKey: 'peso',       label: 'Peso',       color: '#3b82f6' },
-  { dataKey: 'presion',    label: 'Presión',    color: '#f59e0b' },
+  { dataKey: 'adherencia', label: 'Adherencia', color: '#2D6A4F' },
+  { dataKey: 'peso', label: 'Peso', color: '#52B788' },
+  { dataKey: 'presion', label: 'Presión', color: '#9CA3AF' },
 ];
 
-const recentPatients: RecentPatient[] = [
-  { id: '1', initials: 'MR', color: 'bg-green-500',  name: 'María Rodríguez', lastConsult: 'Hoy, 10:00 AM',      status: 'Excelente'          },
-  { id: '2', initials: 'JG', color: 'bg-blue-500',   name: 'Jorge Gutiérrez', lastConsult: 'Ayer, 3:30 PM',      status: 'Regular'            },
-  { id: '3', initials: 'LC', color: 'bg-orange-400', name: 'Lucía Castro',    lastConsult: 'Hace 2 días',        status: 'Bueno'              },
-  { id: '4', initials: 'AP', color: 'bg-purple-500', name: 'Ana Pérez',       lastConsult: 'Hace 5 días',        status: 'Necesita seguimiento' },
-];
-
-const statusBadgeVariant: Record<PatientStatus, 'active' | 'pending' | 'inactive' | 'revision'> = {
-  'Excelente':            'active',
-  'Bueno':                'active',
-  'Regular':              'pending',
-  'Necesita seguimiento': 'revision',
+const statusLabel: Record<NutritionistRecentPatientStatus, string> = {
+  active: 'Activo',
+  at_risk: 'En riesgo',
+  inactive: 'Inactivo',
 };
+
+const statusBadgeVariant: Record<
+  NutritionistRecentPatientStatus,
+  'active' | 'pending' | 'inactive' | 'revision'
+> = {
+  active: 'active',
+  at_risk: 'revision',
+  inactive: 'inactive',
+};
+
+function formatLastConsult(iso: string | null): string {
+  if (!iso) return 'Sin consultas';
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return 'Sin consultas';
+
+  const now = new Date();
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((startOfDay(now) - startOfDay(date)) / 86_400_000);
+  const time = date.toLocaleTimeString('es-EC', { hour: 'numeric', minute: '2-digit' });
+
+  if (diffDays <= 0) return `Hoy, ${time}`;
+  if (diffDays === 1) return `Ayer, ${time}`;
+  if (diffDays < 7) return `Hace ${diffDays} días`;
+  return date.toLocaleDateString('es-EC', { day: 'numeric', month: 'short' });
+}
+
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase() || '??';
+}
+
+type ChangeType = 'positive' | 'negative' | 'neutral';
+
+interface StatsCardData {
+  icon: ReactNode;
+  iconBg: string;
+  label: string;
+  value: string;
+  change: string;
+  changeType: ChangeType;
+}
+
+function buildStatsCards(stats: NutritionistDashboardData['stats'] | null): StatsCardData[] {
+  return [
+    {
+      icon: <MdGroup className="w-5 h-5 text-nutri-dark" />,
+      iconBg: 'bg-nutri-light text-nutri-dark',
+      label: 'Pacientes Activos',
+      value: stats ? String(stats.patients_active_total) : '—',
+      change: stats ? `↑ ${stats.patients_new_this_month} este mes` : '',
+      changeType: stats && stats.patients_new_this_month > 0 ? 'positive' : 'neutral',
+    },
+    {
+      icon: <MdCalendarMonth className="w-5 h-5 text-nutri-dark" />,
+      iconBg: 'bg-nutri-light text-nutri-dark',
+      label: 'Citas de Hoy',
+      value: stats ? String(stats.appointments_today_total) : '—',
+      change: stats ? `${stats.appointments_today_pending} pendientes` : '',
+      changeType: 'neutral',
+    },
+    {
+      icon: <MdSms className="w-5 h-5 text-nutri-dark" />,
+      iconBg: 'bg-nutri-light text-nutri-dark',
+      label: 'Mensajes Nuevos',
+      value: stats ? String(stats.unread_messages) : '—',
+      change: stats ? `${stats.unread_messages} sin leer` : '',
+      changeType: 'neutral',
+    },
+    {
+      icon: <MdBarChart className="w-5 h-5 text-nutri-dark" />,
+      iconBg: 'bg-nutri-light text-nutri-dark',
+      label: 'Adherencia Media',
+      value: stats && stats.average_adherence !== null ? `${stats.average_adherence}%` : '—',
+      change:
+        stats && stats.adherence_delta_vs_last_month !== null
+          ? `${stats.adherence_delta_vs_last_month >= 0 ? '↑' : '↓'} ${Math.abs(stats.adherence_delta_vs_last_month)}% vs mes anterior`
+          : '',
+      changeType:
+        stats && (stats.adherence_delta_vs_last_month ?? 0) >= 0 ? 'positive' : 'negative',
+    },
+  ];
+}
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function HomePage() {
   const [search, setSearch] = useState('');
-  const { user }            = useAuth();
-  const navigate            = useNavigate();
+  const [pendingPlansCount, setPendingPlansCount] = useState<number | null>(null);
+  const [dashboard, setDashboard] = useState<NutritionistDashboardData | null>(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const greeting = user?.email
-    ? `Bienvenido, ${user.email.split('@')[0]} 👋`
-    : 'Bienvenido 👋';
+  const greeting = user?.email ? `Bienvenido, ${user.email.split('@')[0]}` : 'Bienvenido';
 
-  const filteredPatients = recentPatients.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    NutritionPlanService.listPending()
+      .then((plans) => setPendingPlansCount(plans.length))
+      .catch(() => setPendingPlansCount(null));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    NutritionistService.getDashboard()
+      .then((data) => {
+        if (!cancelled) setDashboard(data);
+      })
+      .catch(() => {
+        if (!cancelled) setDashboard(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingDashboard(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const statsCards = buildStatsCards(dashboard?.stats ?? null);
+  const recentPatients: NutritionistRecentPatient[] = dashboard?.recent_patients ?? [];
+  const filteredPatients = recentPatients.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <NutritionistLayout>
-
       {/* ── TopBar ── */}
-      <div className="flex items-center justify-between px-8 py-4 border-b border-gray-100 bg-white sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-gray-800">Panel Principal</h1>
-        <div className="flex items-center gap-3">
-          <SearchInput
-            placeholder="Buscar pacientes..."
-            value={search}
-            onChange={setSearch}
-            className="w-56"
-          />
-          <button className="relative w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
-            <span className="text-lg">🔔</span>
-            <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
-        </div>
-      </div>
+      <NutritionistTopBar title="Panel Principal" searchValue={search} onSearchChange={setSearch} />
 
       <div className="px-8 py-6">
-
         {/* ── Saludo ── */}
         <div className="mb-5">
           <h2 className="text-base font-semibold text-gray-800">{greeting}</h2>
@@ -107,24 +172,29 @@ export default function HomePage() {
 
         {/* ── Stats ── */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          {statsCards.map(card => (
-            <StatCard key={card.label} {...card} />
+          {statsCards.map((card) => (
+            <StatCard key={card.label} {...card} isLoading={loadingDashboard} />
           ))}
         </div>
 
         {/* ── Gráfico + Pacientes recientes ── */}
         <div className="grid grid-cols-5 gap-5 mb-6">
-
           {/* Gráfico semanal */}
           <div className="col-span-3 bg-white rounded-xl border border-gray-100 shadow-sm p-5">
             <h3 className="font-bold text-gray-800 text-sm mb-4">Progreso Semanal de Pacientes</h3>
-            <BarChart
-              data={weeklyData}
-              bars={weeklyBars}
-              xKey="dia"
-              height={200}
-              showLegend
-            />
+            {loadingDashboard ? (
+              <div className="h-[200px] flex items-center justify-center text-gray-400 text-xs">
+                Cargando...
+              </div>
+            ) : (
+              <BarChart
+                data={dashboard?.weekly_progress ?? []}
+                bars={weeklyBars}
+                xKey="dia"
+                height={200}
+                showLegend
+              />
+            )}
           </div>
 
           {/* Pacientes recientes */}
@@ -133,28 +203,43 @@ export default function HomePage() {
               <h3 className="font-bold text-gray-800 text-sm">Pacientes Recientes</h3>
               <button
                 onClick={() => navigate(ROUTES.PATIENTS)}
-                className="text-green-600 text-xs hover:underline"
+                className="text-gray-900 font-medium text-xs hover:underline"
               >
                 Ver todos →
               </button>
             </div>
-            <ul className="space-y-4">
-              {filteredPatients.map(patient => (
-                <li key={patient.id} className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <Avatar initials={patient.initials} color={patient.color} size="md" />
-                    <div>
-                      <p className="text-xs font-semibold text-gray-700 leading-tight">{patient.name}</p>
-                      <p className="text-xs text-gray-400">{patient.lastConsult}</p>
+            {loadingDashboard ? (
+              <p className="text-center text-gray-400 text-xs py-4">Cargando pacientes...</p>
+            ) : (
+              <ul className="space-y-4">
+                {filteredPatients.map((patient) => (
+                  <li key={patient.id} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar
+                        initials={initialsOf(patient.name)}
+                        color="bg-nutri-light text-nutri-dark font-bold"
+                        size="md"
+                      />
+                      <div>
+                        <p className="text-xs font-semibold text-gray-900 leading-tight">
+                          {patient.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatLastConsult(patient.last_consult)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <Badge variant={statusBadgeVariant[patient.status]} label={patient.status} />
-                </li>
-              ))}
-              {filteredPatients.length === 0 && (
-                <li className="text-center text-gray-400 text-xs py-4">Sin resultados</li>
-              )}
-            </ul>
+                    <Badge
+                      variant={statusBadgeVariant[patient.status]}
+                      label={statusLabel[patient.status]}
+                    />
+                  </li>
+                ))}
+                {filteredPatients.length === 0 && (
+                  <li className="text-center text-gray-400 text-xs py-4">Sin resultados</li>
+                )}
+              </ul>
+            )}
           </div>
         </div>
 
@@ -163,20 +248,31 @@ export default function HomePage() {
           <h3 className="font-bold text-gray-800 text-sm mb-4">Acciones Rápidas</h3>
           <div className="flex items-center gap-3 flex-wrap">
             <Button variant="primary" onClick={() => navigate(ROUTES.PATIENTS)}>
-              + Nuevo Paciente
+              Ver Pacientes
             </Button>
-            <Button variant="outline" onClick={() => navigate(ROUTES.AGENDA)}>
-              📅 Agendar Cita
+            <Button
+              variant="outline"
+              icon={<MdCalendarMonth className="w-4 h-4" />}
+              onClick={() => navigate(ROUTES.AGENDA)}
+            >
+              Agendar Cita
             </Button>
-            <Button variant="outline" onClick={() => navigate(ROUTES.PLANS)}>
-              📋 Crear Plan
+            <Button
+              variant="outline"
+              icon={<MdDescription className="w-4 h-4" />}
+              onClick={() => navigate(ROUTES.PLANS)}
+            >
+              Revisar Planes{pendingPlansCount ? ` (${pendingPlansCount})` : ''}
             </Button>
-            <Button variant="outline" onClick={() => navigate(ROUTES.REPORTS)}>
-              📊 Ver Reportes
+            <Button
+              variant="outline"
+              icon={<MdBarChart className="w-4 h-4" />}
+              onClick={() => navigate(ROUTES.REPORTS)}
+            >
+              Ver Reportes
             </Button>
           </div>
         </div>
-
       </div>
     </NutritionistLayout>
   );

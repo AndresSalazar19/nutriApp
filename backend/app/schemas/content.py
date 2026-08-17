@@ -1,7 +1,9 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict
+
 from app.db.models.content import ContentCategory, ContentType
 
 

@@ -1,7 +1,13 @@
 export interface RegisterPageProps {
   onGoToLogin: () => void;
   /** Llamado tras registro exitoso: hace auto-login y redirige al dashboard */
-  onRegistered?: (userData: { userId: string; email: string; role: string }) => void;
+  onRegistered?: (userData: {
+    userId: string;
+    email: string;
+    role: string;
+    token?: string;
+    avatar_url?: string | null;
+  }) => void;
 }
 
 export interface FormState {
@@ -10,9 +16,9 @@ export interface FormState {
   email: string;
   phone: string;
   birthDate: string;
-  gender: string; 
-  specialties: string;     
-  yearsExperience: string;  
+  gender: string;
+  specialties: string;
+  yearsExperience: string;
   password: string;
   confirmPassword: string;
 }

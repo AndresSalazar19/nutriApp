@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 
 interface AllergyChipProps {
@@ -14,9 +15,8 @@ export const AllergyChip: React.FC<AllergyChipProps> = ({ label, selected, onPre
     onPress={onPress}
     activeOpacity={0.7}
   >
-    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-      {selected ? `✓ ${label}` : label}
-    </Text>
+    {selected && <MaterialCommunityIcons name="check" size={14} color={COLORS.primary} />}
+    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
   </TouchableOpacity>
 );
 
@@ -28,6 +28,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#CCC',
     backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   chipSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primaryLight },
   chipText: { fontSize: 13, color: '#555', fontWeight: '500' },

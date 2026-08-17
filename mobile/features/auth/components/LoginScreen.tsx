@@ -16,6 +16,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useLogin } from '@/features/auth/hooks/useAuth';
+import { AuthService } from '@/features/auth/services/authService';
+import { OnboardingProgress } from '@/features/onboarding/services/onboardingProgress';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { PasswordField } from '@/components/ui/PasswordField';
+
+const NON_PATIENT_MESSAGE =
+  'Si eres administrador o nutricionista ingresa a la página web. Esta versión es solo para pacientes.';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -23,7 +30,6 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async () => {
@@ -34,11 +40,28 @@ export default function LoginScreen() {
 
     const result = await login({ email: email.trim(), password });
 
-    if (result) {
-      // Autenticación exitosa → navegar al home
-      router.replace('/(tabs)');
+    if (!result) return;
+
+    // Guard de rol: la app móvil es solo para pacientes. Si el backend
+    // devuelve otro rol, no se deja entrar y se limpia la sesión para que
+    // no quede el token guardado (si no, la próxima apertura entraría
+    // directo sin pasar por este guard).
+    if (!AuthService.isPatient(result.user)) {
+      await AuthService.logout();
+      Alert.alert('Acceso no disponible', NON_PATIENT_MESSAGE);
+      return;
     }
-    // Si result es null, el error ya está en `error` y se muestra abajo
+
+    // Si el token expiró a mitad del onboarding (p. ej. wizard de salud),
+    // al reloguear hay que retomar ese paso, no mandar directo a /(tabs)
+    // con el perfil incompleto -- mismo criterio que el guard de index.tsx.
+    const step = await OnboardingProgress.get(result.user.id);
+    if (step === 'health') router.replace('/(onboarding)/health');
+    else if (step === 'history') router.replace('/(onboarding)/history');
+    else if (step === 'dietary') router.replace('/(onboarding)/dietary');
+    else if (step === 'plans') router.replace('/(onboarding)/plans');
+    else if (step === 'payment') router.replace('/(onboarding)/payment');
+    else router.replace('/(tabs)');
   };
 
   return (
@@ -49,70 +72,80 @@ export default function LoginScreen() {
       >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
 
-          {/* Panel verde superior */}
           <View style={styles.topPanel}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Text style={styles.backArrow}>←</Text>
+              <MaterialCommunityIcons
+                name="arrow-left"
+                size={22}
+                color={COLORS.textOnPrimary}
+              />
             </TouchableOpacity>
 
             <View style={styles.logoCircle}>
-              <Text style={styles.logoEmoji}>🌿</Text>
+              <MaterialCommunityIcons
+                name="leaf"
+                size={32}
+                color={COLORS.primary}
+              />
             </View>
             <Text style={styles.title}>Iniciar Sesión</Text>
             <Text style={styles.subtitle}>Ingresa tus credenciales</Text>
           </View>
 
-          {/* Panel blanco inferior */}
           <View style={styles.bottomPanel}>
 
-            {/* Error del servidor */}
             {error ? (
               <View style={styles.errorBox}>
-                <Text style={styles.errorText}>⚠️ {error}</Text>
+                <View style={styles.errorRow}>
+                  <MaterialCommunityIcons
+                    name="alert-circle-outline"
+                    size={18}
+                    color={COLORS.error}
+                  />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
               </View>
             ) : null}
 
-            {/* Correo */}
             <Text style={styles.label}>Correo Electrónico</Text>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
                 placeholder="ejemplo@correo.com"
-                placeholderTextColor="#bbb"
+                placeholderTextColor={COLORS.placeholder}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
                 onChangeText={setEmail}
                 editable={!loading}
               />
-              <Text style={styles.inputIcon}>✉️</Text>
+              <MaterialCommunityIcons
+                name="email-outline"
+                size={20}
+                color={COLORS.textMuted}
+              />
             </View>
 
-            {/* Contraseña */}
             <Text style={styles.label}>Contraseña</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#bbb"
-                secureTextEntry={!showPassword}
+              <PasswordField
                 value={password}
                 onChangeText={setPassword}
-                editable={!loading}
+                placeholder="••••••••"
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Text style={styles.inputIcon}>{showPassword ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
-            </View>
 
-            {/* Recordarme + Olvidaste */}
             <View style={styles.row}>
               <TouchableOpacity
                 style={styles.checkRow}
                 onPress={() => setRememberMe(!rememberMe)}
               >
                 <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
-                  {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+                  {rememberMe && (
+                    <MaterialCommunityIcons
+                      name="check"
+                      size={14}
+                      color={COLORS.textOnPrimary}
+                    />
+                  )}
                 </View>
                 <Text style={styles.checkLabel}>Recordarme</Text>
               </TouchableOpacity>
@@ -121,37 +154,25 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Botón principal */}
             <TouchableOpacity
               style={[styles.btnPrimary, loading && styles.btnDisabled]}
               onPress={handleLogin}
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={COLORS.textOnPrimary} />
               ) : (
                 <Text style={styles.btnPrimaryText}>Iniciar Sesión</Text>
               )}
             </TouchableOpacity>
 
-            {/* Divisor */}
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>o</Text>
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Biometría */}
-            <TouchableOpacity style={styles.btnSecondary}>
-              <Text style={styles.btnSecondaryText}>🔒  Usar Biometría</Text>
-            </TouchableOpacity>
-
-            {/* Registro */}
-            <TouchableOpacity onPress={() => router.push('/register')}>
-              <Text style={styles.registerText}>
-                ¿No tienes cuenta?{' '}
-                <Text style={styles.registerLink}>Regístrate aquí</Text>
-              </Text>
+            <TouchableOpacity style={styles.registerRow} onPress={() => router.push('/register')}>
+              <Text style={styles.registerText}>¿No tienes cuenta? </Text>
+              <Text style={styles.registerLink}>Regístrate aquí</Text>
             </TouchableOpacity>
 
           </View>
@@ -175,7 +196,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: COLORS.overlay,
     borderRadius: 20,
     width: 36,
     height: 36,
@@ -183,39 +204,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 20,
   },
-  backArrow: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   logoCircle: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 6,
   },
-  logoEmoji: { fontSize: 32 },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.textOnPrimary,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.85)',
+    color: COLORS.overlayMedium,
   },
   bottomPanel: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 24,
@@ -223,38 +238,43 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   errorBox: {
-    backgroundColor: '#fff0f0',
+    backgroundColor: COLORS.errorLight,
     borderWidth: 1,
-    borderColor: '#ffcccc',
+    borderColor: COLORS.errorBorder,
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
-    color: '#cc0000',
+    color: COLORS.error,
     fontSize: 13,
+  },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.textPrimary,
     marginBottom: 6,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     marginBottom: 18,
-    backgroundColor: '#fafafa',
+    backgroundColor: COLORS.inputBg,
   },
   input: {
     flex: 1,
     paddingVertical: 14,
     fontSize: 14,
-    color: '#333',
+    color: COLORS.textPrimary,
   },
   inputIcon: {
     fontSize: 16,
@@ -283,14 +303,9 @@ const styles = StyleSheet.create({
   checkboxActive: {
     backgroundColor: COLORS.primary,
   },
-  checkmark: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   checkLabel: {
     fontSize: 13,
-    color: '#555',
+    color: COLORS.textSecondary,
   },
   forgotText: {
     fontSize: 13,
@@ -312,7 +327,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   btnPrimaryText: {
-    color: '#fff',
+    color: COLORS.textOnPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -320,37 +335,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 20,
-    gap: 10,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e0e0e0',
-  },
-  dividerText: {
-    color: '#aaa',
-    fontSize: 13,
+    backgroundColor: COLORS.border,
   },
   btnSecondary: {
     borderWidth: 1.5,
-    borderColor: '#e0e0e0',
+    borderColor: COLORS.border,
     paddingVertical: 14,
     borderRadius: 50,
     alignItems: 'center',
     marginBottom: 24,
   },
   btnSecondaryText: {
-    color: '#555',
+    color: COLORS.textSecondary,
     fontSize: 15,
     fontWeight: '500',
   },
+  registerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
   registerText: {
-    textAlign: 'center',
     fontSize: 13,
-    color: '#888',
+    color: COLORS.textMuted,
   },
   registerLink: {
+    fontSize: 13,
     color: COLORS.primary,
     fontWeight: 'bold',
+  },
+  biometricContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });

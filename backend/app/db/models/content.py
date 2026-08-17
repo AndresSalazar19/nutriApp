@@ -1,11 +1,13 @@
-from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime, ForeignKey, ARRAY
+import enum
+import uuid
+from datetime import datetime
+
+from sqlalchemy import ARRAY, Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy import Enum as SQLEnum
+
 from app.db.base import Base
-from datetime import datetime
-import uuid
-import enum
 
 
 class ContentCategory(str, enum.Enum):
@@ -55,7 +57,9 @@ class ContentMedia(Base):
     __tablename__ = "content_media"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    content_id = Column(UUID(as_uuid=True), ForeignKey("educational_content.id", ondelete="CASCADE"), nullable=False)
+    content_id = Column(
+        UUID(as_uuid=True), ForeignKey("educational_content.id", ondelete="CASCADE"), nullable=False
+    )
     media_type = Column(String(50), nullable=True)
     media_url = Column(Text, nullable=False)
     thumbnail_url = Column(Text, nullable=True)

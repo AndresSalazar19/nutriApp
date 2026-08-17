@@ -4,6 +4,7 @@ export interface LoginUserData {
   role: string;
   is_active: boolean;
   email_verified: boolean;
+  avatar_url?: string | null;
   person: any | null;
 }
 

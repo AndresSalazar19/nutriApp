@@ -1,6 +1,8 @@
-from pydantic import BaseModel
-from typing import Optional
 import uuid
+from typing import Optional
+
+from pydantic import BaseModel
+
 
 class FoodItemRequest(BaseModel):
     name: str
@@ -23,6 +25,23 @@ class FoodItemRequest(BaseModel):
     serving_per_cup_g: Optional[float] = None
     serving_per_tbsp_g: Optional[float] = None
     serving_per_unit_g: Optional[float] = None
+
+
+class FoodItemListResponse(BaseModel):
+    id: uuid.UUID
+
+    name: str
+    category: Optional[str] = None
+
+    calories_kcal: Optional[float] = None
+    carbs_g: Optional[float] = None
+    protein_g: Optional[float] = None
+    fat_g: Optional[float] = None
+
+    is_active: bool
+
+    class Config:
+        from_attributes = True
 
 
 class FoodItemResponse(BaseModel):

@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { COLORS } from '@/constants/colors';
 import { Plan } from '../../types';
 
 interface PlanCardProps {
@@ -42,7 +44,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, selected, onSelect }) 
       <View style={styles.featuresList}>
         {plan.features.map((feature, i) => (
           <View key={i} style={styles.featureRow}>
-            <Text style={[styles.featureCheck, { color: plan.accentColor }]}>✓</Text>
+            <MaterialCommunityIcons name="check" size={14} color={plan.accentColor} />
             <Text
               style={[
                 styles.featureText,
@@ -64,15 +66,18 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, selected, onSelect }) 
         onPress={() => onSelect(plan.id)}
         activeOpacity={0.8}
       >
-        <Text
-          style={[
-            styles.selectButtonText,
-            { color: plan.accentColor },
-            selected && { color: '#fff' },
-          ]}
-        >
-          {selected ? '✓ Seleccionado' : 'Seleccionar Plan'}
-        </Text>
+        <View style={styles.selectButtonContent}>
+          {selected && <MaterialCommunityIcons name="check-circle" size={16} color={COLORS.textOnPrimary} />}
+          <Text
+            style={[
+              styles.selectButtonText,
+              { color: plan.accentColor },
+              selected && { color: COLORS.textOnPrimary },
+            ]}
+          >
+            {selected ? 'Seleccionado' : 'Seleccionar Plan'}
+          </Text>
+        </View>
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -108,5 +113,6 @@ const styles = StyleSheet.create({
   featureText: { fontSize: 13, color: '#444', flex: 1, lineHeight: 18 },
   featureTextBold: { fontWeight: '700', color: '#1A1A1A' },
   selectButton: { borderWidth: 2, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  selectButtonContent: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   selectButtonText: { fontSize: 14, fontWeight: '700' },
 });

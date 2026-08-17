@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormState, FormErrors, RegisterPageProps } from './types';
 import { PersonalInfoStep } from './PersonalInfoStep';
 import { ProfessionalInfoStep } from './ProfessionalInfoStep';
 import { SecurityStep } from './SecurityStep';
 import { useFormValidation } from './useFormValidation';
 import { RegistrerServices } from '../../services/Registrer/RegisterServices';
-
+import { RegistrerServices as LoginServices } from '../../services/Login/LoginServices';
+import { MdRestaurant } from 'react-icons/md';
 
 function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
   const [step, setStep] = useState(1);
@@ -13,6 +14,8 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [senescytFile, setSenescytFile] = useState<File | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [touched, setTouched] = useState<Set<keyof FormState>>(new Set());
   const [form, setForm] = useState<FormState>({
     fullName: '',
@@ -29,10 +32,18 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
   const { errors, isStepValid } = useFormValidation(form, step, acceptTerms, cvFile, senescytFile);
 
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
+
   // Marks field as touched and updates state
   const update = (field: keyof FormState, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-    setTouched(prev => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setTouched((prev) => {
       const next = new Set(prev);
       next.add(field);
       return next;
@@ -41,16 +52,16 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
   // Only pass errors for fields the user has already interacted with
   const displayErrors: FormErrors = Object.fromEntries(
-    Object.entries(errors).filter(([field]) => touched.has(field as keyof FormState))
+    Object.entries(errors).filter(([field]) => touched.has(field as keyof FormState)),
   );
 
   const nextStep = () => {
     setTouched(new Set());
-    setStep(prev => Math.min(prev + 1, 3));
+    setStep((prev) => Math.min(prev + 1, 3));
   };
   const prevStep = () => {
     setTouched(new Set());
-    setStep(prev => Math.max(prev - 1, 1));
+    setStep((prev) => Math.max(prev - 1, 1));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,44 +80,52 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
       const first_name = nameParts[0] ?? '';
       const last_name = nameParts.slice(1).join(' ') || first_name;
 
-      // Payload JSON con todos los campos que NutritionistCreateRequest espera
-      // Los archivos (CV, Senescyt) se subirán en un paso posterior desde el perfil
-      const payload = {
-        // ── Tabla users + persons ──────────────────────────────
-        email:            form.email,
-        password:         form.password,
-        first_name,
-        last_name,
-        date_of_birth:    form.birthDate,
-        phone:            form.phone,
-        gender:           form.gender,   // enum: 'masculino' | 'femenino'
+      // Construir FormData para enviar archivos como multipart/form-data
+      const formData = new FormData();
 
-        // ── Tabla nutritionist_profile ─────────────────────────
-        cedula:           form.cedula,
-        specialty_id:     Number(form.specialties),    // el select guarda el id como string
-        years_experience: Number(form.yearsExperience),
-      };
+      // Campos de texto
+      formData.append('email', form.email);
+      formData.append('password', form.password);
+      formData.append('first_name', first_name);
+      formData.append('last_name', last_name);
+      formData.append('date_of_birth', form.birthDate);
+      formData.append('phone', form.phone);
+      formData.append('gender', form.gender);
+      formData.append('cedula', form.cedula);
+      formData.append('specialty_id', String(Number(form.specialties)));
+      formData.append('years_experience', String(Number(form.yearsExperience)));
 
-      console.log('📤 Enviando registro de nutricionista:', payload);
+      // Archivos (si existen)
+      if (cvFile) formData.append('cv_file', cvFile);
+      if (senescytFile) formData.append('senescyt_file', senescytFile);
+      if (avatarFile) formData.append('avatar_file', avatarFile);
 
-      const response = await RegistrerServices.crearNutricionista(payload);
+      console.log('[send] Enviando registro de nutricionista (FormData)');
 
-      console.log('✅ Nutricionista registrado:', response.data);
+      const response = await RegistrerServices.crearNutricionista(formData);
+
+      console.log('Nutricionista registrado:', response.data);
 
       const profileData = response.data;
 
-      if (onRegistered) {
-        onRegistered({
-          userId: profileData.user_id ?? profileData.id,
-          email: form.email,
-          role: 'nutritionist',
-        });
-      } else {
+      const sesion = await LoginServices.iniciarSesion(form.email, form.password);
+      const token = sesion.data?.access_token;
+
+      if (!onRegistered || !token) {
+        alert('Tu cuenta fue creada. Inicia sesión para continuar.');
         onGoToLogin();
+        return;
       }
 
+      onRegistered({
+        userId: sesion.data.user?.id ?? profileData.user_id ?? profileData.id,
+        email: form.email,
+        role: 'nutritionist',
+        token,
+        avatar_url: sesion.data.user?.avatar_url ?? null,
+      });
     } catch (error) {
-      console.error('❌ Error al registrar nutricionista:', error);
+      console.error('Error al registrar nutricionista:', error);
       const message = error instanceof Error ? error.message : 'Error desconocido';
       alert(`No se pudo completar el registro: ${message}`);
     } finally {
@@ -116,12 +135,11 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start py-8 px-4">
-
       {/* Botón Volver */}
       <div className="w-full max-w-xl mb-4">
         <button
           onClick={onGoToLogin}
-          className="text-green-700 text-sm hover:underline flex items-center gap-1 disabled:opacity-50"
+          className="text-nutri-medium text-sm hover:text-nutri-dark hover:underline flex items-center gap-1 disabled:opacity-50"
           disabled={isSubmitting}
         >
           ← Volver al inicio
@@ -130,23 +148,22 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
       {/* Contenedor Principal */}
       <div className="bg-white rounded-2xl shadow-md w-full max-w-xl px-6 md:px-10 py-8">
-
         {/* Encabezado */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-3 shadow">
-            <span className="text-xl">🥗</span>
+          <div className="w-12 h-12 bg-nutri-medium rounded-full flex items-center justify-center mb-3 shadow">
+            <MdRestaurant className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-green-700">Crear Cuenta</h1>
-          <p className="text-gray-400 text-sm mt-1">Paso {step} de 3</p>
+          <h1 className="text-2xl font-bold text-nutri-dark">Crear Cuenta</h1>
+          <p className="text-gray-500 text-sm mt-1">Paso {step} de 3</p>
         </div>
 
         {/* Barra de Progreso */}
         <div className="flex justify-between mb-8 gap-2">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <div
               key={i}
               className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
-                step >= i ? 'bg-green-500' : 'bg-gray-100'
+                step >= i ? 'bg-nutri-medium' : 'bg-gray-100'
               }`}
             />
           ))}
@@ -154,9 +171,16 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
 
         {/* Formulario */}
         <form onSubmit={handleSubmit}>
-
           {step === 1 && (
-            <PersonalInfoStep form={form} update={update} errors={displayErrors} />
+            <PersonalInfoStep
+              form={form}
+              update={update}
+              errors={displayErrors}
+              avatarFile={avatarFile}
+              setAvatarFile={setAvatarFile}
+              avatarPreview={avatarPreview}
+              setAvatarPreview={setAvatarPreview}
+            />
           )}
 
           {step === 2 && (
@@ -196,31 +220,27 @@ function RegisterPage({ onGoToLogin, onRegistered }: RegisterPageProps) {
             <button
               type="submit"
               disabled={isSubmitting || !isStepValid}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-xl transition text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+              className="flex-1 bg-nutri-medium hover:bg-nutri-dark text-white font-bold py-3 px-8 rounded-xl transition text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
             >
-              {isSubmitting
-                ? 'Procesando...'
-                : (step === 3 ? 'Finalizar Registro' : 'Continuar')}
+              {isSubmitting ? 'Procesando...' : step === 3 ? 'Finalizar Registro' : 'Continuar'}
             </button>
           </div>
-
         </form>
 
         {/* Enlace al Login */}
         <div className="text-center mt-6 border-t border-gray-100 pt-6">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-600">
             ¿Ya tienes una cuenta?{' '}
             <button
               type="button"
               onClick={onGoToLogin}
               disabled={isSubmitting}
-              className="text-green-600 font-bold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:hover:no-underline"
+              className="text-nutri-medium font-bold hover:text-nutri-dark hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50 disabled:hover:no-underline"
             >
               Iniciar sesión
             </button>
           </p>
         </div>
-
       </div>
     </div>
   );

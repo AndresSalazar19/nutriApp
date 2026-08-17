@@ -1,5 +1,5 @@
-import { API_URL } from "../../config/api";
-import { tokenStorage } from "../../utils/tokenStorage";
+import { API_URL } from '../../config/api';
+import { tokenStorage } from '../../utils/tokenStorage';
 
 // 1. Interfaz basada en tu JSON de respuesta
 export interface FoodComposition {
@@ -28,17 +28,20 @@ export type FoodCompositionPayload = Omit<FoodComposition, 'id' | 'is_active'>;
 
 function authHeaders() {
   const token = tokenStorage.get() ?? '';
-  return { 
-    'Authorization': `Bearer ${token}`, 
-    'Content-Type': 'application/json' 
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   };
 }
 
 // 3. El Servicio usando /food-items
 export const FoodCompositionService = {
-  
   // GET /food-items - Obtener todos (con soporte para filtrar por categoría)
-  async getAll(params?: { category?: string; skip?: number; limit?: number }): Promise<FoodComposition[]> {
+  async getAll(params?: {
+    category?: string;
+    skip?: number;
+    limit?: number;
+  }): Promise<FoodComposition[]> {
     const query = new URLSearchParams();
     if (params?.category) query.append('category', params.category);
     if (params?.skip != null) query.append('skip', String(params.skip));
@@ -49,7 +52,7 @@ export const FoodCompositionService = {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data?.detail ?? `Error ${response.status}`);
-    
+
     return Array.isArray(data) ? data : (data.data ?? []);
   },
 
@@ -109,5 +112,5 @@ export const FoodCompositionService = {
       const data = await response.json().catch(() => ({}));
       throw new Error(data?.detail ?? `Error ${response.status}`);
     }
-  }
+  },
 };

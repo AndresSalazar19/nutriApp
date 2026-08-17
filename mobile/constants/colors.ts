@@ -1,36 +1,62 @@
 /**
- * Centralized color palette for the NutrIA app.
+ * Centralized color palette for the NutrIA mobile app.
+ * Source of truth: frontend nutritionist profile (green theme).
+ *
  * All color usage must reference this file — no hardcoded hex strings in components.
  */
 export const COLORS = {
-  /** Primary brand green. Use for buttons, accents, active states. */
-  primary: '#4CAF50',
+  // ── Brand identity (from frontend tailwind: nutri-*) ──
+  primary: '#2D6A4F',
+  primaryDark: '#1B4332',
+  primaryMedium: '#40916C',
+  primaryAccent: '#52B788',
+  primaryLight: '#D8F3DC',
 
-  /** Dark variant. Use for text and icons on light backgrounds. */
-  primaryDark: '#388E3C',
-
-  /** Light tint. Use for card backgrounds and selected state fills. */
-  primaryLight: '#E8F5E9',
-
-  /** Ultra-light tint. Use for subtle surface backgrounds. */
-  primaryUltraLight: '#F1F8E9',
-
-  /** Alias for primary — use when explicitly describing a background. */
-  backgroundPrimary: '#4CAF50',
-
-  accent: '#FF6B6B',
-  accentBlue: '#4A90D9',
-  accentOrange: '#FF9800',
-  accentPurple: '#9C6FD6',
-  success: '#4CAF82',
-  warning: '#FF9800',
-  danger: '#FF6B6B',
-  background: '#F7FAF8',
+  // ── Surfaces ──
+  background: '#F7F8F3',
   surface: '#FFFFFF',
   surfaceAlt: '#F0F7F3',
-  border: '#E0EDE6',
+
+  // ── Text ──
   textPrimary: '#1A2E25',
-  textSecondary: '#6B8C7A',
+  textSecondary: '#5F7A6E',
   textMuted: '#9BB5A8',
+  textOnPrimary: '#FFFFFF',
+
+  // ── Borders & dividers ──
+  border: '#E0EDE6',
+  divider: '#F0F5F2',
+
+  // ── Inputs ──
+  inputBg: '#FAFBF9',
+  placeholder: '#9BB5A8',
+
+  // ── Semantic ──
+  error: '#C0392B',
+  errorLight: '#FEF2F2',
+  errorBorder: '#F5C2C2',
+  warning: '#D97706',
+  warningLight: '#FFFDE7',
+  warningBorder: '#FDD835',
+  success: '#40916C',
+
+  // ── Data visualization (semantic health metrics) ──
+  danger: '#E53935',
+  chartBlue: '#4A90D9',
+  chartOrange: '#FB8C00',
+  chartPurple: '#9C6FD6',
+
+  // ── Premium ──
+  premium: '#D97706',
+  premiumLight: '#FFF8E1',
+
+  // ── Common ──
   white: '#FFFFFF',
+  black: '#000000',
+
+  // ── Overlays (for use on primary-colored headers) ──
+  backdrop: 'rgba(0,0,0,0.4)',
+  overlay: 'rgba(255,255,255,0.25)',
+  overlayMedium: 'rgba(255,255,255,0.85)',
+  overlaySubtle: 'rgba(255,255,255,0.2)',
 } as const;

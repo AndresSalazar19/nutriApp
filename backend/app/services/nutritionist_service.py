@@ -1,38 +1,45 @@
-from sqlalchemy.orm import Session
-from app.db.models.user import User, Person
-from app.schemas.user import UserResponse, UserCreate
-from app.services.user_service import UserService
-from app.db.models.user import UserRole
-from app.db.models.nutritionist import NutritionistProfile, NutritionistStatus, Specialty
-from datetime import datetime, timezone
-from fastapi import HTTPException
-from app.schemas.nutritionist import NutritionistProfileResponse
 import uuid
+from datetime import datetime, timezone
+
+from fastapi import HTTPException
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session, joinedload
+
+from app.db.models.nutritionist import (
+    DocumentType,
+    NutritionistDocument,
+    NutritionistProfile,
+    NutritionistStatus,
+)
+from app.db.models.user import User, UserRole
+from app.schemas.user import UserCreate
+from app.services.user_service import UserService
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class NutritionistService:
-
     @staticmethod
     def get_all(db: Session, status: NutritionistStatus | None = None):
-        query = db.query(NutritionistProfile)
+        query = db.query(NutritionistProfile).options(
+            joinedload(NutritionistProfile.specialty),
+            joinedload(NutritionistProfile.user).joinedload(User.person),
+            joinedload(NutritionistProfile.user)
+            .joinedload(User.nutritionist_profile)
+            .joinedload(NutritionistProfile.specialty),
+        )
 
         if status:
-            query = query.filter(
-                NutritionistProfile.status == status.value
-            )
+            query = query.filter(NutritionistProfile.status == status.value)
         else:
             query = query.filter(
-                NutritionistProfile.status.notin_([
-                    NutritionistStatus.rejected.value,
-                    NutritionistStatus.suspended.value
-                ])
+                NutritionistProfile.status.notin_(
+                    [NutritionistStatus.rejected.value, NutritionistStatus.suspended.value]
+                )
             )
 
         return query.all()
-    
+
     @staticmethod
     def get_by_user_id(db: Session, user_id: uuid.UUID):
         return db.query(NutritionistProfile).filter(NutritionistProfile.user_id == user_id).first()
@@ -45,14 +52,16 @@ class NutritionistService:
     def review_profile(
         db: Session, profile_id: uuid.UUID, status: NutritionistStatus, admin_id: uuid.UUID
     ) -> NutritionistProfile:
-
         profile = NutritionistService.get_by_id(db, profile_id)
 
         if not profile:
-            raise HTTPException(status_code=400, detail="Perfil de nutricionista no encontrado")
+            raise HTTPException(status_code=404, detail="Perfil de nutricionista no encontrado")
 
         if profile.status != NutritionistStatus.pending:
-            raise HTTPException(status_code=400, detail=f"Solo se pueden revisar perfiles pendientes. Estado actual: {profile.status}" )
+            raise HTTPException(
+                status_code=400,
+                detail=f"Solo se pueden revisar perfiles pendientes. Estado actual: {profile.status}",
+            )
 
         profile.status = status
         profile.verified_by = admin_id
@@ -65,24 +74,21 @@ class NutritionistService:
 
     @staticmethod
     def create(db: Session, data) -> NutritionistProfile:
-
+        # El genero se pasa aqui en vez de parchear user.person despues de crear:
+        # asi entra en el INSERT original (antes quedaba gender=None en la fila
+        # recien insertada y solo se corregia en un UPDATE posterior).
         user_data = UserCreate(
             email=data.email,
+            cedula=data.cedula,
             password=data.password,
             first_name=data.first_name,
             last_name=data.last_name,
             date_of_birth=data.date_of_birth,
             phone=data.phone,
+            gender=data.gender.value if data.gender else None,
             role=UserRole.nutritionist,
         )
         user = UserService.create(db, user_data)
-
-        if user.person:
-            if data.cedula:
-                user.person.cedula = data.cedula
-            if data.gender:
-                user.person.gender = data.gender
-            db.flush()
 
         profile = NutritionistProfile(
             user_id=user.id,
@@ -96,4 +102,56 @@ class NutritionistService:
         db.refresh(profile)
         return profile
 
-    
+    @staticmethod
+    def add_document(
+        db: Session,
+        nutritionist_id: uuid.UUID,
+        document_type: DocumentType,
+        file_path: str,
+        file_name: str,
+        file_size: int,
+        mime_type: str = "application/pdf",
+    ) -> NutritionistDocument:
+        document = NutritionistDocument(
+            nutritionist_id=nutritionist_id,
+            document_type=document_type,
+            file_path=file_path,
+            file_name=file_name,
+            file_size=file_size,
+            mime_type=mime_type,
+        )
+        db.add(document)
+        db.commit()
+        db.refresh(document)
+        return document
+
+    @staticmethod
+    def get_nutritionist_profile(db: Session, user_id: uuid.UUID):
+        profile = (
+            db.query(NutritionistProfile)
+            .options(
+                joinedload(NutritionistProfile.user).joinedload(User.person),
+                joinedload(NutritionistProfile.specialty),
+                joinedload(NutritionistProfile.documents),
+            )
+            .filter(NutritionistProfile.user_id == user_id)
+            .first()
+        )
+
+        if not profile:
+            raise HTTPException(status_code=404, detail="Perfil de nutricionista no encontrado")
+
+        return {
+            "id": profile.id,
+            "license_number": profile.license_number,
+            "bio": profile.bio,
+            "specialty_id": profile.specialty_id,
+            "years_experience": profile.years_experience,
+            "education": profile.education,
+            "consultation_fee": profile.consultation_fee,
+            "max_patients": profile.max_patients,
+            "status": profile.status,
+            "user": profile.user,
+            "specialty": profile.specialty,
+            "documents": profile.documents,
+        }

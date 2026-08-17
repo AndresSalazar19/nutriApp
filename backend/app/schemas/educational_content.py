@@ -1,8 +1,11 @@
-from pydantic import BaseModel, Field, HttpUrl
+import uuid
 from datetime import datetime
 from typing import List, Optional
-import uuid
+
+from pydantic import BaseModel, Field
+
 from app.db.models.content import ContentCategory, ContentType
+
 
 class ContentMediaBase(BaseModel):
     media_type: str = Field(..., example="video/mp4")
@@ -10,11 +13,13 @@ class ContentMediaBase(BaseModel):
     thumbnail_url: Optional[str] = None
     duration: Optional[int] = None
 
+
 class ContentMediaResponse(ContentMediaBase):
     id: uuid.UUID
 
     class Config:
         from_attributes = True
+
 
 class EducationalContentRequest(BaseModel):
     title: str = Field(..., min_length=5, max_length=255)
@@ -23,10 +28,11 @@ class EducationalContentRequest(BaseModel):
     content_type: ContentType
     is_premium: bool = False
     tags: Optional[List[str]] = []
-    published_at: Optional[datetime] = None 
+    published_at: Optional[datetime] = None
     is_published: bool = False
-    
+
     media: Optional[List[ContentMediaBase]] = []
+
 
 class EducationalContentResponse(BaseModel):
     id: uuid.UUID
@@ -47,7 +53,12 @@ class EducationalContentResponse(BaseModel):
 
     @classmethod
     def model_validate(cls, obj, **kwargs):
-        if hasattr(obj, "author") and obj.author and hasattr(obj.author, "person") and obj.author.person:
+        if (
+            hasattr(obj, "author")
+            and obj.author
+            and hasattr(obj.author, "person")
+            and obj.author.person
+        ):
             person = obj.author.person
             obj.__dict__["author_name"] = f"{person.first_name} {person.last_name}"
         else:

@@ -1,11 +1,14 @@
 import enum
 import uuid
-from sqlalchemy import Column, String, Integer, Text, Boolean, ForeignKey, DateTime, ARRAY
+
+from sqlalchemy import ARRAY, Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.sql import func
+
 from app.db.base import Base
+
 
 class ContentCategory(str, enum.Enum):
     nutrition = "nutrition"
@@ -15,12 +18,14 @@ class ContentCategory(str, enum.Enum):
     lifestyle = "lifestyle"
     tips = "tips"
 
+
 class ContentType(str, enum.Enum):
     article = "article"
     video = "video"
     infographic = "infographic"
     recipe = "recipe"
     tip = "tip"
+
 
 class EducationalContent(Base):
     __tablename__ = "educational_content"
@@ -50,10 +55,12 @@ class ContentMedia(Base):
     __tablename__ = "content_media"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    content_id = Column(UUID(as_uuid=True), ForeignKey("educational_content.id", ondelete="CASCADE"), nullable=False)
-    media_type = Column(String(50), nullable=False) 
+    content_id = Column(
+        UUID(as_uuid=True), ForeignKey("educational_content.id", ondelete="CASCADE"), nullable=False
+    )
+    media_type = Column(String(50), nullable=False)
     media_url = Column(String(500), nullable=False)
     thumbnail_url = Column(String(500), nullable=True)
-    duration = Column(Integer, nullable=True) 
+    duration = Column(Integer, nullable=True)
 
     content = relationship("EducationalContent", back_populates="media")

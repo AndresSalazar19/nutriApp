@@ -13,7 +13,6 @@ export interface NutritionistPerson {
   last_name: string;
   date_of_birth: string | null;
   phone: string | null;
-  avatar_url: string | null;
   cedula: string | null;
   gender: string | null;
 }
@@ -23,6 +22,7 @@ export interface NutritionistUser {
   email: string;
   role: string;
   is_active: boolean;
+  avatar_url: string | null;
   person: NutritionistPerson;
 }
 
@@ -32,7 +32,7 @@ export interface NutritionistSpecialty {
 }
 
 export interface NutritionistProfile {
-  id: string;               // profile_id — usado para aprobar/rechazar
+  id: string; // profile_id — usado para aprobar/rechazar
   license_number: string;
   bio: string | null;
   specialty_id: number;
@@ -45,12 +45,134 @@ export interface NutritionistProfile {
   specialty: NutritionistSpecialty | null;
 }
 
+export interface NutritionistDocuments {
+  cv_url: string | null;
+  senescyt_url: string | null;
+}
+
+export interface NutritionistDocumentResponse {
+  id: string;
+  document_type: 'cv' | 'senescyt' | string;
+  file_path: string;
+  file_name?: string | null;
+  file_size?: number | null;
+  mime_type?: string | null;
+}
+
+export interface AvailabilityRule {
+  id: string;
+  nutritionist_id: string;
+  rule_type: 'recurring' | 'exception' | string;
+  day_of_week?: number | null;
+  specific_date?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  is_available?: boolean | null;
+}
+
+export interface AvailabilityCalendar {
+  week_start: string;
+  days: Record<string, AvailabilityRule[]>;
+  exceptions: AvailabilityRule[];
+}
+
+export interface NutritionistProfileDetail extends NutritionistProfile {
+  documents: NutritionistDocumentResponse[];
+  availabilities: AvailabilityRule[];
+}
+
+export interface NutritionistDashboardStats {
+  patients_active_total: number;
+  patients_new_this_month: number;
+  appointments_today_total: number;
+  appointments_today_pending: number;
+  unread_messages: number;
+  average_adherence: number | null;
+  adherence_delta_vs_last_month: number | null;
+}
+
+export interface NutritionistWeeklyProgressPoint {
+  dia: string;
+  adherencia: number;
+  peso: number | null;
+  presion: number | null;
+}
+
+export type NutritionistRecentPatientStatus = 'active' | 'inactive' | 'at_risk';
+
+export interface NutritionistRecentPatient {
+  id: string;
+  name: string;
+  last_consult: string | null;
+  status: NutritionistRecentPatientStatus;
+}
+
+export interface NutritionistDashboardData {
+  stats: NutritionistDashboardStats;
+  weekly_progress: NutritionistWeeklyProgressPoint[];
+  recent_patients: NutritionistRecentPatient[];
+}
+
+export interface NutritionistPatientListItem {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  gender: string | null;
+  age: number | null;
+  status: NutritionistRecentPatientStatus;
+  plan: string;
+  adherence: number;
+  last_consult: string | null;
+  next_appointment: string | null;
+}
+
 function authHeaders(): Record<string, string> {
   const token = tokenStorage.get() ?? '';
   return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 }
 
+async function handleResponse<T>(response: Response): Promise<T> {
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const raw =
+      data?.status?.messages?.[0] ??
+      data?.detail ??
+      data?.errors?.[0] ??
+      `Error ${response.status}`;
+
+    const msg = raw.replace(/^\d+:\s*/, '');
+    throw new Error(msg);
+  }
+
+  return data.data ?? data;
+}
+
 export const NutritionistService = {
+  async getDashboard(): Promise<NutritionistDashboardData> {
+    const response = await fetch(`${API_URL}/nutritionists/dashboard`, {
+      headers: authHeaders(),
+    });
+    return handleResponse<NutritionistDashboardData>(response);
+  },
+
+  async getMyPatients(): Promise<NutritionistPatientListItem[]> {
+    const response = await fetch(`${API_URL}/nutritionists/patients`, {
+      headers: authHeaders(),
+    });
+    return handleResponse<NutritionistPatientListItem[]>(response);
+  },
+
+  async getUnreadMessagesCount(): Promise<number> {
+    const response = await fetch(`${API_URL}/nutritionists/unread-messages`, {
+      headers: authHeaders(),
+    });
+    const data = await handleResponse<{ count: number }>(response);
+    return data.count;
+  },
+
   async getStatus(userId: string): Promise<ApiResponse<NutritionistStatusData>> {
     const response = await fetch(`${API_URL}/nutritionists/status/${userId}`, {
       headers: authHeaders(),
@@ -64,25 +186,122 @@ export const NutritionistService = {
       headers: authHeaders(),
     });
     const data = await response.json();
-    // El endpoint devuelve un array directo: [{...}, {...}]
     return Array.isArray(data) ? data : (data.data ?? []);
+  },
+
+  async getAssignedPatients(nutritionistId: string): Promise<any> {
+    const response = await fetch(
+      `${API_URL}/patient_nutritionists?nutritionist_id=${nutritionistId}`,
+      {
+        headers: authHeaders(),
+      },
+    );
+
+    return response.json();
   },
 
   async review(
     profileId: string,
     status: 'verified' | 'rejected',
     verifiedBy: string,
+    rejectionReason?: string,
   ): Promise<NutritionistProfile> {
+    const payload = {
+      status,
+      verified_by: verifiedBy,
+      rejection_reason: status === 'rejected' ? rejectionReason : null,
+    };
+
     const response = await fetch(`${API_URL}/nutritionists/${profileId}/review`, {
       method: 'PATCH',
       headers: authHeaders(),
-      body: JSON.stringify({ status, verified_by: verifiedBy }),
+      body: JSON.stringify(payload),
     });
+
     const data = await response.json();
     if (!response.ok) {
       const msg = data?.detail ?? data?.errors?.[0] ?? `Error ${response.status}`;
       throw new Error(msg);
     }
     return data.data ?? data;
+  },
+
+  async getDocuments(profileId: string): Promise<NutritionistDocuments> {
+    const response = await fetch(`${API_URL}/nutritionists/${profileId}/documents`, {
+      headers: authHeaders(),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      const msg = data?.detail ?? `Error al cargar documentos (${response.status})`;
+      throw new Error(msg);
+    }
+
+    return data;
+  },
+
+  async getNutritionistProfile(userId: string): Promise<NutritionistProfileDetail> {
+    const response = await fetch(`${API_URL}/nutritionists/profile/${userId}`, {
+      headers: authHeaders(),
+    });
+
+    return handleResponse<NutritionistProfileDetail>(response);
+  },
+
+  async getAvailabilityCalendar(userId: string): Promise<AvailabilityCalendar> {
+    const response = await fetch(`${API_URL}/appointment/availability/calendar/${userId}`, {
+      headers: authHeaders(),
+    });
+
+    return handleResponse<AvailabilityCalendar>(response);
+  },
+
+  async createAvailability(
+    nutritionistId: string,
+    payload: Omit<AvailabilityRule, 'id' | 'nutritionist_id' | 'nutritionist'>,
+  ): Promise<AvailabilityRule> {
+    const response = await fetch(`${API_URL}/appointment/availability/${nutritionistId}`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    return handleResponse<AvailabilityRule>(response);
+  },
+
+  async updateAvailability(
+    availabilityId: string,
+    payload: Omit<AvailabilityRule, 'id' | 'nutritionist_id' | 'nutritionist'>,
+  ): Promise<AvailabilityRule> {
+    const response = await fetch(`${API_URL}/appointment/availability/${availabilityId}`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    return handleResponse<AvailabilityRule>(response);
+  },
+
+  async deleteAvailability(availabilityId: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_URL}/appointment/availability/${availabilityId}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+
+    return handleResponse<{ message: string }>(response);
+  },
+
+  async uploadAvatar(userId: string, file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_URL}/users/${userId}/avatar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tokenStorage.get()}` },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('Error al subir imagen');
+    return response.json();
   },
 };
